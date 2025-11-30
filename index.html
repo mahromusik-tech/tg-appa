@@ -187,25 +187,40 @@
         let isSpinning = false;
 
         // --- СЕТЬ ---
-        async function apiRequest(action, data = {}) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: action,
-                        tg_id: user.id,
-                        username: user.first_name,
-                        ...data
-                    })
-                });
-                return await response.json();
-            } catch (e) {
-                console.error(e);
-                tg.showAlert("Ошибка соединения с сервером!" + e);
-                return null;
-            }
+       async function apiRequest(action, data = {}) {
+    try {
+        // Показываем, куда стучимся (для проверки)
+        // alert("Запрос к: " + new URL(API_URL, window.location.href).href);
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: action,
+                tg_id: user.id,
+                username: user.first_name,
+                ...data
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ошибка! Статус: ${response.status}`);
         }
+
+        // Проверяем, что нам вернулся именно JSON, а не ошибка PHP в виде HTML
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error("Сервер вернул не JSON: " + text.substring(0, 100));
+        }
+
+    } catch (e) {
+        // ВОТ ЭТО ПОКАЖЕТ ВАМ ОШИБКУ НА ЭКРАНЕ ТЕЛЕФОНА
+        tg.showAlert("Ошибка: " + e.message);
+        return null;
+    }
+}
 
         async function initGame() {
             document.getElementById('username').innerText = user.first_name;
