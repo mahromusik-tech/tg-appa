@@ -15,7 +15,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
 // --- НАСТРОЙКИ БАЗЫ ДАННЫХ (Взять в панели хостинга) ---
-$host = 'http://f1198077.xsph.ru/';      // Обычно localhost
+$host = 'f1198077.xsph.ru/';      // Обычно localhost
 $db   = 'f1198077_ton'; // Например: a01234_casino
 $user = 'f1198077_ton'; // Например: a01234_admin
 $pass = 'slawa2004';   // Пароль который ты создавал
