@@ -177,7 +177,7 @@
 
     <script>
         // !!! ВСТАВЬ СЮДА ССЫЛКУ НА ТВОЙ ФАЙЛ API.PHP !!!
-        const API_URL = './api.php'; 
+        const API_URL = 'http://f1198077.xsph.ru/api.php'; 
 
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -193,14 +193,14 @@
         // alert("Запрос к: " + new URL(API_URL, window.location.href).href);
 
         const response = await fetch(API_URL, {
-            method: 'GET',
-      //     headers: { 'Content-Type': 'application/json' },
-      //      body: JSON.stringify({
-      //          action: action,
-      //          tg_id: user.id,
-     //           username: user.first_name,
-      //          ...data
-      //      }) 
+            method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+               action: action,
+               tg_id: user.id,
+                username: user.first_name,
+            ...data
+            }) 
         });
 
         if (!response.ok) {
