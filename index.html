@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TON Strategy</title>
+    <!-- Подключаем SDK Телеграма -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Стили (CSS) прямо здесь */
+        body {
+            background-color: var(--tg-theme-bg-color, #1c1c1e);
+            color: var(--tg-theme-text-color, #ffffff);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color, #2c2c2e);
+            padding: 20px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 24px; }
+        p { margin: 5px 0; opacity: 0.8; }
+
+        .btn {
+            background-color: var(--tg-theme-button-color, #007aff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active { opacity: 0.8; }
+        
+        .resource-box {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Интерфейс -->
+    <div class="card">
+        <h1 id="user-name">Загрузка...</h1>
+        <p id="user-id">ID: ...</p>
+    </div>
+
+    <div class="card">
+        <p>Твои ресурсы</p>
+        <div class="resource-box" id="balance">0 💰</div>
+        <p>Добыча в час: 100</p>
+    </div>
+
+    <button class="btn" onclick="handleMine()">⛏ Собрать налоги</button>
+
+    <!-- Логика (JavaScript) -->
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Раскрыть на весь экран
+
+        // Получаем данные пользователя
+        const user = tg.initDataUnsafe.user;
+        
+        // Элементы на экране
+        const nameEl = document.getElementById('user-name');
+        const idEl = document.getElementById('user-id');
+        const balanceEl = document.getElementById('balance');
+
+        // Отображаем данные
+        if (user) {
+            nameEl.innerText = `Правитель ${user.first_name}`;
+            idEl.innerText = `ID: ${user.id}`;
+        } else {
+            nameEl.innerText = "Правитель Неизвестный";
+            idEl.innerText = "Запущено вне Telegram";
+        }
+
+        // Игровая логика
+        let balance = 0;
+
+        function handleMine() {
+            balance += 10;
+            balanceEl.innerText = `${balance} 💰`;
+            
+            // Вибрация (тактильный отклик)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        // Настраиваем главную кнопку (MainButton) внизу экрана
+        tg.MainButton.setText("Построить казарму (500 💰)");
+        tg.MainButton.show();
+        
+        tg.MainButton.onClick(() => {
+            if (balance >= 500) {
+                balance -= 500;
+                balanceEl.innerText = `${balance} 💰`;
+                tg.showAlert("Казарма построена!");
+            } else {
+                tg.showAlert(`Не хватает золота! Нужно еще ${500 - balance}`);
+            }
+        });
+
+    </script>
+</body>
+</html>
