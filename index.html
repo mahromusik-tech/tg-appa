@@ -202,7 +202,7 @@
                 return await response.json();
             } catch (e) {
                 console.error(e);
-                tg.showAlert("Ошибка соединения с сервером!");
+                tg.showAlert("Ошибка соединения с сервером!" + e);
                 return null;
             }
         }
