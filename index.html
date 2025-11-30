@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Empire</title>
+    <title>TON Casino</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #1c1c1e);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2e);
-            --accent: var(--tg-theme-button-color, #007aff);
-            --accent-text: var(--tg-theme-button-text-color, #ffffff);
+            --bg-color: #0f2b1d; /* Темно-зеленый сукно */
+            --card-bg: #1a402d;
+            --text-color: #ffffff;
+            --red: #ff3b30;
+            --black: #1c1c1e;
+            --green: #34c759;
+            --gold: #ffd700;
         }
 
         body {
@@ -19,22 +21,296 @@
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            padding-bottom: 80px; /* Место для меню */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        /* Верхняя панель ресурсов */
+        /* Баланс */
         .header {
-            position: sticky;
-            top: 0;
-            background-color: var(--bg-color);
-            padding: 15px;
+            width: 100%;
             display: flex;
-            justify-content: space-around;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            z-index: 10;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-sizing: border-box;
+        }
+        .balance { font-size: 24px; font-weight: bold; color: var(--gold); }
+        .label { font-size: 12px; opacity: 0.7; }
+
+        /* Колесо / Результат */
+        .wheel-container {
+            width: 150px;
+            height: 150px;
+            background: #222;
+            border-radius: 50%;
+            border: 5px solid #d4af37;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            font-size: 48px;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .wheel-number {
+            z-index: 2;
+        }
+
+        /* Анимация вращения */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 0.5s linear infinite;
+            border-color: var(--gold);
+            border-style: dashed;
+        }
+
+        /* Поле ставки */
+        .bet-input-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        input:focus { outline: 2px solid var(--gold); }
+
+        /* Кнопки ставок */
+        .bet-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 20px 0;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-red { background-color: var(--red); box-shadow: 0 4px 0 #b02a22; }
+        .btn-green { background-color: var(--green); box-shadow: 0 4px 0 #248a3d; }
+        .btn-black { background-color: var(--black); box-shadow: 0 4px 0 #000; }
+
+        .multiplier { font-size: 10px; opacity: 0.8; margin-top: 4px; }
+
+        /* История */
+        .history {
+            margin-top: 30px;
+            display: flex;
+            gap: 5px;
+        }
+        .history-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <div class="label">БАЛАНС</div>
+            <div class="balance" id="balance">100</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="label">ID ИГРОКА</div>
+            <div id="user-id">...</div>
+        </div>
+    </div>
+
+    <div class="wheel-container" id="wheel">
+        <span class="wheel-number" id="result-num">?</span>
+    </div>
+
+    <div class="bet-input-container">
+        <div class="label" style="margin-bottom: 5px;">Сумма ставки:</div>
+        <input type="number" id="bet-amount" value="10" min="1">
+    </div>
+
+    <div class="bet-buttons">
+        <button class="btn btn-red" onclick="placeBet('red')" id="btn-red">
+            КРАСНОЕ
+            <span class="multiplier">x2</span>
+        </button>
+        <button class="btn btn-green" onclick="placeBet('green')" id="btn-green">
+            ZERO
+            <span class="multiplier">x36</span>
+        </button>
+        <button class="btn btn-black" onclick="placeBet('black')" id="btn-black">
+            ЧЕРНОЕ
+            <span class="multiplier">x2</span>
+        </button>
+    </div>
+
+    <div class="history" id="history">
+        <!-- История выпадений -->
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Данные пользователя
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('user-id').innerText = user ? user.id : 'Guest';
+
+        // Состояние
+        let balance = 100;
+        let isSpinning = false;
+
+        // Загрузка баланса (пока локально)
+        const savedBalance = localStorage.getItem('casino_balance');
+        if (savedBalance) {
+            balance = parseInt(savedBalance);
+            updateBalance();
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').innerText = balance;
+            localStorage.setItem('casino_balance', balance);
+        }
+
+        function getRandomNumber() {
+            return Math.floor(Math.random() * 37); // 0 - 36
+        }
+
+        function getColor(num) {
+            if (num === 0) return 'green';
+            // В рулетке сложная схема цветов, упростим для MVP:
+            // 1-10 и 19-28: нечетные красные
+            // 11-18 и 29-36: нечетные черные
+            // Но для простого кода сделаем так:
+            const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+            return redNumbers.includes(num) ? 'red' : 'black';
+        }
+
+        function addToHistory(num, color) {
+            const historyEl = document.getElementById('history');
+            const dot = document.createElement('div');
+            dot.className = 'history-dot';
+            dot.style.backgroundColor = color === 'red' ? '#ff3b30' : (color === 'green' ? '#34c759' : '#1c1c1e');
+            dot.innerText = num;
+            
+            historyEl.prepend(dot);
+            if (historyEl.children.length > 10) {
+                historyEl.lastChild.remove();
+            }
+        }
+
+        function placeBet(choice) {
+            if (isSpinning) return;
+
+            const betInput = document.getElementById('bet-amount');
+            const betAmount = parseInt(betInput.value);
+
+            if (isNaN(betAmount) || betAmount <= 0) {
+                tg.showAlert("Введите нормальную сумму!");
+                return;
+            }
+            if (betAmount > balance) {
+                tg.showAlert("Недостаточно средств!");
+                return;
+            }
+
+            // Списываем ставку
+            balance -= betAmount;
+            updateBalance();
+
+            // Блокируем кнопки
+            isSpinning = true;
+            document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+            
+            // Анимация
+            const wheel = document.getElementById('wheel');
+            const resultNum = document.getElementById('result-num');
+            
+            wheel.classList.add('spinning');
+            resultNum.innerText = "";
+            tg.HapticFeedback.impactOccurred('light');
+
+            // Результат через 1.5 секунды
+            setTimeout(() => {
+                wheel.classList.remove('spinning');
+                
+                const num = getRandomNumber();
+                const color = getColor(num);
+                
+                // Отображаем результат
+                resultNum.innerText = num;
+                wheel.style.backgroundColor = color === 'red' ? '#ff3b30' : (color === 'green' ? '#34c759' : '#1c1c1e');
+                
+                // Проверка выигрыша
+                let won = false;
+                let winAmount = 0;
+
+                if (choice === color) {
+                    won = true;
+                    if (choice === 'green') {
+                        winAmount = betAmount * 36;
+                    } else {
+                        winAmount = betAmount * 2;
+                    }
+                }
+
+                if (won) {
+                    balance += winAmount;
+                    tg.showAlert(`Выпало ${num} (${color.toUpperCase()}).\nВы выиграли ${winAmount}!`);
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+
+                addToHistory(num, color);
+                updateBalance();
+
+                // Разблокируем
+                isSpinning = false;
+                document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+
+            }, 1500);
+        }
+    </script>
+</body>
+</html>            z-index: 10;
         }
 
         .res-item {
