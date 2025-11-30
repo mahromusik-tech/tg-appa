@@ -1,11 +1,11 @@
 <?php
-/ --- ЛЕЧИМ CORS (Разрешаем доступ отовсюду) ---
+// Разрешаем запросы с любого источника (для тестов)
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 
-// Если браузер просто спрашивает "можно ли?", отвечаем "можно" и выходим
-if ($_SERVER['REQUEST METHOD'] === 'OPTIONS') {
+// Если браузер отправил предварительный запрос OPTIONS, завершаем работу
+if ($_SERVER['REQUEST METHOD'] == 'OPTIONS') {
     http_response_code(200);
     exit;
 }
