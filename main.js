@@ -1,61 +1,81 @@
-// Глобальный объект игры
 window.Game = {
     tg: window.Telegram.WebApp,
-    balance: 100,
     user: null,
+    // Данные текущего игрока
+    data: {
+        balance: 100,
+        gamesPlayed: 0,
+        wins: 0,
+        totalProfit: 0,
+        isBanned: false
+    },
+    // Глобальный флаг подкрутки: 'none', 'win', 'lose'
+    rigMode: 'none',
 
     init: function() {
         this.tg.expand();
-        this.user = this.tg.initDataUnsafe.user || { first_name: 'Test User' };
-        document.getElementById('username').innerText = this.user.first_name;
+        // Имитация данных пользователя
+        this.user = this.tg.initDataUnsafe.user || { id: 111111, first_name: 'Test User', username: 'tester' };
         
-        this.loadBalance();
-        
+        // Загрузка данных
+        this.loadData();
+
         // Инициализация модулей
         if(this.Roulette) this.Roulette.init();
-        if(this.Mines) this.Mines.init();
+        if(this.Profile) this.Profile.init();
+        if(this.Admin) this.Admin.checkAccess();
     },
 
-    loadBalance: function() {
-        this.tg.CloudStorage.getItem('balance', (err, value) => {
-            if (!err && value) {
-                this.balance = parseFloat(value);
-            } else {
-                this.saveBalance(100); // Стартовый баланс
-            }
-            this.updateUI();
-        });
-    },
-
-    saveBalance: function(newVal) {
-        this.balance = newVal;
-        this.tg.CloudStorage.setItem('balance', newVal.toString(), (err) => {
-            if (err) console.error('Save error', err);
-        });
+    loadData: function() {
+        // В реальном приложении здесь запрос к серверу
+        const saved = localStorage.getItem(`user_${this.user.id}`);
+        if(saved) {
+            this.data = JSON.parse(saved);
+        } else {
+            this.saveData(); // Сохраняем дефолт
+        }
+        
+        if(this.data.isBanned) {
+            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:50px;">АККАУНТ ЗАБЛОКИРОВАН</h1>';
+            throw new Error("Banned");
+        }
         this.updateUI();
     },
 
+    saveData: function() {
+        localStorage.setItem(`user_${this.user.id}`, JSON.stringify(this.data));
+        this.updateUI();
+        if(this.Profile) this.Profile.render();
+    },
+
+    updateBalance: function(amount, isWin) {
+        this.data.balance += amount;
+        this.data.gamesPlayed++;
+        if(amount > 0) {
+            this.data.wins++;
+            this.data.totalProfit += amount;
+        } else {
+            this.data.totalProfit -= Math.abs(amount);
+        }
+        this.saveData();
+    },
+
     updateUI: function() {
-        document.getElementById('balance').innerText = Math.floor(this.balance);
+        // Обновляем баланс везде, где он есть
+        const els = document.querySelectorAll('#balance, #p-balance');
+        els.forEach(el => el.innerText = Math.floor(this.data.balance));
     },
 
-    nav: function(screenName, btn) {
+    nav: function(screen, btn) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(`screen-${screenName}`).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(btn) btn.classList.add('active');
+        document.getElementById(`screen-${screen}`).classList.add('active');
+        if(btn) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            btn.classList.add('active');
+        }
     },
 
-    showAlert: function(msg) {
-        this.tg.showAlert(msg);
-    },
-    
-    haptic: function(type) {
-        if(type === 'success') this.tg.HapticFeedback.notificationOccurred('success');
-        else if(type === 'error') this.tg.HapticFeedback.notificationOccurred('error');
-        else this.tg.HapticFeedback.impactOccurred('light');
-    }
+    showAlert: function(msg) { this.tg.showAlert(msg); }
 };
 
-// Запуск при загрузке
 document.addEventListener('DOMContentLoaded', () => Game.init());
