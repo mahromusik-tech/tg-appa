@@ -1,96 +1,117 @@
-Game.Roulette = {
+const Roulette = {
     isSpinning: false,
-    cardWidth: 60,
-    wheelPattern: [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4], // 15 чисел
-
+    order: [0, 11, 5, 10, 6, 9, 7, 8, 1, 14, 2, 13, 3, 12, 4], // Классический порядок
+    colors: {
+        0: 'green',
+        1: 'red', 2: 'black', 3: 'red', 4: 'black', 5: 'red', 6: 'black', 7: 'red',
+        8: 'black', 9: 'red', 10: 'black', 11: 'black', 12: 'red', 13: 'black', 14: 'red'
+    },
+    
     init: function() {
-        this.generateStrip();
+        this.renderStrip();
     },
 
-    generateStrip: function() {
-        const strip = document.getElementById('strip');
+    renderStrip: function() {
+        const strip = document.getElementById('roulette-strip');
         let html = '';
-        // Генерируем 20 повторений паттерна (достаточно длинная лента)
-        for(let i=0; i<20; i++) { 
-            this.wheelPattern.forEach(num => {
-                let color = (num === 0) ? 'bg-green' : (num % 2 === 0 ? 'bg-red' : 'bg-black');
-                html += `<div class="r-card ${color}">${num}</div>`;
+        // Генерируем длинную ленту для анимации (повторяем паттерн)
+        for(let i=0; i<100; i++) {
+            this.order.forEach(num => {
+                let colorClass = `bg-${this.colors[num]}`;
+                html += `<div class="r-cell ${colorClass}">${num}</div>`;
             });
         }
         strip.innerHTML = html;
     },
 
-    spin: function(choice) {
+    spin: function(choiceColor) {
         if(this.isSpinning) return;
-        const bet = parseInt(document.getElementById('r-bet').value);
-        if(bet > Game.data.balance || bet <= 0) return Game.showAlert("Ошибка ставки");
+        
+        const bet = parseInt(document.getElementById('roulette-bet').value);
+        if(isNaN(bet) || bet <= 0) return App.showAlert("Неверная ставка");
+        if(bet > App.state.balance) return App.showAlert("Недостаточно средств");
 
-        Game.updateBalance(-bet, false); // Списываем
+        App.updateBalance(-bet, false);
         this.isSpinning = true;
 
-        // 1. ОПРЕДЕЛЯЕМ РЕЗУЛЬТАТ (Логика + Подкрутка)
-        let winNum;
+        // 1. Определяем результат (RTP)
+        let resultNum = this.getResult(bet, choiceColor);
         
-        // Если включена подкрутка
-        if (Game.rigMode === 'lose') {
-            // Генерируем число, цвет которого НЕ совпадает с выбором игрока
-            do {
-                winNum = Math.floor(Math.random() * 15);
-                let color = (winNum === 0) ? 'green' : (winNum % 2 === 0 ? 'red' : 'black');
-            } while (color === choice); // Ищем пока не найдем проигрышный
-        } else if (Game.rigMode === 'win') {
-            // Генерируем число, цвет которого СОВПАДАЕТ
-             do {
-                winNum = Math.floor(Math.random() * 15);
-                let color = (winNum === 0) ? 'green' : (winNum % 2 === 0 ? 'red' : 'black');
-            } while (color !== choice);
-        } else {
-            // Честный рандом
-            winNum = Math.floor(Math.random() * 15);
+        // 2. Вычисляем позицию для анимации
+        // Ширина ячейки ~60px. Находим этот номер где-то далеко в ленте (например, после 50-го повтора)
+        const cellSize = 60; 
+        const offsetInPattern = this.order.indexOf(resultNum);
+        const loops = 50 + Math.floor(Math.random() * 10); // Случайное кол-во оборотов
+        const targetIndex = (loops * 15) + offsetInPattern;
+        
+        // Добавляем случайный сдвиг внутри ячейки (чтобы стрелка не всегда была по центру)
+        const randomOffset = Math.floor(Math.random() * 40) - 20; 
+        
+        const pixelOffset = (targetIndex * cellSize) + (cellSize / 2) + randomOffset;
+        
+        // 3. Запуск анимации
+        const strip = document.getElementById('roulette-strip');
+        // Центр контейнера (ширина экрана / 2)
+        const centerScreen = strip.parentElement.offsetWidth / 2;
+        const finalTranslate = -(pixelOffset - centerScreen);
+
+        strip.style.transition = "transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)";
+        strip.style.transform = `translateX(${finalTranslate}px)`;
+
+        // 4. Завершение
+        setTimeout(() => {
+            this.finish(resultNum, choiceColor, bet);
+        }, 4000);
+    },
+
+    getResult: function(bet, choice) {
+        // Простой рандом
+        let r = Math.floor(Math.random() * 15); // 0-14
+        let num = this.order[r];
+        let color = this.colors[num];
+
+        // RTP проверка
+        let winMult = (color === 'green') ? 14 : 2;
+        let potentialWin = bet * winMult;
+
+        // Если игрок угадал, но RTP против
+        if (color === choice && !App.checkRtp(potentialWin)) {
+            // Сдвигаем результат на 1 позицию (меняем цвет)
+            let idx = this.order.indexOf(num);
+            num = this.order[(idx + 1) % 15];
         }
 
-        // 2. ВИЗУАЛИЗАЦИЯ (Едем к конкретному числу)
-        // Находим это число в ленте где-то далеко (например, в 10-м повторении паттерна)
-        // Индекс числа в паттерне:
-        const patternIdx = this.wheelPattern.indexOf(winNum);
-        // Глобальный индекс карточки (15 чисел * 10 кругов + смещение)
-        // Добавляем рандомное кол-во полных кругов (от 8 до 12), чтобы каждый раз разное расстояние
-        const rounds = 8 + Math.floor(Math.random() * 4);
-        const targetIndex = (15 * rounds) + patternIdx;
+        return num;
+    },
 
-        // Считаем пиксели
-        const wrapperW = document.querySelector('.roulette-wrapper').offsetWidth;
-        // Центрируем карточку: (индекс * ширина) - пол_экрана + пол_карточки
-        // Добавляем микро-сдвиг внутри карточки (+/- 20px) для реализма
-        const randomOffset = Math.floor(Math.random() * 40) - 20;
-        const pixelOffset = (targetIndex * this.cardWidth) - (wrapperW / 2) + (this.cardWidth / 2) + randomOffset;
+    finish: function(num, choice, bet) {
+        this.isSpinning = false;
+        const strip = document.getElementById('roulette-strip');
+        strip.style.transition = "none";
+        strip.style.transform = "translateX(0px)"; // Сброс (визуально можно доработать)
+        
+        const resultColor = this.colors[num];
+        let win = 0;
 
-        const strip = document.getElementById('strip');
-        strip.style.transition = "transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)";
-        strip.style.transform = `translateX(-${pixelOffset}px)`;
+        if(resultColor === choice) {
+            let mult = (choice === 'green') ? 14 : 2;
+            win = bet * mult;
+            App.updateBalance(win, true);
+            App.showAlert(`Победа! +${win}`);
+        } else {
+            App.updateBalance(0, false); // Запись луза
+        }
 
-        setTimeout(() => {
-            this.isSpinning = false;
-            
-            // Проверка победы
-            let winColor = (winNum === 0) ? 'green' : (winNum % 2 === 0 ? 'red' : 'black');
-            let multiplier = (winColor === 'green') ? 14 : 2;
+        this.addToHistory(num, resultColor);
+    },
 
-            if(choice === winColor) {
-                const winAmount = bet * multiplier;
-                Game.updateBalance(winAmount, true); // Начисляем выигрыш
-                Game.showAlert(`Выпало ${winNum}! Победа +${winAmount}`);
-            }
-
-            // История
-            const h = document.getElementById('history');
-            h.innerHTML = `<span style="color:${winColor}; margin-right:5px;">${winNum}</span>` + h.innerHTML;
-
-            // Сброс ленты (хитрый трюк)
-            // Чтобы лента не уезжала в бесконечность, мы тихо возвращаем её назад,
-            // но так, чтобы визуально позиция не изменилась (находим такой же номер ближе к началу)
-            // Но для простоты здесь просто оставим как есть, или сбросим при следующем спине.
-            
-        }, 4000);
+    addToHistory: function(num, color) {
+        const h = document.getElementById('roulette-history');
+        const badge = document.createElement('span');
+        badge.className = `crash-badge bg-${color}`; // Используем стили crash-badge для простоты
+        badge.style.marginRight = '5px';
+        badge.innerText = num;
+        h.prepend(badge);
+        if(h.children.length > 10) h.lastChild.remove();
     }
 };
