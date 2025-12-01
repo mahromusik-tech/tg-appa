@@ -111,7 +111,6 @@
             display: flex; justify-content: space-between; padding: 15px;
             background: var(--card-bg); margin-bottom: 2px;
         }
-        .loader { text-align: center; padding: 20px; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -164,8 +163,8 @@
             <h2 id="username">Игрок</h2>
             <p style="opacity: 0.5; font-size: 12px;" id="userid">ID: ...</p>
         </div>
-        <div class="stat-row"><span>Баланс (Server)</span><span style="color: var(--accent); font-weight: bold;" id="profile-balance">...</span></div>
-        <div style="text-align:center; margin-top:20px; opacity:0.5; font-size:12px">Данные синхронизированы с БД</div>
+        <div class="stat-row"><span>Баланс (Cloud)</span><span style="color: var(--accent); font-weight: bold;" id="profile-balance">...</span></div>
+        <div style="text-align:center; margin-top:20px; opacity:0.5; font-size:12px">Данные хранятся в Telegram Cloud</div>
     </div>
 
     <!-- НАВИГАЦИЯ -->
@@ -176,71 +175,50 @@
     </div>
 
     <script>
-        // !!! ВСТАВЬ СЮДА ССЫЛКУ НА ТВОЙ ФАЙЛ API.PHP !!!
-        const API_URL = 'http://f1198077.xsph.ru/api.php'; 
-
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Данные пользователя
         const user = tg.initDataUnsafe.user || { id: 111111, first_name: 'Test User' };
-        let currentBalance = 0;
+        let currentBalance = 100; // Баланс по умолчанию, пока не загрузим
         let isSpinning = false;
 
-        // --- СЕТЬ ---
-       async function apiRequest(action, data = {}) {
-    try {
-        // Показываем, куда стучимся (для проверки)
-        // alert("Запрос к: " + new URL(API_URL, window.location.href).href);
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-               action: action,
-               tg_id: user.id,
-                username: user.first_name,
-            ...data
-            }) 
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ошибка! Статус: ${response.status}`);
+        // --- CLOUD STORAGE (Вместо базы данных) ---
+        
+        function loadBalance() {
+            // Запрашиваем ключ 'balance' из облака
+            tg.CloudStorage.getItem('balance', (err, value) => {
+                if (err) {
+                    console.error("Ошибка загрузки:", err);
+                    // Если ошибка, оставляем 100
+                } else if (value) {
+                    // Если значение есть, превращаем его в число
+                    currentBalance = parseInt(value);
+                } else {
+                    // Если значения нет (первый раз), сохраняем 100
+                    saveBalance(100);
+                }
+                updateUI();
+            });
         }
 
-        // Проверяем, что нам вернулся именно JSON, а не ошибка PHP в виде HTML
-        const text = await response.text();
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            throw new Error("Сервер вернул не JSON: " + text.substring(0, 100));
+        function saveBalance(newVal) {
+            // Сохраняем число как строку
+            tg.CloudStorage.setItem('balance', newVal.toString(), (err, stored) => {
+                if (err) console.error("Ошибка сохранения:", err);
+            });
         }
 
-    } catch (e) {
-        // ВОТ ЭТО ПОКАЖЕТ ВАМ ОШИБКУ НА ЭКРАНЕ ТЕЛЕФОНА
-        tg.showAlert("Ошибка: " + e.message);
-        return null;
-    }
-}
-
-        async function initGame() {
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function initGame() {
             document.getElementById('username').innerText = user.first_name;
             document.getElementById('userid').innerText = `ID: ${user.id}`;
             
-            // Загрузка баланса с сервера
-            const res = await apiRequest('get_user');
-            if (res && res.balance !== undefined) {
-                currentBalance = res.balance;
-                updateUI();
-            }
+            loadBalance(); // Загружаем баланс при старте
             generateStrip();
         }
 
-        async function syncBalance() {
-            // Отправляем новый баланс на сервер
-            await apiRequest('update_balance', { balance: currentBalance });
-        }
-
-        // --- ИГРА ---
+        // --- ИГРОВАЯ ЛОГИКА ---
         const CARD_WIDTH = 60;
 
         function generateStrip() {
@@ -262,7 +240,9 @@
             if(bet > currentBalance) return tg.showAlert("Не хватает денег");
 
             currentBalance -= bet;
+            saveBalance(currentBalance); // Сохраняем списание
             updateUI();
+            
             isSpinning = true;
             tg.HapticFeedback.impactOccurred('light');
 
@@ -298,8 +278,7 @@
                     tg.HapticFeedback.notificationOccurred('error');
                 }
 
-                // Сохраняем на сервер
-                syncBalance();
+                saveBalance(currentBalance); // Сохраняем результат
                 updateUI();
 
                 // История
@@ -334,7 +313,7 @@
             }
         }
 
-        // Запуск        // Запуск
+        // Запуск
         initGame();
     </script>
 </body>
