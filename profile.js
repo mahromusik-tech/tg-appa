@@ -1,20 +1,19 @@
-Game.Profile = {
-    init: function() {
-        this.render();
-    },
+const Profile = {
     render: function() {
-        const u = Game.user;
-        const d = Game.data;
-        
-        document.getElementById('p-name').innerText = u.first_name;
-        document.getElementById('p-id').innerText = `ID: ${u.id}`;
-        document.getElementById('p-balance').innerText = Math.floor(d.balance);
-        document.getElementById('p-games').innerText = d.gamesPlayed;
-        document.getElementById('p-wins').innerText = d.wins;
-        document.getElementById('p-profit').innerText = d.totalProfit;
+        const s = App.state;
+        const u = App.user;
 
+        // Аватар и имя
         if(u.photo_url) {
             document.getElementById('p-avatar').style.backgroundImage = `url(${u.photo_url})`;
         }
+        document.getElementById('p-name').innerText = u.first_name;
+        document.getElementById('p-id').innerText = `ID: ${u.id}`;
+
+        // Статистика
+        document.getElementById('p-balance').innerText = Math.floor(s.balance);
+        document.getElementById('p-games').innerText = s.gamesPlayed;
+        document.getElementById('p-wins').innerText = s.wins;
+        document.getElementById('p-loses').innerText = s.loses;
     }
 };
