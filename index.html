@@ -3,131 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TG Mini App Casino</title>
+    <title>Casino Admin Update</title>
     <style>
-        :root { --bg: #1c1c1e; --card: #2c2c2e; --text: #fff; --green: #34c759; --red: #ff3b30; --black: #1a1a1a; --accent: #0a84ff; }
-        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; padding-bottom: 80px; }
+        :root { --bg: #1c1c1e; --card: #2c2c2e; --text: #fff; --green: #34c759; --red: #ff3b30; --accent: #0a84ff; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: sans-serif; padding-bottom: 80px; user-select: none; }
         
-        /* Header */
-        .header { padding: 20px; background: var(--card); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-        .balance-box { font-size: 18px; font-weight: bold; color: var(--green); }
-        
-        /* Screens */
+        /* Common */
         .screen { display: none; padding: 20px; animation: fadeIn 0.3s; }
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; color: #fff; }
+        .btn-primary { background: var(--accent); }
+        .btn-danger { background: var(--red); }
+        .btn-success { background: var(--green); }
+        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
 
-        /* Controls */
-        .control-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; }
-        input[type="number"], select { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; }
-        .btn-primary { background: var(--accent); color: #fff; }
-        .btn-red { background: var(--red); color: #fff; }
-        .btn-black { background: #444; color: #fff; }
-        .btn-green { background: var(--green); color: #fff; }
-        .btn:active { transform: scale(0.96); }
+        /* Profile Styles */
+        .profile-header { text-align: center; margin-bottom: 30px; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #444; margin: 0 auto 10px; background-size: cover; border: 2px solid var(--accent); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--card); padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-val { font-size: 20px; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 12px; color: #888; }
 
-        /* Roulette Specific */
+        /* Admin Styles */
+        .admin-badge { background: #ffcc00; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; vertical-align: middle; }
+        .admin-section { background: #252525; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        .admin-section h4 { margin: 0 0 10px 0; color: #aaa; }
+        .user-result { background: #333; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px; }
+
+        /* Roulette & Mines (Simplified for brevity, same as before) */
         .roulette-wrapper { overflow: hidden; position: relative; height: 80px; background: #000; border-radius: 10px; margin-bottom: 20px; border: 2px solid #gold; }
-        .selector { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #fff; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 10px #fff; }
+        .selector { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #fff; transform: translateX(-50%); z-index: 10; }
         .strip { display: flex; height: 100%; align-items: center; will-change: transform; }
-        .r-card { min-width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; border-right: 1px solid rgba(0,0,0,0.5); color: #fff; }
-        .bg-red { background: var(--red); } .bg-black { background: var(--black); } .bg-green { background: var(--green); }
-        .history { display: flex; gap: 5px; overflow-x: auto; padding: 10px 0; height: 30px; }
-        .bet-buttons { display: flex; gap: 10px; }
-
-        /* Mines Specific */
-        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
-        .mine-cell { aspect-ratio: 1; background: var(--card); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .r-card { min-width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; color: #fff; }
+        .bg-red { background: var(--red); } .bg-black { background: #1a1a1a; } .bg-green { background: var(--green); }
+        
+        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .mine-cell { aspect-ratio: 1; background: var(--card); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; }
         .mine-cell.active { background: #3a3a3c; }
-        .mine-cell.revealed-gem { background: rgba(52, 199, 89, 0.2); border-color: var(--green); }
-        .mine-cell.revealed-mine { background: rgba(255, 59, 48, 0.2); border-color: var(--red); }
-        .mines-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #aaa; }
+        .mine-cell.revealed-gem { background: rgba(52, 199, 89, 0.2); border: 1px solid var(--green); }
+        .mine-cell.revealed-mine { background: rgba(255, 59, 48, 0.2); border: 1px solid var(--red); }
 
-        /* Navigation */
+        /* Nav */
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0 20px; border-top: 1px solid #333; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 12px; cursor: pointer; }
         .nav-item.active { color: var(--accent); }
         .nav-icon { font-size: 24px; margin-bottom: 4px; }
-        
-        /* Coming Soon */
-        .coming-soon { text-align: center; padding: 50px 20px; color: #666; }
-        .coming-soon h2 { color: #fff; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <div id="username">Player</div>
-        <div class="balance-box">💰 <span id="balance">0</span></div>
-    </div>
-
     <!-- Screen: Roulette -->
     <div id="screen-roulette" class="screen active">
-        <h3>🎰 Рулетка (Margin)</h3>
-        <div class="roulette-wrapper">
-            <div class="selector"></div>
-            <div class="strip" id="strip"></div>
-        </div>
-        <div class="history" id="history"></div>
-
-        <div class="control-panel">
-            <input type="number" id="r-bet" placeholder="Ставка" value="10">
-            <div class="bet-buttons">
-                <button class="btn btn-red" onclick="Game.Roulette.spin('red')">x1.9</button>
-                <button class="btn btn-green" onclick="Game.Roulette.spin('green')">x13</button>
-                <button class="btn btn-black" onclick="Game.Roulette.spin('black')">x1.9</button>
-            </div>
+        <h3>🎰 Рулетка</h3>
+        <div class="roulette-wrapper"><div class="selector"></div><div class="strip" id="strip"></div></div>
+        <div id="history" style="height: 25px; overflow: hidden; margin-bottom: 10px;"></div>
+        <input type="number" id="r-bet" placeholder="Ставка" value="10">
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-danger" onclick="Game.Roulette.spin('red')">Red x2</button>
+            <button class="btn btn-success" onclick="Game.Roulette.spin('green')">Zero x14</button>
+            <button class="btn" style="background:#333" onclick="Game.Roulette.spin('black')">Black x2</button>
         </div>
     </div>
 
     <!-- Screen: Mines -->
     <div id="screen-mines" class="screen">
         <h3>💣 Мины</h3>
-        <div class="mines-info">
-            <span id="mines-next-coeff">След: x1.00</span>
-            <span id="mines-current-win">Выигрыш: 0</span>
-        </div>
-        <div class="mines-grid" id="mines-grid">
-            <!-- Generated by JS -->
-        </div>
-        <div class="control-panel">
-            <div id="mines-controls">
-                <select id="mines-count">
-                    <option value="1">1 Мина</option>
-                    <option value="3" selected>3 Мины</option>
-                    <option value="5">5 Мин</option>
-                    <option value="10">10 Мин</option>
-                    <option value="20">20 Мин</option>
-                </select>
-                <input type="number" id="m-bet" placeholder="Ставка" value="10">
-                <button class="btn btn-primary" onclick="Game.Mines.startGame()">Играть</button>
-            </div>
-            <button class="btn btn-green" id="mines-cashout" style="display:none;" onclick="Game.Mines.cashout()">Забрать</button>
+        <div class="mines-grid" id="mines-grid"></div>
+        <div style="margin-top: 20px;">
+            <select id="mines-count"><option value="3">3 Мины</option><option value="5">5 Мин</option><option value="10">10 Мин</option></select>
+            <input type="number" id="m-bet" placeholder="Ставка" value="10">
+            <button class="btn btn-primary" id="mines-btn" onclick="Game.Mines.startGame()">Играть</button>
         </div>
     </div>
 
-    <!-- Screen: Crash (Coming Soon) -->
-    <div id="screen-crash" class="screen">
-        <div class="coming-soon">
-            <h2>🚀 Crash</h2>
-            <p>Режим в разработке...</p>
-            <p>Скоро вы сможете улететь на луну!</p>
+    <!-- Screen: Profile -->
+    <div id="screen-profile" class="screen">
+        <div class="profile-header">
+            <div class="avatar" id="p-avatar"></div>
+            <h2 id="p-name">User</h2>
+            <div style="color:#888" id="p-id">ID: 000000</div>
         </div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-val" id="p-balance">0</div><div class="stat-label">Баланс</div></div>
+            <div class="stat-card"><div class="stat-val" id="p-games">0</div><div class="stat-label">Игр сыграно</div></div>
+            <div class="stat-card"><div class="stat-val" id="p-wins">0</div><div class="stat-label">Побед</div></div>
+            <div class="stat-card"><div class="stat-val" id="p-profit">0</div><div class="stat-label">Общий профит</div></div>
+        </div>
+        <button class="btn btn-danger" style="margin-top: 30px;" onclick="Game.Admin.openPanel()" id="admin-btn" hidden>🔐 Админ Панель</button>
+    </div>
+
+    <!-- Screen: Admin -->
+    <div id="screen-admin" class="screen">
+        <h3>🛠 Админ Панель</h3>
+        
+        <div class="admin-section">
+            <h4>🔍 Управление пользователем</h4>
+            <input type="text" id="adm-search-id" placeholder="Введите ID пользователя">
+            <button class="btn btn-primary" onclick="Game.Admin.searchUser()">Найти</button>
+            
+            <div id="adm-user-result" class="user-result" style="display:none;">
+                <div>Имя: <span id="adm-res-name"></span></div>
+                <div>Баланс: <span id="adm-res-balance"></span></div>
+                <input type="number" id="adm-set-balance" placeholder="Новый баланс" style="margin-top:5px;">
+                <button class="btn btn-success" onclick="Game.Admin.updateBalance()">Выдать баланс</button>
+                <button class="btn btn-danger" onclick="Game.Admin.banUser()">⛔ Заблокировать</button>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h4>🎲 Подкрутка (Rigging)</h4>
+            <select id="adm-rig-mode" onchange="Game.Admin.setRigMode(this.value)">
+                <option value="none">Честная игра</option>
+                <option value="lose">Режим слива (LOSE)</option>
+                <option value="win">Режим заноса (WIN)</option>
+            </select>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">Влияет на все игры</div>
+        </div>
+
+        <button class="btn" style="background: #333;" onclick="Game.nav('profile')">Назад</button>
     </div>
 
     <!-- Navigation -->
     <div class="nav">
         <div class="nav-item active" onclick="Game.nav('roulette', this)"><span class="nav-icon">🎰</span><span>Рулетка</span></div>
         <div class="nav-item" onclick="Game.nav('mines', this)"><span class="nav-icon">💣</span><span>Мины</span></div>
-        <div class="nav-item" onclick="Game.nav('crash', this)"><span class="nav-icon">🚀</span><span>Crash</span></div>
+        <div class="nav-item" onclick="Game.nav('profile', this)"><span class="nav-icon">👤</span><span>Профиль</span></div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="./main.js"></script>
-    <script src="./roulette.js"></script>
-    <script src="./mines.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/roulette.js"></script>
+    <script src="js/mines.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
