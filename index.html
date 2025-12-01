@@ -3,140 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Telegram Casino</title>
+    <title>Casino TGA</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
-    <!-- ГЛОБАЛЬНАЯ ШАПКА С БАЛАНСОМ -->
+    <!-- ЭКРАН БАНА -->
+    <div id="banned-screen" style="display: none;">
+        <div class="ban-content">
+            <h1>⛔</h1>
+            <h2>ВЫ ЗАБЛОКИРОВАНЫ</h2>
+            <p>Обратитесь к администратору.</p>
+        </div>
+    </div>
+
+    <!-- ГЛОБАЛЬНАЯ ШАПКА -->
     <header class="global-header">
         <div class="balance-box">
-            💰 <span id="global-balance">0</span>
+            <span class="currency">RUB</span> <span id="global-balance">0</span>
         </div>
         <div class="user-mini">
-            <span id="header-username">User</span>
+            <span id="header-username">...</span>
         </div>
     </header>
 
     <div id="app">
-        <!-- 1. ЛОББИ (Список игр) -->
+        <!-- 1. ЛОББИ -->
         <div id="tab-lobby" class="tab active">
-            <h2>🔥 Игры</h2>
-            <div class="game-card" onclick="Game.nav('slots')">
-                <div class="icon">🎰</div>
-                <div class="title">Slots 777</div>
+            <div class="banner">
+                <h3>Добро пожаловать!</h3>
+                <p>Выбирай игру и побеждай.</p>
             </div>
-            <div class="game-card" onclick="Game.nav('mines')">
-                <div class="icon">💣</div>
-                <div class="title">Mines</div>
-            </div>
-            <div class="game-card" onclick="Game.nav('crash')">
-                <div class="icon">🚀</div>
-                <div class="title">Crash</div>
+            
+            <h2 class="section-title">Игры</h2>
+            
+            <div class="games-grid">
+                <div class="game-card" onclick="Game.nav('mines')">
+                    <div class="icon">💣</div>
+                    <div class="meta">
+                        <div class="title">Mines</div>
+                        <div class="desc">Сапер на деньги</div>
+                    </div>
+                </div>
+                <div class="game-card" onclick="Game.nav('crash')">
+                    <div class="icon">🚀</div>
+                    <div class="meta">
+                        <div class="title">Crash</div>
+                        <div class="desc">Успей забрать</div>
+                    </div>
+                </div>
+                <div class="game-card" onclick="Game.nav('slots')">
+                    <div class="icon">🎰</div>
+                    <div class="meta">
+                        <div class="title">Slots</div>
+                        <div class="desc">Классика 777</div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- 2. SLOTS -->
         <div id="tab-slots" class="tab">
-            <button class="back-btn" onclick="Game.nav('lobby')">⬅ Назад</button>
-            <h2>Slots 777</h2>
-            <div class="slot-machine">
-                <div class="reel" id="reel1">❓</div>
-                <div class="reel" id="reel2">❓</div>
-                <div class="reel" id="reel3">❓</div>
+            <div class="game-header">
+                <button class="back-btn" onclick="Game.nav('lobby')">✕</button>
+                <h2>Slots</h2>
             </div>
-            <div class="controls">
-                <input type="number" id="bet-amount" placeholder="Ставка" value="100">
-                <button onclick="Game.Slots.spin()">Крутить</button>
+            <div class="slot-machine">
+                <div class="reel-container">
+                    <div class="reel" id="reel1">🍒</div>
+                    <div class="reel" id="reel2">🍒</div>
+                    <div class="reel" id="reel3">🍒</div>
+                </div>
+            </div>
+            <div class="controls-area">
+                <input type="number" id="bet-amount" class="bet-input" placeholder="Сумма" value="100">
+                <button class="play-btn" onclick="Game.Slots.spin()">КРУТИТЬ</button>
             </div>
         </div>
 
         <!-- 3. MINES -->
         <div id="tab-mines" class="tab">
-            <button class="back-btn" onclick="Game.nav('lobby')">⬅ Назад</button>
-            <h2>Mines</h2>
-            <div class="mines-controls">
-                <input type="number" id="m-bet" placeholder="Ставка" value="100">
-                <select id="mines-count">
-                    <option value="3">3 мины</option>
-                    <option value="5">5 мин</option>
-                    <option value="10">10 мин</option>
-                    <option value="24">24 мины</option>
-                </select>
+            <div class="game-header">
+                <button class="back-btn" onclick="Game.nav('lobby')">✕</button>
+                <h2>Mines</h2>
             </div>
             
-            <!-- Инфо о следующем ходе -->
-            <div class="mines-info">
-                След. множитель: <span id="mines-next-x" style="color:#f1c40f">x1.00</span>
+            <div class="mines-stats">
+                <span>Коэф: <b id="mines-next-x" style="color:#00ff88">x1.00</b></span>
             </div>
 
             <div class="grid" id="mines-grid"></div>
-            <button id="mines-btn" class="main-btn" onclick="Game.Mines.startGame()">Играть</button>
+            
+            <div class="controls-area">
+                <div class="bet-row">
+                    <input type="number" id="m-bet" class="bet-input" placeholder="Сумма" value="100">
+                    <select id="mines-count" class="bet-select">
+                        <option value="3">3 мины</option>
+                        <option value="5">5 мин</option>
+                        <option value="10">10 мин</option>
+                        <option value="24">24 мины</option>
+                    </select>
+                </div>
+                <button id="mines-btn" class="play-btn" onclick="Game.Mines.startGame()">ИГРАТЬ</button>
+            </div>
         </div>
 
-        <!-- 4. CRASH (Новая игра) -->
+        <!-- 4. CRASH -->
         <div id="tab-crash" class="tab">
-            <button class="back-btn" onclick="Game.nav('lobby')">⬅ Назад</button>
-            <h2>Crash 🚀</h2>
+            <div class="game-header">
+                <button class="back-btn" onclick="Game.nav('lobby')">✕</button>
+                <h2>Crash</h2>
+            </div>
             <div class="crash-screen">
                 <div class="crash-graph">
                     <span id="crash-counter">1.00x</span>
                     <div id="crash-rocket">🚀</div>
                 </div>
             </div>
-            <div class="controls">
-                <input type="number" id="c-bet" placeholder="Ставка" value="100">
-                <button id="crash-btn" class="main-btn" onclick="Game.Crash.action()">Ставка</button>
+            <div class="controls-area">
+                <input type="number" id="c-bet" class="bet-input" placeholder="Сумма" value="100">
+                <button id="crash-btn" class="play-btn" onclick="Game.Crash.action()">СТАВКА</button>
             </div>
         </div>
 
         <!-- 5. PROFILE -->
         <div id="tab-profile" class="tab">
-            <h2>Профиль</h2>
-            <div class="profile-card">
+            <div class="profile-header">
                 <div id="p-avatar" class="avatar"></div>
-                <h3 id="p-name">Name</h3>
-                <!-- Секретная кнопка для админки: клик по ID -->
-                <p id="p-id" onclick="Game.Admin.secretClick()">ID: 000</p>
+                <div class="profile-info">
+                    <h3 id="p-name">User</h3>
+                    <p id="p-id">ID: 000</p>
+                </div>
             </div>
-            <div class="stats">
-                <div>Баланс: <span id="p-balance">0</span></div>
-                <div>Игр: <span id="p-games">0</span></div>
-                <div>Побед: <span id="p-wins">0</span></div>
-                <div>Профит: <span id="p-profit">0</span></div>
+            
+            <div class="stats-box">
+                <div class="stat-row">
+                    <span>Баланс</span>
+                    <span id="p-balance" class="val">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Всего игр</span>
+                    <span id="p-games" class="val">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Выигрышей</span>
+                    <span id="p-wins" class="val">0</span>
+                </div>
             </div>
+
+            <!-- Кнопка админки (видна только админу) -->
+            <button id="admin-entry-btn" class="admin-btn" style="display: none;" onclick="Game.nav('admin')">
+                🔒 Панель Администратора
+            </button>
         </div>
 
-        <!-- 6. ADMIN (Скрытая вкладка) -->
+        <!-- 6. ADMIN PANEL -->
         <div id="tab-admin" class="tab">
-            <h2>⚙️ Admin Panel</h2>
-            <div class="admin-controls">
-                <h3>Режим игры (RTP)</h3>
-                <div class="mode-switcher">
-                    <button id="btn-rig-random" class="active-mode">Честный (RTP 90%)</button>
-                    <button id="btn-rig-win">WIN (Подкрутка)</button>
-                    <button id="btn-rig-lose">LOSE (Слив)</button>
-                </div>
-                <hr>
-                <h3>Пользователи</h3>
-                <div id="admin-user-list"></div>
+            <div class="game-header">
+                <button class="back-btn" onclick="Game.nav('profile')">✕</button>
+                <h2>Admin Panel</h2>
             </div>
-            <button class="back-btn" onclick="Game.nav('profile')">Выйти</button>
+            <div class="admin-container">
+                <button class="refresh-btn" onclick="Game.Admin.renderUserList()">🔄 Обновить список</button>
+                <div id="admin-user-list" class="user-list">
+                    <!-- Сюда загружаются пользователи -->
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Нижнее меню -->
     <nav class="bottom-nav">
-        <button onclick="Game.nav('lobby')">🎮 Игры</button>
-        <button onclick="Game.nav('profile')">👤 Профиль</button>
+        <button onclick="Game.nav('lobby')" class="nav-item">
+            <span class="nav-icon">🎮</span>
+            <span>Игры</span>
+        </button>
+        <button onclick="Game.nav('profile')" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span>Профиль</span>
+        </button>
     </nav>
 
-    <script src="./main.js"></script>
-    <script src="./slots.js"></script>
-    <script src="./mines.js"></script>
-    <script src="./crash.js"></script>
-    <script src="./profile.js"></script>
-    <script src="./admin.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/slots.js"></script>
+    <script src="js/mines.js"></script>
+    <script src="js/crash.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
