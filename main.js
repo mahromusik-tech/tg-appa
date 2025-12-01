@@ -1,105 +1,117 @@
-const Game = {
+const App = {
+    tg: window.Telegram.WebApp,
     user: null,
-    // ID Админа (только этот ID видит панель)
-    ADMIN_ID: 7845891364, 
     
-    data: {
+    // Состояние приложения
+    state: {
         balance: 1000,
         gamesPlayed: 0,
         wins: 0,
-        mode: 'random', // 'random', 'win', 'lose'
-        isBanned: false
+        loses: 0,
+        crashHistory: [] // Храним историю краша
     },
 
-    init: function() {
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    init: async function() {
+        this.tg.expand();
+        this.tg.enableClosingConfirmation();
         
-        // Получаем данные пользователя из Telegram
-        this.user = tg.initDataUnsafe.user || { id: 12345, first_name: "Test User" };
+        // Получаем данные юзера
+        this.user = this.tg.initDataUnsafe.user || { id: 'test', first_name: 'Test User' };
         
-        // Если это админ, подменяем ID для теста (если нужно) или используем реальный
-        // this.user.id = 7845891364; // Раскомментируйте для теста админки в браузере
-
-        // Загрузка данных
-        this.load();
-
-        // Проверка бана
-        if (this.data.isBanned) {
-            document.getElementById('banned-screen').style.display = 'flex';
-            return; // Останавливаем выполнение
-        }
-
-        // Обновляем UI
-        document.getElementById('header-username').innerText = this.user.first_name;
-        this.updateBalance(0);
-
-        // Проверка на админа
-        if (this.user.id == this.ADMIN_ID) {
-            document.getElementById('admin-entry-btn').style.display = 'block';
-        }
+        // Загружаем данные из CloudStorage
+        await this.loadData();
+        
+        // Убираем лоадер
+        document.getElementById('loader').style.display = 'none';
+        
+        // Рендер UI
+        this.updateUI();
         
         // Инициализация модулей
-        if(this.Profile) this.Profile.init();
+        if(window.Roulette) Roulette.init();
+        if(window.Crash) Crash.init();
     },
 
-    nav: function(tabName) {
-        if (this.data.isBanned) return;
-        
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-        
-        if(tabName === 'profile' && this.Profile) this.Profile.render();
-        if(tabName === 'admin' && this.Admin) this.Admin.init();
+    // Обертка над CloudStorage (Promisified)
+    storageGet: function(key) {
+        return new Promise((resolve) => {
+            this.tg.CloudStorage.getItem(key, (err, val) => {
+                if(err) { console.error(err); resolve(null); }
+                else resolve(val);
+            });
+        });
     },
 
-    updateBalance: function(amount, isWin = false) {
-        this.data.balance += amount;
-        if(isWin && amount > 0) this.data.wins++;
-        if(amount !== 0) this.data.gamesPlayed++;
-        
-        this.save();
-        
-        // Обновление UI
-        document.getElementById('global-balance').innerText = Math.floor(this.data.balance);
-        if(document.getElementById('p-balance')) document.getElementById('p-balance').innerText = Math.floor(this.data.balance);
+    storageSet: function(key, val) {
+        this.tg.CloudStorage.setItem(key, val, (err) => {
+            if(err) console.error('Save error:', err);
+        });
     },
 
-    save: function() {
-        localStorage.setItem(`user_${this.user.id}`, JSON.stringify(this.data));
-    },
-
-    load: function() {
-        const saved = localStorage.getItem(`user_${this.user.id}`);
-        if(saved) {
-            this.data = JSON.parse(saved);
-            // Миграция старых данных (если не было поля mode)
-            if(!this.data.mode) this.data.mode = 'random';
-            if(this.data.isBanned === undefined) this.data.isBanned = false;
+    loadData: async function() {
+        const raw = await this.storageGet(`user_data_${this.user.id}`);
+        if(raw) {
+            try {
+                const data = JSON.parse(raw);
+                this.state = { ...this.state, ...data };
+            } catch(e) { console.error('Parse error', e); }
         } else {
-            this.save();
+            // Первый запуск - сохраняем дефолт
+            this.saveData();
         }
+    },
+
+    saveData: function() {
+        this.storageSet(`user_data_${this.user.id}`, JSON.stringify(this.state));
+    },
+
+    // Обновление баланса и статистики
+    updateBalance: function(amount, isWin) {
+        this.state.balance += amount;
+        if(amount !== 0) this.state.gamesPlayed++;
+        
+        if(isWin) this.state.wins++;
+        else if(amount < 0 && !isWin) { /* Ставка */ } 
+        else if(amount === 0 && !isWin) this.state.loses++; // Проигрыш в игре
+
+        this.saveData();
+        this.updateUI();
+    },
+
+    updateUI: function() {
+        // Шапка
+        document.getElementById('balance-display').innerText = Math.floor(this.state.balance);
+        document.getElementById('header-username').innerText = this.user.first_name;
+        if(this.user.photo_url) document.getElementById('header-avatar').src = this.user.photo_url;
+
+        // Профиль
+        if(window.Profile) Profile.render();
+    },
+
+    nav: function(viewId) {
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${viewId}`).classList.add('active');
+        
+        if(viewId === 'profile') Profile.render();
     },
 
     showAlert: function(msg) {
-        window.Telegram.WebApp.showAlert(msg);
+        this.tg.showAlert(msg);
     },
 
-    // ПРОВЕРКА РЕЗУЛЬТАТА (RTP)
-    // Теперь зависит от this.data.mode конкретного игрока
-    checkWinCondition: function(potentialWin) {
-        const mode = this.data.mode;
+    // RTP SYSTEM (Anti-Infinite Win)
+    // Возвращает true (можно выиграть) или false (слив)
+    checkRtp: function(potentialWin) {
+        // 1. Если баланс маленький, даем выиграть чаще
+        if(this.state.balance < 500) return Math.random() > 0.3; 
+        
+        // 2. Если выигрыш огромный (> 50% баланса), шанс маленький
+        if(potentialWin > this.state.balance * 0.5) return Math.random() > 0.7;
 
-        if (mode === 'win') return true;  // Всегда победа
-        if (mode === 'lose') return false; // Всегда проигрыш
-
-        // Режим Random (Честный)
-        // Если выигрыш очень большой, уменьшаем шанс
-        if (potentialWin > this.data.balance * 3) {
-            return Math.random() > 0.7;
-        }
-        return Math.random() > 0.1; // 90% RTP
+        // 3. Стандартный RTP 85%
+        return Math.random() > 0.15;
     }
 };
 
-window.onload = () => Game.init();
+// Запуск
+window.onload = () => App.init();
