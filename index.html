@@ -2,319 +2,132 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Casino Online</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TG Mini App Casino</title>
     <style>
-        :root {
-            --bg: #121212;
-            --card-bg: #1e1e1e;
-            --accent: #f5c518;
-            --text: #ffffff;
-            --red: #e53935;
-            --black: #212121;
-            --green: #43a047;
-        }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0; padding-bottom: 80px;
-            user-select: none; overflow-x: hidden;
-        }
-        /* Хедер */
-        .header {
-            padding: 15px 20px; background: var(--card-bg);
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        .balance-box {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 20px;
-        }
-        .coin-icon { color: var(--accent); font-size: 18px; }
-        .balance-val { font-weight: bold; font-size: 16px; }
-
-        /* Навигация */
-        .nav {
-            position: fixed; bottom: 0; width: 100%; background: var(--card-bg);
-            display: flex; justify-content: space-around; padding: 10px 0 20px 0;
-            border-top: 1px solid rgba(255,255,255,0.1); z-index: 100;
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            opacity: 0.5; font-size: 10px; gap: 4px;
-        }
-        .nav-item.active { opacity: 1; color: var(--accent); }
-        .nav-icon { font-size: 20px; }
-
-        /* Экраны */
+        :root { --bg: #1c1c1e; --card: #2c2c2e; --text: #fff; --green: #34c759; --red: #ff3b30; --black: #1a1a1a; --accent: #0a84ff; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Header */
+        .header { padding: 20px; background: var(--card); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .balance-box { font-size: 18px; font-weight: bold; color: var(--green); }
+        
+        /* Screens */
         .screen { display: none; padding: 20px; animation: fadeIn 0.3s; }
         .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Рулетка */
-        .roulette-wrapper {
-            width: 100%; overflow: hidden; position: relative;
-            background: #000; height: 80px; border-radius: 8px;
-            margin: 20px 0; border: 2px solid #333;
-        }
-        .roulette-strip {
-            display: flex; height: 100%;
-            transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1);
-        }
-        .r-card {
-            min-width: 60px; height: 100%; display: flex;
-            justify-content: center; align-items: center;
-            font-weight: bold; font-size: 18px; color: white;
-            border-right: 1px solid rgba(0,0,0,0.2);
-        }
-        .bg-red { background: var(--red); }
-        .bg-black { background: var(--black); }
-        .bg-green { background: var(--green); }
-        .pointer {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 4px; height: 100%; background: var(--accent); z-index: 10;
-            box-shadow: 0 0 10px var(--accent);
-        }
+        /* Controls */
+        .control-panel { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; }
+        input[type="number"], select { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 5px; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-red { background: var(--red); color: #fff; }
+        .btn-black { background: #444; color: #fff; }
+        .btn-green { background: var(--green); color: #fff; }
+        .btn:active { transform: scale(0.96); }
 
-        /* Ставки */
-        .bet-controls { display: flex; gap: 10px; margin-bottom: 20px; }
-        .bet-input {
-            flex: 1; background: var(--card-bg); border: 1px solid #333;
-            color: white; padding: 12px; border-radius: 8px;
-            text-align: center; font-size: 18px;
-        }
-        .bet-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .btn-bet {
-            padding: 15px; border: none; border-radius: 8px; color: white;
-            font-weight: bold; cursor: pointer; position: relative; overflow: hidden;
-        }
-        .btn-bet:active { transform: scale(0.96); }
-        .x-val { font-size: 10px; opacity: 0.8; display: block; }
+        /* Roulette Specific */
+        .roulette-wrapper { overflow: hidden; position: relative; height: 80px; background: #000; border-radius: 10px; margin-bottom: 20px; border: 2px solid #gold; }
+        .selector { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #fff; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 10px #fff; }
+        .strip { display: flex; height: 100%; align-items: center; will-change: transform; }
+        .r-card { min-width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; border-right: 1px solid rgba(0,0,0,0.5); color: #fff; }
+        .bg-red { background: var(--red); } .bg-black { background: var(--black); } .bg-green { background: var(--green); }
+        .history { display: flex; gap: 5px; overflow-x: auto; padding: 10px 0; height: 30px; }
+        .bet-buttons { display: flex; gap: 10px; }
 
-        /* Меню */
-        .game-card {
-            background: var(--card-bg); border-radius: 12px; padding: 15px;
-            margin-bottom: 15px; display: flex; align-items: center; gap: 15px;
-        }
-        .game-icon { font-size: 30px; }
-        .tag-soon { background: #333; padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-left: auto; }
+        /* Mines Specific */
+        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+        .mine-cell { aspect-ratio: 1; background: var(--card); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .mine-cell.active { background: #3a3a3c; }
+        .mine-cell.revealed-gem { background: rgba(52, 199, 89, 0.2); border-color: var(--green); }
+        .mine-cell.revealed-mine { background: rgba(255, 59, 48, 0.2); border-color: var(--red); }
+        .mines-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #aaa; }
 
-        /* Профиль */
-        .profile-header { text-align: center; margin-bottom: 30px; }
-        .avatar {
-            width: 80px; height: 80px; background: #333; border-radius: 50%;
-            margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 30px;
-        }
-        .stat-row {
-            display: flex; justify-content: space-between; padding: 15px;
-            background: var(--card-bg); margin-bottom: 2px;
-        }
+        /* Navigation */
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0 20px; border-top: 1px solid #333; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 12px; cursor: pointer; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 24px; margin-bottom: 4px; }
+        
+        /* Coming Soon */
+        .coming-soon { text-align: center; padding: 50px 20px; color: #666; }
+        .coming-soon h2 { color: #fff; }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <div class="header">
-        <div style="font-weight: 900; letter-spacing: 1px;">TON CASINO</div>
-        <div class="balance-box">
-            <span class="coin-icon">🪙</span>
-            <span class="balance-val" id="balance">...</span>
-        </div>
+        <div id="username">Player</div>
+        <div class="balance-box">💰 <span id="balance">0</span></div>
     </div>
 
-    <!-- МЕНЮ -->
-    <div id="screen-menu" class="screen">
-        <h3>Выбор режима</h3>
-        <div class="game-card" onclick="switchScreen('roulette')">
-            <div class="game-icon">🎰</div>
-            <div><h4>Рулетка</h4><p style="font-size:12px; opacity:0.6">Классика</p></div>
-        </div>
-        <div class="game-card" style="opacity: 0.7;">
-            <div class="game-icon">💣</div>
-            <div><h4>Mines</h4><p style="font-size:12px; opacity:0.6">Сапер</p></div>
-            <div class="tag-soon">СКОРО</div>
-        </div>
-    </div>
-
-    <!-- РУЛЕТКА -->
+    <!-- Screen: Roulette -->
     <div id="screen-roulette" class="screen active">
-        <button onclick="switchScreen('menu')" style="background:none; border:none; color:gray; margin-bottom:10px;">← Меню</button>
+        <h3>🎰 Рулетка (Margin)</h3>
         <div class="roulette-wrapper">
-            <div class="pointer"></div>
-            <div class="roulette-strip" id="strip"></div>
+            <div class="selector"></div>
+            <div class="strip" id="strip"></div>
         </div>
-        <div class="bet-controls">
-            <input type="number" id="bet-amount" class="bet-input" value="10" placeholder="Сумма">
-            <button onclick="setMaxBet()" style="background:#333; border:none; color:white; border-radius:8px; padding:0 10px;">MAX</button>
+        <div class="history" id="history"></div>
+
+        <div class="control-panel">
+            <input type="number" id="r-bet" placeholder="Ставка" value="10">
+            <div class="bet-buttons">
+                <button class="btn btn-red" onclick="Game.Roulette.spin('red')">x1.9</button>
+                <button class="btn btn-green" onclick="Game.Roulette.spin('green')">x13</button>
+                <button class="btn btn-black" onclick="Game.Roulette.spin('black')">x1.9</button>
+            </div>
         </div>
-        <div class="bet-actions">
-            <button class="btn-bet bg-red" onclick="spin('red')" id="btn-red"><span>RED</span> <span class="x-val">x2</span></button>
-            <button class="btn-bet bg-green" onclick="spin('green')" id="btn-green"><span>ZERO</span> <span class="x-val">x14</span></button>
-            <button class="btn-bet bg-black" onclick="spin('black')" id="btn-black"><span>BLACK</span> <span class="x-val">x2</span></button>
-        </div>
-        <div style="margin-top: 20px; text-align: center; font-size: 12px; color: gray;">История: <span id="history"></span></div>
     </div>
 
-    <!-- ПРОФИЛЬ -->
-    <div id="screen-profile" class="screen">
-        <div class="profile-header">
-            <div class="avatar">👤</div>
-            <h2 id="username">Игрок</h2>
-            <p style="opacity: 0.5; font-size: 12px;" id="userid">ID: ...</p>
+    <!-- Screen: Mines -->
+    <div id="screen-mines" class="screen">
+        <h3>💣 Мины</h3>
+        <div class="mines-info">
+            <span id="mines-next-coeff">След: x1.00</span>
+            <span id="mines-current-win">Выигрыш: 0</span>
         </div>
-        <div class="stat-row"><span>Баланс (Cloud)</span><span style="color: var(--accent); font-weight: bold;" id="profile-balance">...</span></div>
-        <div style="text-align:center; margin-top:20px; opacity:0.5; font-size:12px">Данные хранятся в Telegram Cloud</div>
+        <div class="mines-grid" id="mines-grid">
+            <!-- Generated by JS -->
+        </div>
+        <div class="control-panel">
+            <div id="mines-controls">
+                <select id="mines-count">
+                    <option value="1">1 Мина</option>
+                    <option value="3" selected>3 Мины</option>
+                    <option value="5">5 Мин</option>
+                    <option value="10">10 Мин</option>
+                    <option value="20">20 Мин</option>
+                </select>
+                <input type="number" id="m-bet" placeholder="Ставка" value="10">
+                <button class="btn btn-primary" onclick="Game.Mines.startGame()">Играть</button>
+            </div>
+            <button class="btn btn-green" id="mines-cashout" style="display:none;" onclick="Game.Mines.cashout()">Забрать</button>
+        </div>
     </div>
 
-    <!-- НАВИГАЦИЯ -->
+    <!-- Screen: Crash (Coming Soon) -->
+    <div id="screen-crash" class="screen">
+        <div class="coming-soon">
+            <h2>🚀 Crash</h2>
+            <p>Режим в разработке...</p>
+            <p>Скоро вы сможете улететь на луну!</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
     <div class="nav">
-        <div class="nav-item" onclick="switchScreen('menu', this)"><span class="nav-icon">🎮</span><span>Игры</span></div>
-        <div class="nav-item active" onclick="switchScreen('roulette', this)"><span class="nav-icon">🎰</span><span>Рулетка</span></div>
-        <div class="nav-item" onclick="switchScreen('profile', this)"><span class="nav-icon">👤</span><span>Профиль</span></div>
+        <div class="nav-item active" onclick="Game.nav('roulette', this)"><span class="nav-icon">🎰</span><span>Рулетка</span></div>
+        <div class="nav-item" onclick="Game.nav('mines', this)"><span class="nav-icon">💣</span><span>Мины</span></div>
+        <div class="nav-item" onclick="Game.nav('crash', this)"><span class="nav-icon">🚀</span><span>Crash</span></div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Данные пользователя
-        const user = tg.initDataUnsafe.user || { id: 111111, first_name: 'Test User' };
-        let currentBalance = 100; // Баланс по умолчанию, пока не загрузим
-        let isSpinning = false;
-
-        // --- CLOUD STORAGE (Вместо базы данных) ---
-        
-        function loadBalance() {
-            // Запрашиваем ключ 'balance' из облака
-            tg.CloudStorage.getItem('balance', (err, value) => {
-                if (err) {
-                    console.error("Ошибка загрузки:", err);
-                    // Если ошибка, оставляем 100
-                } else if (value) {
-                    // Если значение есть, превращаем его в число
-                    currentBalance = parseInt(value);
-                } else {
-                    // Если значения нет (первый раз), сохраняем 100
-                    saveBalance(100);
-                }
-                updateUI();
-            });
-        }
-
-        function saveBalance(newVal) {
-            // Сохраняем число как строку
-            tg.CloudStorage.setItem('balance', newVal.toString(), (err, stored) => {
-                if (err) console.error("Ошибка сохранения:", err);
-            });
-        }
-
-        // --- ИНИЦИАЛИЗАЦИЯ ---
-        function initGame() {
-            document.getElementById('username').innerText = user.first_name;
-            document.getElementById('userid').innerText = `ID: ${user.id}`;
-            
-            loadBalance(); // Загружаем баланс при старте
-            generateStrip();
-        }
-
-        // --- ИГРОВАЯ ЛОГИКА ---
-        const CARD_WIDTH = 60;
-
-        function generateStrip() {
-            const strip = document.getElementById('strip');
-            let html = '';
-            for(let i=0; i<100; i++) {
-                const num = Math.floor(Math.random() * 15);
-                let color = (num === 0) ? 'bg-green' : (num % 2 === 0 ? 'bg-red' : 'bg-black');
-                html += `<div class="r-card ${color}" id="card-${i}">${num}</div>`;
-            }
-            strip.innerHTML = html;
-        }
-
-        function spin(choice) {
-            if(isSpinning) return;
-            const bet = parseInt(document.getElementById('bet-amount').value);
-            
-            if(isNaN(bet) || bet <= 0) return tg.showAlert("Неверная ставка");
-            if(bet > currentBalance) return tg.showAlert("Не хватает денег");
-
-            currentBalance -= bet;
-            saveBalance(currentBalance); // Сохраняем списание
-            updateUI();
-            
-            isSpinning = true;
-            tg.HapticFeedback.impactOccurred('light');
-
-            // Логика выигрыша
-            const winNum = Math.floor(Math.random() * 15);
-            let winColor = (winNum === 0) ? 'green' : (winNum % 2 === 0 ? 'red' : 'black');
-
-            // Анимация
-            let targetIndex = 75 + Math.floor(Math.random() * 10);
-            const targetCard = document.getElementById(`card-${targetIndex}`);
-            targetCard.innerText = winNum;
-            targetCard.className = `r-card bg-${winColor === 'red' ? 'red' : (winColor === 'green' ? 'green' : 'black')}`;
-
-            const wrapperWidth = document.querySelector('.roulette-wrapper').offsetWidth;
-            const offset = (targetIndex * CARD_WIDTH) - (wrapperWidth / 2) + (CARD_WIDTH / 2);
-            
-            const strip = document.getElementById('strip');
-            strip.style.transition = "transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)";
-            strip.style.transform = `translateX(-${offset}px)`;
-
-            setTimeout(() => {
-                isSpinning = false;
-                let won = false;
-                let multiplier = (winColor === 'green') ? 14 : 2;
-
-                if(choice === winColor) {
-                    won = true;
-                    const winAmount = bet * multiplier;
-                    currentBalance += winAmount;
-                    tg.showAlert(`ПОБЕДА! +${winAmount}`);
-                    tg.HapticFeedback.notificationOccurred('success');
-                } else {
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-
-                saveBalance(currentBalance); // Сохраняем результат
-                updateUI();
-
-                // История
-                const hist = document.getElementById('history');
-                const span = document.createElement('span');
-                span.innerText = winNum + " ";
-                span.style.color = winColor;
-                hist.prepend(span);
-
-                setTimeout(() => {
-                    strip.style.transition = "none";
-                    strip.style.transform = "translateX(0px)";
-                    generateStrip();
-                }, 1000);
-
-            }, 4000);
-        }
-
-        function setMaxBet() { document.getElementById('bet-amount').value = currentBalance; }
-        
-        function updateUI() {
-            document.getElementById('balance').innerText = currentBalance;
-            document.getElementById('profile-balance').innerText = currentBalance;
-        }
-
-        function switchScreen(name, btn) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(`screen-${name}`).classList.add('active');
-            if(btn) {
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                btn.classList.add('active');
-            }
-        }
-
-        // Запуск
-        initGame();
-    </script>
+    <!-- Scripts -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/roulette.js"></script>
+    <script src="js/mines.js"></script>
 </body>
 </html>
