@@ -1,81 +1,92 @@
-window.Game = {
-    tg: window.Telegram.WebApp,
+const Game = {
     user: null,
-    // Данные текущего игрока
     data: {
-        balance: 100,
+        balance: 1000,
         gamesPlayed: 0,
         wins: 0,
-        totalProfit: 0,
-        isBanned: false
+        totalProfit: 0
     },
-    // Глобальный флаг подкрутки: 'none', 'win', 'lose'
-    rigMode: 'none',
+    // Режимы: 'random' (с RTP), 'win' (всегда победа), 'lose' (всегда слив)
+    rigMode: 'random', 
+    // RTP 0.9 = 90% возврата игроку в долгосроке (в режиме random)
+    rtp: 0.9, 
 
     init: function() {
-        this.tg.expand();
-        // Имитация данных пользователя
-        this.user = this.tg.initDataUnsafe.user || { id: 111111, first_name: 'Test User', username: 'tester' };
+        const tg = window.Telegram.WebApp;
+        tg.expand();
         
-        // Загрузка данных
-        this.loadData();
-
-        // Инициализация модулей
-        if(this.Roulette) this.Roulette.init();
-        if(this.Profile) this.Profile.init();
-        if(this.Admin) this.Admin.checkAccess();
-    },
-
-    loadData: function() {
-        // В реальном приложении здесь запрос к серверу
+        // Имитация входа
+        this.user = tg.initDataUnsafe.user || { id: 12345, first_name: "Test User" };
+        
+        // Загрузка сохранения
         const saved = localStorage.getItem(`user_${this.user.id}`);
-        if(saved) {
-            this.data = JSON.parse(saved);
-        } else {
-            this.saveData(); // Сохраняем дефолт
-        }
+        if(saved) this.data = JSON.parse(saved);
+        else this.save();
+
+        // Обновляем UI
+        document.getElementById('header-username').innerText = this.user.first_name;
+        this.updateBalance(0);
         
-        if(this.data.isBanned) {
-            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:50px;">АККАУНТ ЗАБЛОКИРОВАН</h1>';
-            throw new Error("Banned");
-        }
-        this.updateUI();
+        // Инициализация модулей
+        if(this.Profile) this.Profile.init();
+        if(this.Admin) this.Admin.init();
     },
 
-    saveData: function() {
-        localStorage.setItem(`user_${this.user.id}`, JSON.stringify(this.data));
-        this.updateUI();
-        if(this.Profile) this.Profile.render();
+    nav: function(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        
+        // При переходе в профиль обновляем данные
+        if(tabName === 'profile' && this.Profile) this.Profile.render();
+        // При переходе в админку обновляем данные
+        if(tabName === 'admin' && this.Admin) this.Admin.renderUserList();
     },
 
-    updateBalance: function(amount, isWin) {
+    updateBalance: function(amount, isWin = false) {
         this.data.balance += amount;
-        this.data.gamesPlayed++;
-        if(amount > 0) {
+        if(isWin && amount > 0) {
             this.data.wins++;
             this.data.totalProfit += amount;
-        } else {
-            this.data.totalProfit -= Math.abs(amount);
         }
-        this.saveData();
+        if(amount !== 0) this.data.gamesPlayed++;
+        
+        this.save();
+        
+        // Обновляем ВЕЗДЕ
+        document.getElementById('global-balance').innerText = Math.floor(this.data.balance);
+        if(document.getElementById('p-balance')) document.getElementById('p-balance').innerText = Math.floor(this.data.balance);
     },
 
-    updateUI: function() {
-        // Обновляем баланс везде, где он есть
-        const els = document.querySelectorAll('#balance, #p-balance');
-        els.forEach(el => el.innerText = Math.floor(this.data.balance));
+    save: function() {
+        localStorage.setItem(`user_${this.user.id}`, JSON.stringify(this.data));
     },
 
-    nav: function(screen, btn) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(`screen-${screen}`).classList.add('active');
-        if(btn) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            btn.classList.add('active');
+    showAlert: function(msg) {
+        window.Telegram.WebApp.showAlert(msg);
+    },
+
+    // ГЛАВНАЯ ФУНКЦИЯ RTP
+    // Возвращает true, если игроку "разрешено" выиграть этот раунд
+    // potentialWinAmount - сколько игрок может выиграть в этом раунде
+    checkRtp: function(potentialWinAmount) {
+        if (this.rigMode === 'win') return true;
+        if (this.rigMode === 'lose') return false;
+
+        // Простая логика RTP:
+        // Если выигрыш слишком большой относительно баланса, уменьшаем шанс
+        // В реальном казино считается пул денег, здесь упростим:
+        // Просто рандом, но если выигрыш > 50% текущего баланса, шанс режется
+        
+        let random = Math.random();
+        
+        // Если выигрыш огромный, шанс должен быть очень мал
+        if (potentialWinAmount > this.data.balance * 2) {
+            return random > 0.8; // 20% шанс на занос
         }
-    },
-
-    showAlert: function(msg) { this.tg.showAlert(msg); }
+        
+        // Стандартный RTP чек
+        return random < this.rtp; 
+    }
 };
 
-document.addEventListener('DOMContentLoaded', () => Game.init());
+window.onload = () => Game.init();
