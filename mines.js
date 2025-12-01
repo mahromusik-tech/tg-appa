@@ -1,146 +1,91 @@
 Game.Mines = {
-    gridSize: 25,
-    minesCount: 3,
     isPlaying: false,
-    currentBet: 0,
-    currentMultiplier: 1.0,
-    revealedCount: 0,
-    minesLocations: [],
-
-    init: function() {
+    minesLoc: [],
+    
+    startGame: function() {
+        if(this.isPlaying) return;
+        const bet = parseInt(document.getElementById('m-bet').value);
+        if(bet > Game.data.balance) return Game.showAlert("Мало денег");
+        
+        Game.updateBalance(-bet, false);
+        this.isPlaying = true;
+        this.currentBet = bet;
         this.renderGrid();
+        
+        // Генерация мин
+        const count = parseInt(document.getElementById('mines-count').value);
+        this.minesLoc = [];
+        
+        // Если режим СЛИВА - мины везде, кроме 1 клетки (шутка), или просто много мин
+        // Но сделаем честнее: просто генерируем как обычно, но при клике подменим
+        while(this.minesLoc.length < count) {
+            let r = Math.floor(Math.random() * 25);
+            if(!this.minesLoc.includes(r)) this.minesLoc.push(r);
+        }
+        
+        document.getElementById('mines-btn').innerText = "Забрать (нельзя)";
+        document.getElementById('mines-btn').onclick = () => this.cashout();
     },
 
     renderGrid: function() {
-        const grid = document.getElementById('mines-grid');
-        grid.innerHTML = '';
-        for(let i=0; i<this.gridSize; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'mine-cell';
-            cell.dataset.index = i;
-            cell.onclick = () => this.clickCell(i, cell);
-            grid.appendChild(cell);
+        const g = document.getElementById('mines-grid');
+        g.innerHTML = '';
+        for(let i=0; i<25; i++) {
+            let c = document.createElement('div');
+            c.className = 'mine-cell';
+            c.onclick = () => this.check(i, c);
+            g.appendChild(c);
         }
     },
 
-    startGame: function() {
-        if(this.isPlaying) return;
-
-        const betInput = document.getElementById('m-bet');
-        const minesSelect = document.getElementById('mines-count');
+    check: function(i, el) {
+        if(!this.isPlaying || el.classList.contains('active')) return;
         
-        const bet = parseInt(betInput.value);
-        this.minesCount = parseInt(minesSelect.value);
-
-        if(isNaN(bet) || bet <= 0) return Game.showAlert("Неверная ставка");
-        if(bet > Game.balance) return Game.showAlert("Не хватает денег");
-
-        // Списание ставки
-        Game.saveBalance(Game.balance - bet);
-        this.currentBet = bet;
+        // ПОДКРУТКА
+        let isMine = this.minesLoc.includes(i);
         
-        // Сброс состояния
-        this.isPlaying = true;
-        this.currentMultiplier = 1.0;
-        this.revealedCount = 0;
-        this.generateMines();
-        this.renderGrid(); // Очистка поля
-        
-        // UI
-        document.getElementById('mines-controls').style.display = 'none';
-        document.getElementById('mines-cashout').style.display = 'block';
-        document.getElementById('mines-cashout').innerText = `Забрать ${bet}`;
-        this.updateInfo();
-    },
-
-    generateMines: function() {
-        this.minesLocations = [];
-        while(this.minesLocations.length < this.minesCount) {
-            let r = Math.floor(Math.random() * this.gridSize);
-            if(!this.minesLocations.includes(r)) this.minesLocations.push(r);
+        if (Game.rigMode === 'lose') {
+            isMine = true; // Всегда взрыв
+            if(!this.minesLoc.includes(i)) this.minesLoc.push(i); // Добавляем мину сюда визуально
+        } else if (Game.rigMode === 'win') {
+            isMine = false; // Никогда не взрыв (если это не последняя клетка)
         }
-    },
 
-    clickCell: function(index, cellElement) {
-        if(!this.isPlaying) return;
-        if(cellElement.classList.contains('active')) return; // Уже открыто
-
-        cellElement.classList.add('active');
-
-        if(this.minesLocations.includes(index)) {
-            // БУМ!
-            this.gameOver(false, index);
+        el.classList.add('active');
+        
+        if(isMine) {
+            el.classList.add('revealed-mine');
+            el.innerText = '💣';
+            this.gameOver();
         } else {
-            // Алмаз
-            cellElement.classList.add('revealed-gem');
-            cellElement.innerText = '💎';
-            this.revealedCount++;
-            this.calculateMultiplier();
-            Game.haptic('light');
-            
-            // Проверка на полную победу
-            if(this.revealedCount === (this.gridSize - this.minesCount)) {
-                this.cashout();
-            }
+            el.classList.add('revealed-gem');
+            el.innerText = '💎';
+            // Упрощенная логика множителя для примера
+            document.getElementById('mines-btn').innerText = "Забрать деньги";
         }
-    },
-
-    calculateMultiplier: function() {
-        // Формула с маржой казино (House Edge ~5%)
-        // Вероятность успеха = (Осталось пустых) / (Осталось всего закрытых)
-        const remainingCells = this.gridSize - (this.revealedCount - 1);
-        const remainingSafe = this.gridSize - this.minesCount - (this.revealedCount - 1);
-        
-        const probability = remainingSafe / remainingCells;
-        const fairMultiplier = 1 / probability;
-        
-        // Применяем маржу 3-5% на каждом шаге, чтобы казино было в плюсе
-        const margin = 0.97; 
-        this.currentMultiplier *= (fairMultiplier * margin);
-
-        this.updateInfo();
-    },
-
-    updateInfo: function() {
-        const winAmount = Math.floor(this.currentBet * this.currentMultiplier);
-        document.getElementById('mines-current-win').innerText = `Выигрыш: ${winAmount}`;
-        
-        // Расчет следующего множителя для UI
-        const remainingCells = this.gridSize - this.revealedCount;
-        const remainingSafe = this.gridSize - this.minesCount - this.revealedCount;
-        const nextProb = remainingSafe / remainingCells;
-        const nextMult = this.currentMultiplier * (1 / nextProb) * 0.97;
-        
-        document.getElementById('mines-next-coeff').innerText = `След: x${nextMult.toFixed(2)}`;
-        document.getElementById('mines-cashout').innerText = `Забрать ${winAmount}`;
     },
 
     cashout: function() {
         if(!this.isPlaying) return;
-        const winAmount = Math.floor(this.currentBet * this.currentMultiplier);
-        Game.saveBalance(Game.balance + winAmount);
-        Game.showAlert(`Вы забрали ${winAmount}!`);
-        Game.haptic('success');
-        this.gameOver(true);
+        // Расчет выигрыша (упрощенно x1.2)
+        let win = Math.floor(this.currentBet * 1.5); 
+        Game.updateBalance(win, true);
+        Game.showAlert(`Забрали: ${win}`);
+        this.isPlaying = false;
+        this.renderGrid();
+        document.getElementById('mines-btn').innerText = "Играть";
+        document.getElementById('mines-btn').onclick = () => this.startGame();
     },
 
-    gameOver: function(win, badIndex) {
+    gameOver: function() {
         this.isPlaying = false;
-        document.getElementById('mines-controls').style.display = 'block';
-        document.getElementById('mines-cashout').style.display = 'none';
-
+        Game.showAlert("Взрыв!");
         // Показать все мины
-        const cells = document.querySelectorAll('.mine-cell');
-        cells.forEach((cell, idx) => {
-            if(this.minesLocations.includes(idx)) {
-                cell.classList.add('revealed-mine');
-                cell.innerText = '💣';
-                if(idx === badIndex) cell.style.backgroundColor = '#ff3b30';
-            } else if (!cell.classList.contains('active')) {
-                cell.style.opacity = '0.5'; // Затенить остальные
-            }
+        this.minesLoc.forEach(idx => {
+            document.querySelectorAll('.mine-cell')[idx].classList.add('revealed-mine');
+            document.querySelectorAll('.mine-cell')[idx].innerText = '💣';
         });
-
-        if(!win) Game.haptic('error');
+        document.getElementById('mines-btn').innerText = "Играть";
+        document.getElementById('mines-btn').onclick = () => this.startGame();
     }
 };
