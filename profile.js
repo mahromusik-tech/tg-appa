@@ -1,19 +1,32 @@
 const Profile = {
     render: function() {
+        // Проверка на готовность App
+        if (!App || !App.user || !App.state) return;
+
         const s = App.state;
         const u = App.user;
 
-        // Аватар и имя
-        if(u.photo_url) {
-            document.getElementById('p-avatar').style.backgroundImage = `url(${u.photo_url})`;
-        }
-        document.getElementById('p-name').innerText = u.first_name;
-        document.getElementById('p-id').innerText = `ID: ${u.id}`;
+        // Безопасное обновление DOM элементов
+        const setSafe = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
+        };
 
-        // Статистика
-        document.getElementById('p-balance').innerText = Math.floor(s.balance);
-        document.getElementById('p-games').innerText = s.gamesPlayed;
-        document.getElementById('p-wins').innerText = s.wins;
-        document.getElementById('p-loses').innerText = s.loses;
+        setSafe('p-name', u.first_name || 'Unknown');
+        setSafe('p-id', `ID: ${u.id}`);
+        setSafe('p-balance', Math.floor(s.balance));
+        setSafe('p-games', s.gamesPlayed || 0);
+        setSafe('p-wins', s.wins || 0);
+        setSafe('p-loses', s.loses || 0);
+
+        const ava = document.getElementById('p-avatar');
+        if(ava) {
+            if(u.photo_url) {
+                ava.style.backgroundImage = `url(${u.photo_url})`;
+            } else {
+                ava.style.backgroundImage = 'none';
+                ava.style.backgroundColor = '#333';
+            }
+        }
     }
 };
