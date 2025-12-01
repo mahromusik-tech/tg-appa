@@ -2,139 +2,108 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Casino</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Casino</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
-    <!-- ЭКРАН ЗАГРУЗКИ -->
-    <div id="loader">
-        <div class="spinner"></div>
-        <p>Загрузка...</p>
-    </div>
-
     <!-- ШАПКА -->
     <header class="app-header">
         <div class="balance-container">
-            <span class="coin-icon">💎</span>
-            <span id="balance-display">0</span>
+            💎 <span id="balance-display">0</span>
         </div>
         <div class="user-pill">
-            <img id="header-avatar" src="" alt="" onerror="this.style.display='none'">
-            <span id="header-username">...</span>
+            <img id="header-avatar" src="" style="display:none">
+            <span id="header-username">Loading...</span>
         </div>
     </header>
 
     <main id="app-content">
         
-        <!-- 1. ЛОББИ -->
+        <!-- ЛОББИ -->
         <div id="view-lobby" class="view active">
-            <div class="promo-banner">
+            <div style="text-align:center; margin: 20px 0;">
                 <h1>TON CASINO</h1>
-                <p>Играй честно. Выигрывай много.</p>
             </div>
-
-            <h3 class="label">ИГРЫ</h3>
             <div class="games-list">
-                <div class="game-card" onclick="App.nav('mines')">
-                    <div class="g-icon">💣</div>
-                    <div class="g-info">
-                        <b>Mines</b>
-                        <span>Сапер на стероидах</span>
-                    </div>
-                </div>
-                <div class="game-card" onclick="App.nav('roulette')">
-                    <div class="g-icon">🔴</div>
-                    <div class="g-info">
-                        <b>Roulette</b>
-                        <span>Red / Black / Green</span>
-                    </div>
-                </div>
-                <!-- CRASH УБРАН ПО ПРОСЬБЕ -->
+                <button class="btn-main" onclick="App.nav('mines')" style="background:#333; color:#fff; margin-bottom:10px;">
+                    💣 MINES
+                </button>
+                <button class="btn-main" onclick="App.nav('roulette')" style="background:#e74c3c; color:#fff;">
+                    🔴 ROULETTE ⚫
+                </button>
             </div>
         </div>
 
-        <!-- 2. MINES -->
+        <!-- MINES -->
         <div id="view-mines" class="view">
-            <div class="view-header">
-                <button class="btn-back" onclick="App.nav('lobby')">❮ Назад</button>
-                <h2>Mines</h2>
-            </div>
-            <div class="mines-wrapper">
-                <div class="mines-info">Коэф: <span id="mines-coeff" class="accent">x1.00</span></div>
-                <div id="mines-grid" class="grid-5x5"></div>
-            </div>
-            <div class="controls">
-                <div class="bet-panel">
-                    <input type="number" id="mines-bet" value="100" placeholder="Ставка">
-                    <select id="mines-count">
-                        <option value="3">3 Мины</option>
-                        <option value="5">5 Мин</option>
-                        <option value="10">10 Мин</option>
-                        <option value="24">24 Мины</option>
-                    </select>
-                </div>
-                <button id="btn-mines-action" class="btn-main" onclick="Mines.action()">СТАВКА</button>
-            </div>
+            <h2>Mines</h2>
+            <div id="mines-grid" style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:20px 0;"></div>
+            <input type="number" id="mines-bet" class="full-input" value="100">
+            <select id="mines-count" class="full-input" style="margin-top:5px;">
+                <option value="3">3 Мины</option>
+                <option value="5">5 Мин</option>
+            </select>
+            <button id="btn-mines-action" class="btn-main" onclick="Mines.action()">СТАВКА</button>
+            <button class="nav-btn" onclick="App.nav('lobby')" style="margin-top:10px">Назад</button>
         </div>
 
-        <!-- 3. ROULETTE -->
+        <!-- ROULETTE -->
         <div id="view-roulette" class="view">
-            <div class="view-header">
-                <button class="btn-back" onclick="App.nav('lobby')">❮ Назад</button>
-                <h2>Roulette</h2>
-            </div>
+            <h2>Roulette</h2>
             
+            <!-- КОНТЕЙНЕР РУЛЕТКИ -->
             <div class="roulette-wheel-container">
                 <div class="roulette-pointer">▼</div>
-                <div class="roulette-strip" id="roulette-strip"></div>
-            </div>
-
-            <div class="last-rolls" id="roulette-history" style="display:flex; gap:5px; margin-bottom:10px; height: 25px;">
-                <!-- История -->
-            </div>
-
-            <div class="controls">
-                <input type="number" id="roulette-bet" class="full-input" value="100" placeholder="Сумма ставки">
-                <div class="roulette-buttons">
-                    <button class="btn-r-red" onclick="Roulette.spin('red')">x2 🔴</button>
-                    <button class="btn-r-green" onclick="Roulette.spin('green')">x14 🟢</button>
-                    <button class="btn-r-black" onclick="Roulette.spin('black')">x2 ⚫</button>
+                <div class="roulette-strip" id="roulette-strip">
+                    <!-- Сюда JS вставит ячейки -->
                 </div>
             </div>
+
+            <div id="roulette-history" style="display:flex; gap:5px; height:30px; margin-bottom:10px;"></div>
+
+            <input type="number" id="roulette-bet" class="full-input" value="100">
+            <div class="roulette-buttons">
+                <button class="btn-r-red" onclick="Roulette.spin('red')">RED x2</button>
+                <button class="btn-r-green" onclick="Roulette.spin('green')">ZERO x14</button>
+                <button class="btn-r-black" onclick="Roulette.spin('black')">BLACK x2</button>
+            </div>
+            <button class="nav-btn" onclick="App.nav('lobby')" style="margin-top:10px">Назад</button>
         </div>
 
-        <!-- 4. PROFILE -->
+        <!-- PROFILE -->
         <div id="view-profile" class="view">
             <div class="profile-card">
                 <div class="p-avatar" id="p-avatar"></div>
-                <h2 id="p-name">User</h2>
-                <div class="p-id" id="p-id">ID: 000000</div>
+                <h2 id="p-name">...</h2>
+                <div class="p-id" id="p-id">ID: ...</div>
+                
+                <!-- КНОПКА ПОПОЛНЕНИЯ -->
+                <button class="crypto-btn" onclick="App.openDepositModal()">
+                    💎 Пополнить (CryptoBot)
+                </button>
             </div>
             
             <div class="stats-grid">
-                <div class="stat-box">
-                    <small>Баланс</small>
-                    <b id="p-balance">0</b>
-                </div>
-                <div class="stat-box">
-                    <small>Игр сыграно</small>
-                    <b id="p-games">0</b>
-                </div>
-                <div class="stat-box">
-                    <small>Побед</small>
-                    <b id="p-wins" style="color: #00ff88">0</b>
-                </div>
-                <div class="stat-box">
-                    <small>Проигрышей</small>
-                    <b id="p-loses" style="color: #ff4757">0</b>
-                </div>
+                <div class="stat-box"><small>Баланс</small><b id="p-balance">0</b></div>
+                <div class="stat-box"><small>Игр</small><b id="p-games">0</b></div>
             </div>
         </div>
 
     </main>
+
+    <!-- МОДАЛКА ПОПОЛНЕНИЯ -->
+    <div id="deposit-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal">
+            <h3>Пополнение</h3>
+            <p>Выберите сумму:</p>
+            <input type="number" id="dep-amount" class="full-input" value="1000">
+            <button class="crypto-btn" onclick="App.createInvoice()">Оплатить через CryptoBot</button>
+            <button class="nav-btn" onclick="document.getElementById('deposit-modal').style.display='none'">Отмена</button>
+        </div>
+    </div>
 
     <nav class="bottom-bar">
         <button onclick="App.nav('lobby')" class="nav-btn">🎮 Игры</button>
