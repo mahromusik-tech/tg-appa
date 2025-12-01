@@ -1,16 +1,36 @@
 Game.Admin = {
-    // Инициализация админ-панели
+    clicks: 0,
+    clickTimer: null,
+
     init: function() {
         this.renderUserList();
         this.updateRigStatus();
         
-        // Навешиваем обработчики на кнопки режимов
-        document.getElementById('btn-rig-random').onclick = () => this.setRigMode('random');
-        document.getElementById('btn-rig-win').onclick = () => this.setRigMode('win');
-        document.getElementById('btn-rig-lose').onclick = () => this.setRigMode('lose');
+        // Обработчики кнопок режимов
+        const modes = ['random', 'win', 'lose'];
+        modes.forEach(m => {
+            let btn = document.getElementById(`btn-rig-${m}`);
+            if(btn) btn.onclick = () => this.setRigMode(m);
+        });
     },
 
-    // Получение всех пользователей из LocalStorage
+    // Секретный вход: 5 кликов за 2 секунды по ID в профиле
+    secretClick: function() {
+        this.clicks++;
+        if(this.clicks === 1) {
+            this.clickTimer = setTimeout(() => {
+                this.clicks = 0;
+            }, 2000);
+        }
+        
+        if(this.clicks >= 5) {
+            clearTimeout(this.clickTimer);
+            this.clicks = 0;
+            Game.nav('admin'); // Переход в админку
+            Game.showAlert("Добро пожаловать, Админ!");
+        }
+    },
+
     getAllUsers: function() {
         let users = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -29,7 +49,6 @@ Game.Admin = {
         return users;
     },
 
-    // Отрисовка таблицы пользователей
     renderUserList: function() {
         const list = document.getElementById('admin-user-list');
         if (!list) return;
@@ -49,23 +68,20 @@ Game.Admin = {
         });
     },
 
-    // Изменение баланса пользователя
     promptBalance: function(userId) {
         let amount = prompt(`Введите новый баланс для ID ${userId}:`);
         if (amount !== null) {
             amount = parseInt(amount);
             if (isNaN(amount)) return alert("Неверное число");
 
-            // Обновляем в хранилище
             let key = `user_${userId}`;
             let data = JSON.parse(localStorage.getItem(key));
             data.balance = amount;
             localStorage.setItem(key, JSON.stringify(data));
 
-            // Если меняем баланс себе же — обновляем интерфейс сразу
             if (Game.user && String(Game.user.id) === String(userId)) {
                 Game.data.balance = amount;
-                Game.updateBalance(0); // Триггер обновления UI
+                Game.updateBalance(0); 
             }
 
             this.renderUserList();
@@ -73,9 +89,8 @@ Game.Admin = {
         }
     },
 
-    // Установка режима подкрутки
     setRigMode: function(mode) {
-        Game.rigMode = mode; // Меняем глобальную переменную в main.js
+        Game.rigMode = mode; 
         this.updateRigStatus();
         
         let text = "";
@@ -86,15 +101,12 @@ Game.Admin = {
         Game.showAlert(text);
     },
 
-    // Визуальное обновление кнопок
     updateRigStatus: function() {
-        // Сброс классов
         ['random', 'win', 'lose'].forEach(m => {
             let btn = document.getElementById(`btn-rig-${m}`);
             if(btn) btn.classList.remove('active-mode');
         });
 
-        // Подсветка активного
         let activeBtn = document.getElementById(`btn-rig-${Game.rigMode}`);
         if(activeBtn) activeBtn.classList.add('active-mode');
     }
