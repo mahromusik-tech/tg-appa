@@ -1,0 +1,179 @@
+body {
+    background-color: #1e1e1e;
+    color: #fff;
+    font-family: sans-serif;
+    margin: 0;
+    padding-bottom: 60px; /* Место для меню */
+    padding-top: 50px; /* Место для хедера */
+}
+
+/* Глобальный хедер */
+.global-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 50px;
+    background: #2c3e50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.balance-box { font-size: 18px; font-weight: bold; color: #f1c40f; }
+
+/* Навигация */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #252525;
+    display: flex;
+    border-top: 1px solid #333;
+}
+.bottom-nav button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 16px;
+}
+.bottom-nav button:active { color: #fff; }
+
+.tab { display: none; padding: 20px; text-align: center; }
+.tab.active { display: block; }
+
+/* Лобби */
+.game-card {
+    background: #333;
+    margin: 10px 0;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.game-card:active { transform: scale(0.98); background: #444; }
+.game-card .icon { font-size: 30px; margin-right: 15px; }
+.game-card .title { font-size: 20px; font-weight: bold; }
+
+/* Mines */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin: 20px auto;
+    max-width: 300px;
+}
+.mine-cell {
+    background: #444;
+    aspect-ratio: 1;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    cursor: pointer;
+}
+.mine-cell.active { background: #555; }
+.revealed-gem { background: #2ecc71; }
+.revealed-mine { background: #e74c3c; }
+.mines-info { margin: 10px 0; font-size: 14px; }
+
+/* Crash */
+.crash-screen {
+    background: #000;
+    height: 200px;    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#crash-counter {
+    font-size: 40px;
+    font-weight: bold;
+    color: #fff;
+    z-index: 2;
+}
+#crash-rocket {
+    position: absolute;
+    bottom: 10px; left: 10px;
+    font-size: 30px;
+    transition: all 0.1s linear;
+}
+.crashed #crash-counter { color: #e74c3c; }
+
+/* Общие кнопки */
+.main-btn {
+    width: 100%;
+    padding: 15px;
+    background: #3498db;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+    margin-top: 10px;
+}
+.back-btn {
+    background: none; border: none; color: #aaa; float: left; font-size: 16px;
+}
+input, select {
+    padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: #fff; width: 100px;
+}
+.active-mode { border: 2px solid #f1c40f; color: #f1c40f; }
+
+/* Admin Panel */
+.admin-controls {
+    margin-top: 20px;
+    text-align: left;
+}
+.admin-controls h3 {
+    margin-top: 20px;
+    color: #f1c40f;
+}
+.mode-switcher {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+.mode-switcher button {
+    padding: 10px 15px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+}
+.mode-switcher button.active-mode {
+    border-color: #f1c40f;
+    color: #f1c40f;
+}
+.admin-user-list {
+    margin-top: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+}
+.admin-user-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+}
+.admin-user-row:last-child {
+    border-bottom: none;
+}
+.admin-user-row button {
+    background: #3498db;
+    border: none;
+    border-radius: 3px;
+    color: white;
+    padding: 5px 8px;
+    cursor: pointer;
+}
