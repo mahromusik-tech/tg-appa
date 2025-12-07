@@ -1,329 +1,391 @@
-* {
+
+/* styles/styles.css */
+
+/* Сброс базовых стилей */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-}
-body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #0b0b0f;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  background-color: #0b0c10;
   color: #f5f5f5;
 }
-header {
-  background: #11131a;
-  border-bottom: 1px solid #222633;
-  padding: 12px 20px;
+
+/* Корневой контейнер приложения */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Шапка */
+.app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, #141824, #10131c);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-header .logo {
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #f8e71c;
-}
-header .meta {
-  font-size: 13px;
-  color: #a0a4b8;
-}
-main {
+
+.app-title {
   display: flex;
-  min-height: calc(100vh - 50px);
+  flex-direction: column;
 }
-nav {
-  width: 220px;
-  background: #11131a;
-  border-right: 1px solid #222633;
-  padding: 16px 10px;
-}
-nav h3 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6f7489;
-  margin: 0 0 8px;
-}
-.nav-btn {
-  width: 100%;
-  text-align: left;
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: #d0d3e6;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.nav-btn span.badge {
-  background: #222633;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 11px;
-  color: #9ea3c0;
-}
-.nav-btn.active {
-  background: linear-gradient(90deg, #1f2435, #252b3f);
-  color: #ffffff;
-}
-.nav-btn:hover {
-  background: #1a1e2b;
-}
-.content {
-  flex: 1;
-  padding: 20px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-.card {
-  background: #11131a;
-  border-radius: 10px;
-  border: 1px solid #222633;
-  padding: 16px 18px;
-  margin-bottom: 16px;
-}
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.card-title {
+
+.app-title-main {
   font-size: 16px;
   font-weight: 600;
 }
-.card-subtitle {
-  font-size: 13px;
-  color: #8b90a8;
+
+.app-title-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
 }
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+
+.app-user-info {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
 }
-.col {
+
+/* Основной контент */
+.app-main {
   flex: 1;
-  min-width: 220px;
+  overflow-y: auto;
+  padding: 12px 12px 64px; /* отступ под нижнюю навигацию */
 }
-label {
+
+/* Экраны */
+.screen {
+  display: none;
+}
+
+.screen.active {
   display: block;
+}
+
+.screen-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Заголовки */
+h1 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 16px;
+  margin: 12px 0 6px;
+}
+
+/* Текст */
+p {
   font-size: 13px;
-  margin-bottom: 4px;
-  color: #a0a4b8;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.8);
 }
-input[type="text"],
-select {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #2b3040;
-  background: #0b0d14;
-  color: #f5f5f5;
-  font-size: 14px;
-}
-input[type="text"]:focus,
-select:focus {
-  outline: none;
-  border-color: #f8e71c;
-}
-button.primary {
-  background: linear-gradient(135deg, #f8e71c, #f5a623);
+
+/* Кнопки */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
   border: none;
-  color: #11131a;
-  font-weight: 600;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
+  padding: 8px 16px;
   font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease,
+    box-shadow 0.15s ease;
 }
-button.primary:disabled {
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #00b4ff, #0077ff);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(0, 180, 255, 0.4);
+  width: 100%;
+  margin-top: 16px;
+}
+
+.btn.primary:disabled {
   opacity: 0.5;
+  box-shadow: none;
   cursor: default;
 }
-button.secondary {
-  background: #1a1e2b;
-  border: 1px solid #2b3040;
-  color: #d0d3e6;
-  padding: 7px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
-button.secondary:hover {
-  background: #222633;
+
+.btn.ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  padding: 4px 10px;
 }
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-}
-.stat-item {
-  background: #0b0d14;
-  border-radius: 8px;
+
+/* Инпуты */
+.input-text {
+  width: 100%;
   padding: 8px 10px;
-  border: 1px solid #1c2030;
-}
-.stat-label {
-  font-size: 12px;
-  color: #8b90a8;
-  margin-bottom: 4px;
-}
-.stat-value {
-  font-size: 15px;
-  font-weight: 600;
-}
-.stat-bar {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(10, 12, 20, 0.9);
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
   margin-top: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: #1c2030;
-  overflow: hidden;
 }
-.stat-bar-inner {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #f8e71c, #f5a623);
-  width: 0%;
-  transition: width 0.3s ease;
-    }
+
+.input-text::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
-.tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  background: #1a1e2b;
-  color: #9ea3c0;
-  margin-right: 4px;
+
+.input-text:focus {
+  border-color: #00b4ff;
+  box-shadow: 0 0 0 1px rgba(0, 180, 255, 0.4);
 }
-.tag.highlight {
-  background: #f8e71c;
-  color: #11131a;
-  font-weight: 600;
+
+/* Выбор дисциплины */
+.discipline-select {
+  margin-top: 16px;
 }
-.match-log {
-  font-size: 13px;
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: 4px;
+
+.discipline-list {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }
-.match-log-entry {
-  padding: 4px 0;
-  border-bottom: 1px solid #1a1e2b;
-}
-.match-log-entry:last-child {
-  border-bottom: none;
-}
-.match-log-entry span.time {
-  color: #6f7489;
-  margin-right: 6px;
-}
-.pill {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-size: 11px;
-  margin-left: 4px;
-}
-.pill.win {
-  background: rgba(46, 204, 113, 0.15);
-  color: #2ecc71;
-}
-.pill.loss {
-  background: rgba(231, 76, 60, 0.15);
-  color: #e74c3c;
-}
-.pill.draw {
-  background: rgba(241, 196, 15, 0.15);
-  color: #f1c40f;
-}
-.timer {
-  font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 18px;
-  font-weight: 600;
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-}
-.calendar-item {
-  background: #0b0d14;
-  border-radius: 8px;
-  padding: 8px 10px;
-  border: 1px solid #1c2030;
+
+.discipline-card {
+  flex: 1;
+  border-radius: 12px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: radial-gradient(circle at top left, #1b2335, #10131c);
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 13px;
 }
-.calendar-date {
-  color: #8b90a8;
-  margin-bottom: 4px;
-}
-.calendar-title {
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-.calendar-type {
-  font-size: 11px;
-  color: #9ea3c0;
-}
-.badge-season {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #1a1e2b;
-  font-size: 11px;
-  color: #f5f5f5;
-  margin-left: 6px;
-}
-.badge-season.summer,
-.badge-season.winter {
-  background: #f8e71c;
-  color: #11131a;
+
+.discipline-card .discipline-name {
   font-weight: 600;
 }
-.flex-between {
+
+.discipline-card .discipline-status {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.discipline-card.active {
+  border-color: #00b4ff;
+  box-shadow: 0 0 10px rgba(0, 180, 255, 0.4);
+}
+
+.discipline-card.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Блок никнейма */
+.nickname-block {
+  margin-top: 16px;
+}
+
+/* Нижняя навигация */
+.app-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: rgba(10, 12, 20, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: space-around;
+  padding: 4px 6px;
+  z-index: 10;
 }
-.small {
+
+.nav-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
-  color: #8b90a8;
-}
-.trophies {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 12px;
-}
-.trophy {
-  padding: 3px 8px;
+  padding: 6px 4px;
   border-radius: 999px;
-  background: #1a1e2b;
-  border: 1px solid #2b3040;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
+
+.nav-btn.active {
+  background: rgba(0, 180, 255, 0.16);
+  color: #ffffff;
+}
+
+/* Табы */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+
+.tab-btn {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #00b4ff, #0077ff);
+  color: #ffffff;
+}
+
+/* Карточки тренировок */
+.training-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.training-card {
+  border-radius: 12px;
+  padding: 10px;
+  background: radial-gradient(circle at top left, #1b2335, #10131c);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.training-card h2 {
+  margin-top: 0;
+}
+
+.training-card p {
+  margin: 4px 0 8px;
+}
+
+/* Таймер тренировки */
+.training-timer {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.training-result {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+}
+
+/* Календарь */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 10px;
+}
+
+#calendar-current-month {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.calendar-day {
+  border-radius: 8px;
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 11px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.calendar-day.today {
+  border: 1px solid #00b4ff;
+}
+
+.calendar-day.has-events {
+  background: rgba(0, 180, 255, 0.16);
+}
+
+.calendar-day.selected {
+  outline: 1px solid #ffffff;
+}
+
+.calendar-day-events {
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+}
+
+/* Профиль */
+.profile-card {
+  border-radius: 12px;
+  padding: 10px;
+  background: radial-gradient(circle at top left, #1b2335, #10131c);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 10px;
+}
+
+.profile-stats {
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Вспомогательные классы */
 .hidden {
   display: none !important;
 }
-@media (max-width: 800px) {
-  main {
-    flex-direction: column;
-  }
-  nav {
-    width: 100%;
-    display: flex;
-    overflow-x: auto;
-  }
-  nav h3 {
-    display: none;
-  }
-  .nav-btn {
-    white-space: nowrap;
-  }
-      }
+
+.mt-8 {
+  margin-top: 8px;
+}
+
+.mt-12 {
+  margin-top: 12px;
+}
