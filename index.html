@@ -1,278 +1,211 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Путь киберспортсмена</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Esports Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./styles/styles.css" />
 </head>
 <body>
-<header>
-  <div class="logo">Путь киберспортсмена</div>
-  <div class="meta">
-    <span id="meta-date"></span> · Сезон: <span id="meta-season"></span>
+  <div id="app">
+    <!-- Верхняя панель / заголовок -->
+    <header class="app-header">
+      <div class="app-title">
+        <span class="app-title-main">Esports Journey</span>
+        <span class="app-title-sub">История киберспортсмена</span>
+      </div>
+      <div class="app-user-info" id="tg-user-info">
+        <!-- Здесь можно показать аватар/имя из Telegram -->
+      </div>
+    </header>
+
+    <!-- Основной контейнер контента -->
+    <main class="app-main">
+      <!-- Экран приветствия / первый заход -->
+      <section id="screen-onboarding" class="screen active">
+        <div class="screen-content">
+          <h1>Начни путь киберспортсмена</h1>
+          <p>
+            Выбери дисциплину, создай никнейм и начни путь от матчмейкинга до
+            профессиональной сцены.
+          </p>
+
+          <!-- На тестовом этапе доступна только CS2 -->
+          <div class="discipline-select">
+            <h2>Выбор дисциплины</h2>
+            <div class="discipline-list">
+              <button class="discipline-card active" data-discipline="cs2">
+                <span class="discipline-name">CS2</span>
+                <span class="discipline-status">Доступно</span>
+              </button>
+              <button class="discipline-card disabled" data-discipline="dota2" disabled>
+                <span class="discipline-name">Dota 2</span>
+                <span class="discipline-status">Скоро</span>
+              </button>
+              <button class="discipline-card disabled" data-discipline="valorant" disabled>
+                <span class="discipline-name">Valorant</span>
+                <span class="discipline-status">Скоро</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Ввод никнейма -->
+          <div class="nickname-block">
+            <h2>Никнейм игрока</h2>
+            <input
+              type="text"
+              id="input-nickname"
+              class="input-text"
+              maxlength="20"
+              placeholder="Придумай свой никнейм"
+            />
+          </div>
+
+          <button id="btn-start-journey" class="btn primary">
+            Начать путь
+          </button>
+        </div>
+      </section>
+
+      <!-- Экран матчей (MM, Faceit, квалы) -->
+      <section id="screen-matches" class="screen">
+        <div class="screen-content">
+          <h1>Матчи</h1>
+          <div id="matches-tabs" class="tabs">
+            <button class="tab-btn active" data-tab="mm">MM</button>
+            <button class="tab-btn" data-tab="faceit">Faceit</button>
+            <button class="tab-btn" data-tab="quals">Квалификации</button>
+          </div>
+
+          <div id="matches-content">
+            <!-- Содержимое будет отрисовываться JS (mm, faceit, quals) -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Экран тренировок -->
+      <section id="screen-training" class="screen">
+        <div class="screen-content">
+          <h1>Тренировка</h1>
+          <p>Выбери режим тренировки, чтобы улучшить навыки игрока.</p>
+
+          <div class="training-list">
+            <div class="training-card" data-training="dm">
+              <h2>Deathmatch</h2>
+              <p>1 минута. Улучшает aim и понимание игры.</p>
+              <button class="btn secondary btn-start-training">
+                Начать DM
+              </button>
+            </div>
+
+            <div class="training-card" data-training="bots">
+              <h2>Боты</h2>
+              <p>30 секунд. Улучшает aim и реакцию.</p>
+              <button class="btn secondary btn-start-training">
+                Играть с ботами
+              </button>
+            </div>
+
+            <div class="training-card" data-training="aimlab">
+              <h2>Aim Lab</h2>
+              <p>15 секунд. Небольшой прирост aim.</p>
+              <button class="btn secondary btn-start-training">
+                Aim Lab
+              </button>
+            </div>
+          </div>
+
+          <div id="training-timer" class="training-timer hidden">
+            <span id="training-timer-label">Оставшееся время:</span>
+            <span id="training-timer-value">00:00</span>
+          </div>
+
+          <div id="training-result" class="training-result hidden">
+            <!-- Результаты тренировки будут подставляться JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Экран календаря -->
+      <section id="screen-calendar" class="screen">
+        <div class="screen-content">
+          <h1>Календарь</h1>
+          <p>
+            Следи за сезонами, турнирами, тренировочными матчами и
+            трансферными окнами.
+          </p>
+
+          <div class="calendar-header">
+            <div id="calendar-season-info">
+              <!-- Текущий сезон, даты, статус (лето/зима/межсезонье) -->
+            </div>
+            <div class="calendar-nav">
+              <button id="calendar-prev" class="btn ghost"><</button>
+              <span id="calendar-current-month"></span>
+              <button id="calendar-next" class="btn ghost">></button>
+            </div>
+          </div>
+
+          <div id="calendar-grid" class="calendar-grid">
+            <!-- Сетка календаря будет отрисовываться JS -->
+          </div>
+
+          <div id="calendar-day-events" class="calendar-day-events">
+            <!-- События выбранного дня: турниры, матчи, тренировки -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Экран профиля -->
+      <section id="screen-profile" class="screen">
+        <div class="screen-content">
+          <h1>Профиль игрока</h1>
+
+          <div id="profile-card" class="profile-card">
+            <!-- Карточка игрока: ник, дисциплина, ранг, Faceit lvl, команда -->
+          </div>
+
+          <div id="profile-stats" class="profile-stats">
+            <!-- Статистика: матчи, K/D, рейтинг, трофеи, сезоны -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Нижняя навигация -->
+    <nav class="app-nav">
+      <button class="nav-btn active" data-screen="screen-matches">
+        Матчи
+      </button>
+      <button class="nav-btn" data-screen="screen-training">
+        Тренировка
+      </button>
+      <button class="nav-btn" data-screen="screen-calendar">
+        Календарь
+      </button>
+      <button class="nav-btn" data-screen="screen-profile">
+        Профиль
+      </button>
+    </nav>
   </div>
-</header>
 
-<main>
-  <nav>
-    <h3>Разделы</h3>
-    <button class="nav-btn active" data-screen="screen-create">Создание</button>
-    <button class="nav-btn" data-screen="screen-play">
-      Матчи <span class="badge" id="badge-rank">MM</span>
-    </button>
-    <button class="nav-btn" data-screen="screen-training">Тренировка</button>
-    <button class="nav-btn" data-screen="screen-calendar">Календарь</button>
-    <button class="nav-btn" data-screen="screen-profile">Профиль</button>
-  </nav>
+  <!-- Скрипты -->
+  <script src="./js/state.js"></script>
+  <script src="./js/matchmaking.js"></script>
+  <script src="./js/training.js"></script>
+  <script src="./js/calendar.js"></script>
 
-  <div class="content">
-    <!-- Создание персонажа -->
-    <section id="screen-create">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Создание персонажа</div>
-            <div class="card-subtitle">Выбери дисциплину и никнейм. Пока доступна только CS2.</div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col">
-            <label>Дисциплина</label>
-            <select id="discipline" disabled>
-              <option value="cs2">CS2 (доступно)</option>
-              <option value="dota2" disabled>Dota 2 (скоро)</option>
-              <option value="valorant" disabled>Valorant (скоро)</option>
-            </select>
-          </div>
-          <div class="col">
-            <label>Никнейм</label>
-            <input type="text" id="nickname" placeholder="Введите никнейм" />
-          </div>
-        </div>
-        <div style="margin-top: 12px;">
-          <button class="primary" id="btn-create">Создать персонажа</button>
-          <button class="secondary" id="btn-reset">Сбросить прогресс</button>
-          <span class="small" id="create-status"></span>
-        </div>
-      </div>
+  <script src="./js/ui/ui-navigation.js"></script>
+  <script src="./js/ui/ui-profile.js"></script>
+  <script src="./js/ui/ui-matches.js"></script>
+  <script src="./js/ui/ui-training.js"></script>
+  <script src="./js/ui/ui-calendar.js"></script>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Стартовые характеристики</div>
-          <div class="card-subtitle">Генерируются случайно в небольшом диапазоне, как в FIFA.</div>
-        </div>
-        <div class="stat-grid" id="start-stats"></div>
-      </div>
-    </section>
-
-    <!-- Матчи -->
-    <section id="screen-play" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Матчи MM</div>
-            <div class="card-subtitle">
-              1 матч = 1 минута (симуляция). Звания, скрытый скилл, быстрый ап, если ты сильнее своего ранга.
-            </div>
-          </div>
-          <div class="flex-between">
-            <div class="timer" id="match-timer">00:00</div>
-            <button class="primary" id="btn-start-mm">Играть матч MM</button>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col">
-            <div class="stat-grid">
-              <div class="stat-item">
-                <div class="stat-label">Звание (MM)</div>
-                <div class="stat-value" id="stat-rank"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-rank"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Скрытый скилл (MMR)</div>
-                <div class="stat-value" id="stat-mmr"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-mmr"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Уровень аккаунта</div>
-                <div class="stat-value" id="stat-level"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-level"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Faceit уровень</div>
-                <div class="stat-value" id="stat-faceit"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-faceit"></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="small" style="margin-bottom: 6px;">
-              Матчмейкинг подбирает соперников по званию и скрытому скиллу.  
-              Если ты слишком силён для своего звания — делаешь больше киллов и быстрее апаешься.
-            </div>
-            <div class="match-log" id="match-log"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Faceit матчи</div>
-            <div class="card-subtitle">
-              Открываются при достижении определённого уровня и звания. 1 матч = 1 минута (симуляция).
-            </div>
-          </div>
-          <div class="flex-between">
-            <div class="small" id="faceit-status"></div>
-            <button class="primary" id="btn-start-faceit">Играть Faceit</button>
-          </div>
-        </div>
-        <div class="small">
-          Faceit уровень растёт от 1 до 10. При достижении 10 уровня открываются открытые квалификации и интерес от про-команд.
-        </div>
-      </div>
-    </section>
-
-    <!-- Тренировка -->
-    <section id="screen-training" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Тренировка</div>
-            <div class="card-subtitle">
-              Короткие режимы, которые прокачивают статы: Aim, Reaction, Gamesense.
-            </div>
-          </div>
-          <div class="timer" id="training-timer">00:00</div>
-        </div>
-        <div class="row">
-          <div class="col">
-            <div class="stat-grid">
-              <div class="stat-item">
-                <div class="stat-label">Aim</div>
-                <div class="stat-value" id="stat-aim"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-aim"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Reaction</div>
-                <div class="stat-value" id="stat-reaction"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-reaction"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Gamesense</div>
-                <div class="stat-value" id="stat-gamesense"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-gamesense"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Positioning</div>
-                <div class="stat-value" id="stat-positioning"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-positioning"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Mentality</div>
-                <div class="stat-value" id="stat-mentality"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-mentality"></div></div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">Overall</div>
-                <div class="stat-value" id="stat-overall"></div>
-                <div class="stat-bar"><div class="stat-bar-inner" id="bar-overall"></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="col">
-            <div style="margin-bottom: 8px;">Режимы:</div>
-            <div style="margin-bottom: 6px;">
-              <button class="primary" id="btn-train-dm">Deathmatch (1 минута)</button>
-              <div class="small">+ Aim, + Gamesense, немного XP.</div>
-            </div>
-            <div style="margin-bottom: 6px;">
-              <button class="primary" id="btn-train-bots">Боты (30 сек)</button>
-              <div class="small">+ Aim, + Reaction, хороший прирост механики.</div>
-            </div>
-            <div style="margin-bottom: 6px;">
-              <button class="primary" id="btn-train-aimlab">Aim Lab (15 сек)</button>
-              <div class="small">Быстрая тренировка, небольшой прирост Aim.</div>
-            </div>
-            <div class="small" id="training-status" style="margin-top: 8px;"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Календарь -->
-    <section id="screen-calendar" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Календарь и сезоны</div>
-            <div class="card-subtitle">
-              Турниры, тренировочные матчи и трансферные окна (лето и зима).
-            </div>
-          </div>
-          <div>
-            <span class="small">Сегодня: <span id="calendar-today"></span></span>
-          </div>
-        </div>
-        <div class="flex-between" style="margin-bottom: 8px;">
-          <div class="small">
-            Сезон: <span id="calendar-season"></span>
-            <span class="badge-season" id="calendar-season-badge"></span>
-          </div>
-          <div class="small">
-            Трансферное окно:
-            <span id="calendar-transfer"></span>
-          </div>
-        </div>
-        <div class="calendar-grid" id="calendar-grid"></div>
-      </div>
-    </section>
-
-    <!-- Профиль -->
-    <section id="screen-profile" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Профиль игрока</div>
-            <div class="card-subtitle">Карточка игрока, статы, звания, Faceit и трофеи.</div>
-          </div>
-          <div class="tag" id="profile-discipline"></div>
-        </div>
-        <div class="row">
-          <div class="col">
-            <div class="stat-item" style="margin-bottom: 8px;">
-              <div class="stat-label">Никнейм</div>
-              <div class="stat-value" id="profile-nickname"></div>
-            </div>
-            <div class="stat-item" style="margin-bottom: 8px;">
-              <div class="stat-label">Текущая команда</div>
-              <div class="stat-value" id="profile-team"></div>
-            </div>
-            <div class="stat-item" style="margin-bottom: 8px;">
-              <div class="stat-label">Ранг и Faceit</div>
-              <div class="stat-value">
-                <span id="profile-rank"></span> · <span id="profile-faceit"></span>
-              </div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">Общая статистика</div>
-              <div class="small" id="profile-stats"></div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="stat-item">
-              <div class="stat-label">Трофеи и достижения</div>
-              <div class="trophies" id="profile-trophies"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-</main>
-
-<script src="script.js"></script>
-                </body>
+  <script src="./js/main.js"></script>
+        </body>
 </html>
