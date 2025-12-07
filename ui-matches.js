@@ -175,3 +175,4 @@ function renderMatchesScreen() {
 
 /* Экспорт в глобальную область */
 window.initMatchesUI = initMatchesUI;
+window.renderMatchesScreen = renderMatchesScreen;
