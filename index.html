@@ -245,37 +245,7 @@
       </div>
     </main>
 
-<!-- Модалка магазина -->
-<div id="shop-modal" class="modal hidden">
-  <div class="modal-content">
-    <h2>Shop (soon)</h2>
-    <p>Visual upgrades and themes will be available here.</p>
-    <ul>
-      <li>Tile themes (neon, pastel, dark)</li>
-      <li>Board skins</li>
-      <li>XP-based unlocks</li>
-    </ul>
-    <!-- ВАЖНО: id="close-shop" -->
-    <button id="close-shop">Close</button>
-  </div>
-</div>
-
-<script>
-  // Элементы
-  const shopBtn = document.getElementById('shop-btn');
-  const shopModal = document.getElementById('shop-modal');
-  const closeShopBtn = document.getElementById('close-shop');
-
-  // Открыть магазин
-  shopBtn.addEventListener('click', () => {
-    shopModal.classList.remove('hidden');
-  });
-
-  // Закрыть магазин по кнопке Close
-  closeShopBtn.addEventListener('click', () => {
-    shopModal.classList.add('hidden');
-  });
-</script>
+ 
   </div>
 
   <script>
