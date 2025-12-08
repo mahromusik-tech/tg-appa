@@ -1,391 +1,198 @@
-
-/* styles/styles.css */
-
-/* Сброс базовых стилей */
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-html,
-body {
-  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, sans-serif;
-  background-color: #0b0c10;
+  background: #121212;
   color: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 100vh;
 }
 
-/* Корневой контейнер приложения */
 #app {
+  width: 100%;
+  max-width: 480px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  gap: 12px;
 }
 
-/* Шапка */
-.app-header {
+.top-bar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: linear-gradient(90deg, #141824, #10131c);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
 }
 
-.app-title {
+.logo {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffcc00;
+}
+
+.stats {
   display: flex;
-  flex-direction: column;
+  gap: 8px;
 }
 
-.app-title-main {
+.stat {
+  background: #1f1f1f;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: right;
+  min-width: 60px;
+}
+
+.stat .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #aaaaaa;
+}
+
+.stat span:last-child {
   font-size: 16px;
   font-weight: 600;
 }
 
-.app-title-sub {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+.controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.app-user-info {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Основной контент */
-.app-main {
+button {
   flex: 1;
-  overflow-y: auto;
-  padding: 12px 12px 64px; /* отступ под нижнюю навигацию */
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #2b2b2b;
+  color: #f5f5f5;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-/* Экраны */
-.screen {
+button:active {
+  transform: scale(0.97);
+  background: #3a3a3a;
+}
+
+#game-container {
+  position: relative;
+  background: #1b1b1b;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+#grid {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.tile {
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 22px;
+  transition: transform 0.08s ease-out, background 0.1s ease-out;
+}
+
+.tile.empty {
+  background: #252525;
+}
+
+.tile:not(.empty) {
+  color: #222;
+}
+
+/* Цвета тайлов */
+.tile-2 { background: #eee4da; }
+.tile-4 { background: #ede0c8; }
+.tile-8 { background: #f2b179; color: #f9f6f2; }
+.tile-16 { background: #f59563; color: #f9f6f2; }
+.tile-32 { background: #f67c5f; color: #f9f6f2; }
+.tile-64 { background: #f65e3b; color: #f9f6f2; }
+.tile-128 { background: #edcf72; color: #f9f6f2; }
+.tile-256 { background: #edcc61; color: #f9f6f2; }
+.tile-512 { background: #edc850; color: #f9f6f2; }
+.tile-1024 { background: #edc53f; color: #f9f6f2; }
+.tile-2048 { background: #edc22e; color: #f9f6f2; }
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hidden {
   display: none;
 }
 
-.screen.active {
-  display: block;
+.overlay-content {
+  text-align: center;
+  padding: 16px;
+  background: #1f1f1f;
+  border-radius: 10px;
+  width: 80%;
 }
 
-.screen-content {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* Заголовки */
-h1 {
-  font-size: 20px;
+.overlay-content h2 {
   margin-bottom: 8px;
 }
 
-h2 {
-  font-size: 16px;
-  margin: 12px 0 6px;
-}
-
-/* Текст */
-p {
-  font-size: 13px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Кнопки */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  border: none;
-  padding: 8px 16px;
+.overlay-content p {
+  margin-bottom: 12px;
   font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.05s ease,
-    box-shadow 0.15s ease;
+  color: #cccccc;
 }
 
-.btn:active {
-  transform: scale(0.97);
-}
-
-.btn.primary {
-  background: linear-gradient(135deg, #00b4ff, #0077ff);
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(0, 180, 255, 0.4);
-  width: 100%;
-  margin-top: 16px;
-}
-
-.btn.primary:disabled {
-  opacity: 0.5;
-  box-shadow: none;
-  cursor: default;
-}
-
-.btn.secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
-}
-
-.btn.ghost {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.8);
-  border-radius: 999px;
-  padding: 4px 10px;
-}
-
-/* Инпуты */
-.input-text {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background-color: rgba(10, 12, 20, 0.9);
-  color: #ffffff;
-  font-size: 14px;
-  outline: none;
-  margin-top: 4px;
-}
-
-.input-text::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.input-text:focus {
-  border-color: #00b4ff;
-  box-shadow: 0 0 0 1px rgba(0, 180, 255, 0.4);
-}
-
-/* Выбор дисциплины */
-.discipline-select {
-  margin-top: 16px;
-}
-
-.discipline-list {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.discipline-card {
-  flex: 1;
-  border-radius: 12px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: radial-gradient(circle at top left, #1b2335, #10131c);
-  color: #ffffff;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-}
-
-.discipline-card .discipline-name {
-  font-weight: 600;
-}
-
-.discipline-card .discipline-status {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.discipline-card.active {
-  border-color: #00b4ff;
-  box-shadow: 0 0 10px rgba(0, 180, 255, 0.4);
-}
-
-.discipline-card.disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* Блок никнейма */
-.nickname-block {
-  margin-top: 16px;
-}
-
-/* Нижняя навигация */
-.app-nav {
+/* Модалка магазина */
+.modal {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 52px;
-  background: rgba(10, 12, 20, 0.98);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-around;
-  padding: 4px 6px;
   z-index: 10;
 }
 
-.nav-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
-  padding: 6px 4px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.nav-btn.active {
-  background: rgba(0, 180, 255, 0.16);
-  color: #ffffff;
-}
-
-/* Табы */
-.tabs {
-  display: flex;
-  gap: 6px;
-  margin: 10px 0 12px;
-}
-
-.tab-btn {
-  flex: 1;
-  border-radius: 999px;
-  border: none;
-  padding: 6px 10px;
-  font-size: 13px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.tab-btn.active {
-  background: linear-gradient(135deg, #00b4ff, #0077ff);
-  color: #ffffff;
-}
-
-/* Карточки тренировок */
-.training-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.training-card {
-  border-radius: 12px;
-  padding: 10px;
-  background: radial-gradient(circle at top left, #1b2335, #10131c);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.training-card h2 {
-  margin-top: 0;
-}
-
-.training-card p {
-  margin: 4px 0 8px;
-}
-
-/* Таймер тренировки */
-.training-timer {
-  margin-top: 12px;
-  padding: 8px 10px;
+.modal-content {
+  background: #1f1f1f;
+  padding: 16px;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.4);
+  width: 90%;
+  max-width: 360px;
+}
+
+.modal-content h2 {
+  margin-bottom: 8px;
+}
+
+.modal-content p {
+  margin-bottom: 8px;
   font-size: 14px;
-  display: flex;
-  justify-content: space-between;
+  color: #cccccc;
 }
 
-.training-result {
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  font-size: 13px;
-}
-
-/* Календарь */
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 8px 0 10px;
-}
-
-#calendar-current-month {
+.modal-content ul {
+  margin-left: 16px;
+  margin-bottom: 12px;
   font-size: 14px;
-  font-weight: 500;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-bottom: 10px;
-}
-
-.calendar-day {
-  border-radius: 8px;
-  padding: 6px 4px;
-  text-align: center;
-  font-size: 11px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.calendar-day.today {
-  border: 1px solid #00b4ff;
-}
-
-.calendar-day.has-events {
-  background: rgba(0, 180, 255, 0.16);
-}
-
-.calendar-day.selected {
-  outline: 1px solid #ffffff;
-}
-
-.calendar-day-events {
-  border-radius: 10px;
-  padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.4);
-  font-size: 12px;
-}
-
-/* Профиль */
-.profile-card {
-  border-radius: 12px;
-  padding: 10px;
-  background: radial-gradient(circle at top left, #1b2335, #10131c);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  margin-bottom: 10px;
-}
-
-.profile-stats {
-  border-radius: 12px;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* Вспомогательные классы */
-.hidden {
-  display: none !important;
-}
-
-.mt-8 {
-  margin-top: 8px;
-}
-
-.mt-12 {
-  margin-top: 12px;
+  color: #bbbbbb;
 }
