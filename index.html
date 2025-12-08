@@ -1,181 +1,92 @@
-        <!DOCTYPE html>
+              <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <title>Esports Journey</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app">
-    <!-- Верхняя панель / заголовок -->
-    <header class="app-header">
-      <div class="app-title">
-        <span class="app-title-main">Esports Journey</span>
-        <span class="app-title-sub">История киберспортсмена</span>
+    <!-- Экран онбординга / ввода ника -->
+    <section id="screen-onboarding" class="screen active">
+      <div class="screen-inner">
+        <h1>Esports Journey</h1>
+        <p>История киберспортсмена</p>
+
+        <div class="onboarding-card">
+          <p>Введи свой ник, чтобы начать путь:</p>
+          <input
+            id="input-nickname"
+            type="text"
+            placeholder="Твой ник"
+            autocomplete="off"
+          />
+          <button id="btn-start">Продолжить</button>
+        </div>
       </div>
-      <div class="app-user-info" id="tg-user-info">
-        <!-- Здесь можно показать аватар/имя из Telegram -->
+    </section>
+
+    <!-- Основные экраны приложения -->
+    <section id="screen-matches" class="screen">
+      <div class="screen-inner">
+        <h1>Матчи</h1>
+        <p>Здесь будут твои матчи (MM, Faceit, квалификации).</p>
+        <div id="matches-content"></div>
       </div>
-    </header>
+    </section>
 
-    <!-- Основной контейнер контента -->
-    <main class="app-main">
-      <!-- Экран приветствия / первый заход -->
-      <section id="screen-onboarding" class="screen active">
-        <div class="screen-content">
-          <h1>Начни путь киберспортсмена</h1>
-          <p>
-            Выбери дисциплину, создай никнейм и начни путь от матчмейкинга до
-            профессиональной сцены.
-          </p>
+    <section id="screen-training" class="screen">
+      <div class="screen-inner">
+        <h1>Тренировка</h1>
+        <p>Выбери режим тренировки, чтобы улучшить навыки игрока.</p>
 
-          <!-- На тестовом этапе доступна только CS2 -->
-          <div class="discipline-select">
-            <h2>Выбор дисциплины</h2>
-            <div class="discipline-list">
-              <button class="discipline-card active" data-discipline="cs2">
-                <span class="discipline-name">CS2</span>
-                <span class="discipline-status">Доступно</span>
-              </button>
-              <button class="discipline-card disabled" data-discipline="dota2" disabled>
-                <span class="discipline-name">Dota 2</span>
-                <span class="discipline-status">Скоро</span>
-              </button>
-              <button class="discipline-card disabled" data-discipline="valorant" disabled>
-                <span class="discipline-name">Valorant</span>
-                <span class="discipline-status">Скоро</span>
-              </button>
-            </div>
-          </div>
+        <div class="training-cards">
+          <button id="btn-training-dm" class="training-card">
+            <h2>Deathmatch</h2>
+            <p>1 минута. Улучшает aim и понимание игры.</p>
+          </button>
 
-          <!-- Ввод никнейма -->
-          <div class="nickname-block">
-            <h2>Никнейм игрока</h2>
-            <input
-              type="text"
-              id="input-nickname"
-              class="input-text"
-              maxlength="20"
-              placeholder="Придумай свой никнейм"
-            />
-          </div>
+          <button id="btn-training-bots" class="training-card">
+            <h2>Боты</h2>
+            <p>30 секунд. Улучшает aim и реакцию.</p>
+          </button>
 
-          <button id="btn-start-journey" class="btn primary">
-            Начать путь
+          <button id="btn-training-aimlab" class="training-card">
+            <h2>Aim Lab</h2>
+            <p>15 секунд. Небольшой прирост aim.</p>
           </button>
         </div>
-      </section>
 
-      <!-- Экран матчей (MM, Faceit, квалы) -->
-      <section id="screen-matches" class="screen">
-        <div class="screen-content">
-          <h1>Матчи</h1>
-          <div id="matches-tabs" class="tabs">
-            <button class="tab-btn active" data-tab="mm">MM</button>
-            <button class="tab-btn" data-tab="faceit">Faceit</button>
-            <button class="tab-btn" data-tab="quals">Квалификации</button>
-          </div>
+        <div id="training-timer" class="mt-16"></div>
+        <div id="training-result" class="mt-16"></div>
+      </div>
+    </section>
 
-          <div id="matches-content">
-            <!-- Содержимое будет отрисовываться JS (mm, faceit, quals) -->
-          </div>
+    <section id="screen-calendar" class="screen">
+      <div class="screen-inner">
+        <h1>Календарь</h1>
+        <p>Следи за сезонами, турнирами, тренировочными матчами и трансферными окнами.</p>
+
+        <div class="calendar-header">
+          <button id="calendar-prev">‹</button>
+          <span id="calendar-current-month"></span>
+          <button id="calendar-next">›</button>
         </div>
-      </section>
 
-      <!-- Экран тренировок -->
-      <section id="screen-training" class="screen">
-        <div class="screen-content">
-          <h1>Тренировка</h1>
-          <p>Выбери режим тренировки, чтобы улучшить навыки игрока.</p>
+        <div id="calendar-season-info" class="mt-8"></div>
+        <div id="calendar-grid" class="calendar-grid mt-16"></div>
+        <div id="calendar-day-events" class="mt-16"></div>
+      </div>
+    </section>
 
-          <div class="training-list">
-            <div class="training-card" data-training="dm">
-              <h2>Deathmatch</h2>
-              <p>1 минута. Улучшает aim и понимание игры.</p>
-              <button class="btn secondary btn-start-training">
-                Начать DM
-              </button>
-            </div>
-
-            <div class="training-card" data-training="bots">
-              <h2>Боты</h2>
-              <p>30 секунд. Улучшает aim и реакцию.</p>
-              <button class="btn secondary btn-start-training">
-                Играть с ботами
-              </button>
-            </div>
-
-            <div class="training-card" data-training="aimlab">
-              <h2>Aim Lab</h2>
-              <p>15 секунд. Небольшой прирост aim.</p>
-              <button class="btn secondary btn-start-training">
-                Aim Lab
-              </button>
-            </div>
-          </div>
-
-          <div id="training-timer" class="training-timer hidden">
-            <span id="training-timer-label">Оставшееся время:</span>
-            <span id="training-timer-value">00:00</span>
-          </div>
-
-          <div id="training-result" class="training-result hidden">
-            <!-- Результаты тренировки будут подставляться JS -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Экран календаря -->
-      <section id="screen-calendar" class="screen">
-        <div class="screen-content">
-          <h1>Календарь</h1>
-          <p>
-            Следи за сезонами, турнирами, тренировочными матчами и
-            трансферными окнами.
-          </p>
-
-          <div class="calendar-header">
-            <div id="calendar-season-info">
-              <!-- Текущий сезон, даты, статус (лето/зима/межсезонье) -->
-            </div>
-            <div class="calendar-nav">
-              <button id="calendar-prev" class="btn ghost"><</button>
-              <span id="calendar-current-month"></span>
-              <button id="calendar-next" class="btn ghost">></button>
-            </div>
-          </div>
-
-          <div id="calendar-grid" class="calendar-grid">
-            <!-- Сетка календаря будет отрисовываться JS -->
-          </div>
-
-          <div id="calendar-day-events" class="calendar-day-events">
-            <!-- События выбранного дня: турниры, матчи, тренировки -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Экран профиля -->
-      <section id="screen-profile" class="screen">
-        <div class="screen-content">
-          <h1>Профиль игрока</h1>
-
-          <div id="profile-card" class="profile-card">
-            <!-- Карточка игрока: ник, дисциплина, ранг, Faceit lvl, команда -->
-          </div>
-
-          <div id="profile-stats" class="profile-stats">
-            <!-- Статистика: матчи, K/D, рейтинг, трофеи, сезоны -->
-          </div>
-        </div>
-      </section>
-    </main>
+    <section id="screen-profile" class="screen">
+      <div class="screen-inner">
+        <h1>Профиль</h1>
+        <div id="profile-content"></div>
+      </div>
+    </section>
 
     <!-- Нижняя навигация -->
     <nav class="app-nav">
@@ -194,18 +105,17 @@
     </nav>
   </div>
 
-  <!-- Скрипты -->
-  <script src="./state.js"></script>
-  <script src="./matchmaking.js"></script>
-  <script src="./training.js"></script>
-  <script src="./calendar.js"></script>
+  <!-- Скрипты: порядок важен -->
+  <script src="js/state.js"></script>
+  <script src="js/training.js"></script>
+  <script src="js/calendar.js"></script>
 
-  <script src="./ui-navigation.js"></script>
-  <script src="./ui-profile.js"></script>
-  <script src="./ui-matches.js"></script>
-  <script src="./ui-training.js"></script>
-  <script src="./ui-calendar.js"></script>
+  <script src="js/ui/ui-training.js"></script>
+  <script src="js/ui/ui-calendar.js"></script>
+  <script src="js/ui/ui-navigation.js"></script>
+  <script src="js/ui/ui-profile.js"></script>
+  <script src="js/ui/ui-matches.js"></script>
 
-  <script src="./main.js"></script>
-        </body>
+  <script src="js/main.js"></script>
+</body>
 </html>
