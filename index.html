@@ -1,121 +1,66 @@
-              <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Esports Journey</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link rel="stylesheet" href="./styles.css" />
+  <title>2048 Mini App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app">
-    <!-- Экран онбординга / ввода ника -->
-    <section id="screen-onboarding" class="screen active">
-      <div class="screen-inner">
-        <h1>Esports Journey</h1>
-        <p>История киберспортсмена</p>
-
-        <div class="onboarding-card">
-          <p>Введи свой ник, чтобы начать путь:</p>
-          <input
-            id="input-nickname"
-            type="text"
-            placeholder="Твой ник"
-            autocomplete="off"
-          />
-          <button id="btn-start">Продолжить</button>
+    <header class="top-bar">
+      <div class="logo">2048</div>
+      <div class="stats">
+        <div class="stat">
+          <span class="label">Score</span>
+          <span id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Best</span>
+          <span id="best">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">XP</span>
+          <span id="xp">0</span>
         </div>
       </div>
-    </section>
+    </header>
 
-    <!-- Основные экраны приложения -->
-    <section id="screen-matches" class="screen">
-      <div class="screen-inner">
-        <h1>Матчи</h1>
-        <p>Здесь будут твои матчи (MM, Faceit, квалификации).</p>
-        <div id="matches-content"></div>
+    <main>
+      <div class="controls">
+        <button id="new-game">New game</button>
+        <button id="shop-btn">Shop (soon)</button>
       </div>
-    </section>
 
-    <section id="screen-training" class="screen">
-      <div class="screen-inner">
-        <h1>Тренировка</h1>
-        <p>Выбери режим тренировки, чтобы улучшить навыки игрока.</p>
-
-        <div class="training-cards">
-          <button id="btn-training-dm" class="training-card">
-            <h2>Deathmatch</h2>
-            <p>1 минута. Улучшает aim и понимание игры.</p>
-          </button>
-
-          <button id="btn-training-bots" class="training-card">
-            <h2>Боты</h2>
-            <p>30 секунд. Улучшает aim и реакцию.</p>
-          </button>
-
-          <button id="btn-training-aimlab" class="training-card">
-            <h2>Aim Lab</h2>
-            <p>15 секунд. Небольшой прирост aim.</p>
-          </button>
+      <div id="game-container">
+        <div id="grid"></div>
+        <div id="overlay" class="hidden">
+          <div class="overlay-content">
+            <h2 id="overlay-title">Game Over</h2>
+            <p id="overlay-text"></p>
+            <button id="try-again">Try again</button>
+          </div>
         </div>
-
-        <div id="training-timer" class="mt-16"></div>
-        <div id="training-result" class="mt-16"></div>
       </div>
-    </section>
+    </main>
 
-    <section id="screen-calendar" class="screen">
-      <div class="screen-inner">
-        <h1>Календарь</h1>
-        <p>Следи за сезонами, турнирами, тренировочными матчами и трансферными окнами.</p>
-
-        <div class="calendar-header">
-          <button id="calendar-prev">‹</button>
-          <span id="calendar-current-month"></span>
-          <button id="calendar-next">›</button>
-        </div>
-
-        <div id="calendar-season-info" class="mt-8"></div>
-        <div id="calendar-grid" class="calendar-grid mt-16"></div>
-        <div id="calendar-day-events" class="mt-16"></div>
+    <div id="shop-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Shop (soon)</h2>
+        <p>Visual upgrades and themes will be available here.</p>
+        <ul>
+          <li>Tile themes (neon, pastel, dark)</li>
+          <li>Board skins</li>
+          <li>XP-based unlocks</li>
+        </ul>
+        <button id="close-shop">Close</button>
       </div>
-    </section>
-
-    <section id="screen-profile" class="screen">
-      <div class="screen-inner">
-        <h1>Профиль</h1>
-        <div id="profile-content"></div>
-      </div>
-    </section>
-
-    <!-- Нижняя навигация -->
-    <nav class="app-nav">
-      <button class="nav-btn active" data-screen="screen-matches">
-        Матчи
-      </button>
-      <button class="nav-btn" data-screen="screen-training">
-        Тренировка
-      </button>
-      <button class="nav-btn" data-screen="screen-calendar">
-        Календарь
-      </button>
-      <button class="nav-btn" data-screen="screen-profile">
-        Профиль
-      </button>
-    </nav>
+    </div>
   </div>
 
-  <!-- Скрипты: порядок важен -->
-  <script src="./state.js"></script>
-  <script src="./training.js"></script>
-  <script src="./calendar.js"></script>
+  <!-- Telegram WebApp init (опционально, если уже встраиваешь) -->
+  <!-- <script src="https://telegram.org/js/telegram-web-app.js"></script> -->
 
-  <script src="./ui-training.js"></script>
-  <script src="./ui-calendar.js"></script>
-  <script src="./ui-navigation.js"></script>
-  <script src="./ui-profile.js"></script>
-  <script src="./ui-matches.js"></script>
-
-  <script src="./main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
