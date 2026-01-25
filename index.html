@@ -1,4 +1,333 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+<title>Miner Tycoon — Updated</title>
+<style>
+  :root{
+    --bg1:#071428; --bg2:#041e2f; --card:#081826;
+    --accent:#00ffe1; --accent2:#ff4db6; --muted:rgba(255,255,255,0.6);
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#fff}
+  .app{max-width:420px;margin:0 auto;padding:12px;box-sizing:border-box}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .title{font-weight:800;font-size:18px}
+  .subtitle{font-size:12px;color:var(--muted)}
+  .balances{display:flex;gap:8px;align-items:center}
+  .balanceCard{background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));padding:8px 10px;border-radius:12px;display:flex;gap:8px;align-items:center}
+  .ico{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center}
+  .main{display:flex;flex-direction:column;gap:10px}
+  .panel{background:var(--card);padding:10px;border-radius:14px;box-shadow:0 8px 24px rgba(2,6,12,0.6)}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+  .slot{background:var(--glass);padding:10px;border-radius:10px;min-height:96px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;position:relative}
+  .slot.empty{align-items:center;justify-content:center;color:var(--muted)}
+  .slot .name{font-weight:700}
+  .small{font-size:12px;color:var(--muted)}
+  .store{display:flex;flex-direction:column;gap:8px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:8px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+  .btn{background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;padding:10px;border-radius:12px;color:#031224;font-weight:800;cursor:pointer;min-width:44px;text-align:center}
+  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px}
+  .btn.full{width:100%}
+  .muted{color:var(--muted)}
+  #chart{width:100%;height:90px;border-radius:8px;background:linear-gradient(180deg,#041826,#083240);display:block}
+  /* modal */
+  .modalBack{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal{width:100%;max-width:420px;background:linear-gradient(180deg,#071b24,#092a33);padding:14px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.7)}
+  .modalHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .controls{display:flex;gap:8px}
+  /* notifications */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:linear-gradient(90deg,#0f3b45,#1b2430);padding:10px 14px;border-radius:10px;color:#bfeee6;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:60}
+  /* responsive tweaks */
+  @media (min-width:420px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  .statRow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .pill{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div>
+      <div class="title">Miner Tycoon</div>
+      <div class="subtitle">Стройте ферму, торгуйте монетой, доминируйте</div>
+    </div>
+    <div class="balances">
+      <div class="balanceCard" title="Баланс денег">
+        <div class="ico" id="moneyIco">
+          <!-- wallet SVG -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 7h16v10H3z" stroke="#9EEFD4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 10v2" stroke="#9EEFD4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="text-align:right">
+          <div id="money">$0</div>
+          <div class="small muted">Баланс USD</div>
+        </div>
+      </div>
+      <div class="balanceCard" style="margin-left:6px" title="Баланс монет">
+        <div class="ico" id="coinIco">
+          <!-- coin SVG -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#FFD966" stroke-width="1.4"/><path d="M9 10h6M9 14h6" stroke="#FFD966" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div style="text-align:right">
+          <div id="coins">0.00</div>
+          <div class="small muted">Баланс Coin</div>
+        </div>
+      </div>
+    </div>
+  </header>
+<main class="main">
+    <section class="panel">
+      <div class="row">
+        <div>
+          <div style="font-weight:800">Ферма</div>
+          <div class="small muted">Слоты, энергоёмкость, статус</div>
+        </div>
+        <div class="statRow">
+          <div class="pill small" id="slotsInfo">1 слот</div>
+          <div class="pill small" id="powerInfo">300W</div>
+        </div>
+      </div>
+
+      <div class="grid" id="slotsGrid" style="margin-top:10px"></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="btnBuySlot" class="btn full">Купить слот</button>
+        <button id="btnPowerUp" class="btn secondary" style="min-width:46px">Питание</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="row">
+        <div>
+          <div style="font-weight:800">Показатели</div>
+          <div class="small muted">Хешрейт, доход, электро</div>
+        </div>
+        <div class="muted small" id="tickInfo">Обновление: 1с</div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:8px;flex-direction:column">
+        <div class="card"><div>Хешрейт</div><div id="totalHash">0 H/s</div></div>
+        <div class="card"><div>Производство</div><div id="prodCoins">+0.00 Coin/с</div></div>
+        <div class="card"><div>Электро</div><div id="elecCost">-0.000 $/с</div></div>
+        <div class="card"><div>Чистый (USD)</div><div id="netUsd">+0.000 $/с</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:800">Маркет / Магазин</div>
+          <div class="small muted">Выберите карту и установите в слот</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small muted">Эл. цена $/kWh</div>
+          <input id="priceKwh" type="number" step="0.01" value="0.12" style="width:84px;border-radius:8px;padding:6px;border:none;background:#051a20;color:#fff">
+        </div>
+      </div>
+
+      <div class="store" id="storeArea" style="margin-top:10px"></div>
+
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btnCooling" class="btn secondary">Cooling $350</button>
+        <button id="btnMaintenance" class="btn secondary">Maintenance $500</button>
+        <button id="btnBoost" class="btn">Boost 60s $150</button>
+        <button id="btnInsurance" class="btn secondary">Insurance $120/mo</button>
+      </div>
+    </section>
+<section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:800">Рынок монеты</div>
+          <div class="small muted">Курс обновляется каждую минуту</div>
+        </div>
+        <div>
+          <div class="small muted">Текущая цена</div>
+          <div style="font-weight:800" id="coinPrice">$0.00</div>
+        </div>
+      </div>
+
+      <canvas id="chart" style="margin-top:10px"></canvas>
+
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <input id="sellAmount" type="number" placeholder="Кол-во Coin" style="flex:1;padding:8px;border-radius:8px;border:none;background:#051a20;color:#fff">
+        <button id="btnSellNow" class="btn">Продать</button>
+      </div>
+
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <input id="orderPrice" type="number" placeholder="Цена для авто‑продажи" style="flex:1;padding:8px;border-radius:8px;border:none;background:#051a20;color:#fff">
+        <button id="btnPlaceOrder" class="btn secondary">Поставить ордер</button>
+      </div>
+
+      <div style="margin-top:8px" id="ordersList" class="small muted"></div>
+    </section>
+
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:800">Журнал</div>
+          <div class="small muted">События и уведомления</div>
+        </div>
+        <div><button id="btnReset" class="btn secondary">Сброс</button></div>
+      </div>
+      <div id="log" style="margin-top:10px;max-height:160px;overflow:auto;color:var(--muted);font-size:13px"></div>
+    </section>
+  </main>
+</div>
+
+<!-- modal -->
+<div class="modalBack" id="modalBack">
+  <div class="modal" id="modal">
+    <div class="modalHeader">
+      <div>
+        <div id="modalName" style="font-weight:900"></div>
+        <div class="small muted" id="modalSub"></div>
+      </div>
+      <div><button id="modalClose" class="btn secondary">Закр.</button></div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">OK</div>
+<script>
+(() => {
   // -------------------------
+  // Data & config
+  // -------------------------
+  const SAVE_KEY = 'miner_tycoon_v2';
+  const initialUSD = 1000;
+  const $perH_base = 0.0002; // base coin production conversion -> we will produce coins not USD; convert later by price
+  // But we'll set GPU hashrate units as "hash units" that produce coins/sec via coinRatePerH
+  const coinPerH = 0.01 / 10; // scaling so starter yields ~1 coin/sec? We'll tune in code below.
+
+  // GPU catalog (expanded)
+  const GPU_CATALOG = [
+    // id,name,price,hash, powerW, reliability(0..1), repairFactor
+    {id:'starter', name:'Старая 1', price:100, hash:10, power:75, reliability:0.998, repairFactor:0.2, rarity:'common'},
+    {id:'g1', name:'GTX 1050 Ti', price:180, hash:30, power:75, reliability:0.996, repairFactor:0.18, rarity:'common'},
+    {id:'g2', name:'GTX 1060', price:300, hash:60, power:120, reliability:0.995, repairFactor:0.17, rarity:'common'},
+    {id:'g3', name:'RX 570', price:320, hash:70, power:130, reliability:0.994, repairFactor:0.16, rarity:'common'},
+    {id:'g4', name:'RTX 2060', price:850, hash:200, power:160, reliability:0.992, repairFactor:0.15, rarity:'rare'},
+    {id:'g5', name:'RTX 2070', price:1200, hash:260, power:185, reliability:0.991, repairFactor:0.14, rarity:'rare'},
+    {id:'g6', name:'RTX 3060', price:1600, hash:360, power:170, reliability:0.990, repairFactor:0.13, rarity:'rare'},
+    {id:'g7', name:'RTX 3080', price:3200, hash:1100, power:320, reliability:0.988, repairFactor:0.12, rarity:'epic'},
+    {id:'g8', name:'RTX 4090', price:7000, hash:2600, power:450, reliability:0.986, repairFactor:0.11, rarity:'epic'},
+    {id:'asic1', name:'ASIC S1', price:9000, hash:6000, power:2000, reliability:0.995, repairFactor:0.09, rarity:'asic'},
+    {id:'asic2', name:'ASIC XPro', price:25000, hash:25000, power:6000, reliability:0.997, repairFactor:0.07, rarity:'asic'},
+    {id:'usedlot', name:'Used Bundle', price:1200, hash:900, power:1000, reliability:0.96, repairFactor:0.22, rarity:'bundle'}
+  ];
+
+  // improvements & prices
+  const PRICES = {
+    slotBase: 220,
+    powerUpgrade: 600, // +500W
+    cooling: 350,
+    maintenance: 500,
+    boost: 150,
+    insuranceMonthly: 120
+  };
+
+  // game state
+  let state = {
+    usd: initialUSD,
+    coins: 0,
+    coinPrice: 0.12, // USD per coin
+    coinHistory: [], // last 60 points (per minute)
+    slotsTotal: 1,
+    slots: [], // each: { id, gpu:null or gpuObj, oc:false, brokenUntil:null }
+    powerCapacity: 300,
+    coolingLevel: 0,
+    maintenance: false,
+    boostUntil: 0,
+    insurance: false,
+    orders: [], // auto-sell orders: {id, price}
+    lastTick: Date.now(),
+    lastPriceUpdate: Date.now()
+  };
+
+  // tuning: coin production scaling
+  // We'll compute coinProductionPerHash = 0.001 / 1  (so hash 10 -> 0.01 coin/s). We'll tune so starter ~1 coin/s:
+  // Aim: starter hash=10 -> 1 coin/s => factor = 0.1 coin per H
+  const coinPerHRate = 0.1; // 10 H => 1 coin/s
+
+  // -------------------------
+  // Helpers
+  // -------------------------
+  function now(){ return Date.now(); }
+  function genId(){ return Math.random().toString(36).slice(2,9); }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+  function formatMoney(x){ return '$' + x.toFixed(2); }
+  function formatCoins(x){ return x.toFixed(3); }
+  function toast(msg, t=2200){ const el=document.getElementById('toast'); el.textContent=msg; el.style.display='block'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display='none', t); }
+
+  // -------------------------
+  // Save / Load
+  // -------------------------
+  function save(){
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function load(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw){
+      try{ const s = JSON.parse(raw); state = s; return; }catch(e){}
+    }
+    // init default
+    state.usd = initialUSD;
+    state.coins = 0;
+    state.coinPrice = 0.12;
+    state.coinHistory = [state.coinPrice];
+    state.slotsTotal = 1;
+    state.slots = [{id:genId(), gpu: clone(GPU_CATALOG[0]), oc:false, brokenUntil:null}]; // starter installed
+    state.powerCapacity = 300;
+    state.coolingLevel = 0;
+    state.maintenance = false;
+    state.boostUntil = 0;
+    state.insurance = false;
+    state.orders = [];
+    state.lastTick = now();
+    state.lastPriceUpdate = now();
+    save();
+  }
+
+  // -------------------------
+  // UI refs
+  // -------------------------
+  const slotsGrid = document.getElementById('slotsGrid');
+  const slotsInfo = document.getElementById('slotsInfo');
+  const powerInfo = document.getElementById('powerInfo');
+  const moneyEl = document.getElementById('money');
+  const coinsEl = document.getElementById('coins');
+  const totalHashEl = document.getElementById('totalHash');
+  const prodCoinsEl = document.getElementById('prodCoins');
+  const elecCostEl = document.getElementById('elecCost');
+  const netUsdEl = document.getElementById('netUsd');
+  const storeArea = document.getElementById('storeArea');
+  const priceKwhInput = document.getElementById('priceKwh');
+  const coinPriceEl = document.getElementById('coinPrice');
+  const chart = document.getElementById('chart');
+  const ctx = chart.getContext('2d');
+  const logEl = document.getElementById('log');
+  const modalBack = document.getElementById('modalBack');
+  const modal = document.getElementById('modal');
+  const modalName = document.getElementById('modalName');
+  const modalSub = document.getElementById('modalSub');
+  const modalBody = document.getElementById('modalBody');
+
+  // form controls
+  const btnBuySlot = document.getElementById('btnBuySlot');
+  const btnPowerUp = document.getElementById('btnPowerUp');
+  const btnCooling = document.getElementById('btnCooling');
+  const btnMaintenance = document.getElementById('btnMaintenance');
+  const btnBoost = document.getElementById('btnBoost');
+  const btnInsurance = document.getElementById('btnInsurance');
+  const btnSellNow = document.getElementById('btnSellNow');
+  const sellAmountInput = document.getElementById('sellAmount');
+  const orderPriceInput = document.getElementById('orderPrice');
+  const btnPlaceOrder = document.getElementById('btnPlaceOrder');
+  const ordersList = document.getElementById('ordersList');
+  const btnReset = document.getElementById('btnReset');
+
+// -------------------------
   // Rendering functions
   // -------------------------
   function renderSlots(){
