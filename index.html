@@ -1,1 +1,326 @@
 
+    // handlers
+    document.getElementById('sellBtn').addEventListener('click', ()=>{
+      const price = Math.round(g.price * 0.5);
+      if(!confirm(`Продать ${g.name} за ${formatMoney(price)} ?`)) return;
+      state.usd += price;
+      state.slots[index].gpu = null;
+      state.slots[index].oc = false;
+      state.slots[index].brokenUntil = null;
+      log(`Продана ${g.name} за ${formatMoney(price)}`);
+      closeModal(); save(); updateUI();
+    });
+    document.getElementById('ocBtn').addEventListener('click', ()=>{
+      state.slots[index].oc = !state.slots[index].oc;
+      log(`${g.name} OC ${state.slots[index].oc ? 'включён' : 'отключён'}`);
+      closeModal(); save(); updateUI();
+    });
+    document.getElementById('repairBtn').addEventListener('click', ()=>{ repairSlot(index); });
+    document.getElementById('closeBtn').addEventListener('click', closeModal);
+  }
+
+  function closeModal(){ modalBack.style.display = 'none'; }
+
+  // -------------------------
+  // Core simulation
+  // -------------------------
+  function computeTotals(){
+    // compute total hash, coin/sec, power, elec cost per sec
+    let hash = 0, power = 0;
+    for(const s of state.slots){
+      if(!s.gpu) continue;
+      const broken = s.brokenUntil && s.brokenUntil > now();
+      if(!broken){
+        let h = s.gpu.hash;
+        if(s.oc) h *= 1.25;
+        if(state.boostUntil > now()) h *= 1.5;
+        hash += h;
+      }
+      let p = s.gpu.power * (s.oc ? 1.15 : 1);
+      if(s.brokenUntil && s.brokenUntil > now()) p *= 0.3;
+      power += p;
+    }
+    const coinPerSec = hash * coinPerHRate;
+    const pricekwh = parseFloat(priceKwhInput.value) || 0.12;
+    const elecPerSec = power/1000 * pricekwh / 3600;
+    const netUsdPerSec = coinPerSec * state.coinPrice - elecPerSec;
+    return {hash, coinPerSec, power, elecPerSec, netUsd: netUsdPerSec};
+  }
+
+  function calcCoinProductionForSlot(slot){
+    if(!slot.gpu) return 0;
+    const broken = slot.brokenUntil && slot.brokenUntil > now();
+    if(broken) return 0;
+    let h = slot.gpu.hash;
+    if(slot.oc) h *= 1.25;
+    if(state.boostUntil > now()) h *= 1.5;
+    return h * coinPerHRate;
+  }
+  function elecForSlotInUsd(slot){
+    if(!slot.gpu) return 0;
+    let p = slot.gpu.power * (slot.oc ? 1.15 : 1);
+    if(slot.brokenUntil && slot.brokenUntil > now()) p *= 0.3;
+    const pricekwh = parseFloat(priceKwhInput.value) || 0.12;
+    return p/1000 * pricekwh / 3600;
+  }
+
+  // tick every second
+  function gameTick(){
+    const elapsed = (now() - state.lastTick) / 1000; // seconds since last tick
+    state.lastTick = now();
+
+    // produce coins
+    const totals = computeTotals();
+    state.coins += totals.coinPerSec * elapsed;
+    state.usd += (totals.netUsd + (state.insurance ? -PRICES.insuranceMonthly/ (30*24*3600) : 0)) * elapsed; // insurance is monthly cost
+
+    // passive failure checks
+    for(const s of state.slots){
+      if(!s.gpu) continue;
+      const broken = s.brokenUntil && s.brokenUntil > now();
+      if(broken) continue;
+      const baseFailPerMin = 1 - s.gpu.reliability;
+      const failProbPerSec = baseFailPerMin / 60;
+      let mod = 1;
+      if(state.coolingLevel > 0) mod *= 0.6;
+      if(state.maintenance) mod *= 0.5;
+      if(s.oc) mod *= 1.6;
+      if(Math.random() < failProbPerSec * mod * elapsed){ // scale prob by elapsed time
+        const downtime = 1000 * (60 * (1 + Math.random()*2)); // 1-3 minutes down
+        s.brokenUntil = now() + downtime;
+        log(`${s.gpu.name} в слоте вышла из строя на ${Math.round(downtime/1000)} с.`);
+      }
+    }
+
+    // auto-repair if maintenance team present
+    if(state.maintenance){
+      for(const s of state.slots){
+        if(s.brokenUntil && s.brokenUntil > now()){
+          s.brokenUntil = Math.max(now(), s.brokenUntil - elapsed * 1000 * 2); // repair 2 seconds faster per tick
+          if(s.brokenUntil <= now()){
+            s.brokenUntil = null;
+            log(`${s.gpu.name} починена командой`);
+          }
+        }
+      }
+    }
+
+    // auto-sell orders
+    state.orders = state.orders.filter(o=>{
+      if(state.coinPrice >= o.price){
+        const amount = state.coins; // sell all available
+        state.usd += amount * state.coinPrice;
+        state.coins = 0;
+        log(`Ордер выполнен: продано ${formatCoins(amount)} Coin по ${formatMoney(state.coinPrice)}`);
+        return false; // remove order
+      }
+      return true;
+    });
+
+    updateUI();
+  }
+
+  // price update every minute
+  function priceTick(){
+    const elapsedMin = (now() - state.lastPriceUpdate) / (1000 * 60);
+    state.lastPriceUpdate = now();
+    if(elapsedMin < 1) return; // only update if a minute passed
+
+    // random walk for coin price
+    const volatility = 0.02; // 2% up/down
+    const change = (Math.random() * 2 - 1) * volatility * state.coinPrice;
+    state.coinPrice = Math.max(0.01, state.coinPrice + change); // min price 0.01
+
+    // add to history
+    state.coinHistory.push(state.coinPrice);
+    if(state.coinHistory.length > 60) state.coinHistory.shift(); // keep last 60 minutes
+
+    renderMarket();
+  }
+
+  // -------------------------
+  // Actions
+  // -------------------------
+  btnBuySlot.addEventListener('click', ()=>{
+    const price = PRICES.slotBase + (state.slotsTotal - 1) * 150;
+    if(state.usd < price){ toast('Недостаточно USD для покупки слота'); return; }
+    state.usd -= price;
+    state.slotsTotal += 1;
+    log(`Куплен слот за ${formatMoney(price)}`);
+    save(); updateUI();
+  });
+
+  btnPowerUp.addEventListener('click', ()=>{
+    if(state.usd < PRICES.powerUpgrade){ toast('Недостаточно USD для апгрейда питания'); return; }
+    state.usd -= PRICES.powerUpgrade;
+    state.powerCapacity += 500;
+    log(`Мощность увеличена на 500W за ${formatMoney(PRICES.powerUpgrade)}`);
+    save(); updateUI();
+  });
+
+  btnCooling.addEventListener('click', ()=>{
+    if(state.coolingLevel >= 1){ toast('Охлаждение уже установлено'); return; }
+    if(state.usd < PRICES.cooling){ toast('Недостаточно USD для охлаждения'); return; }
+    state.usd -= PRICES.cooling;
+    state.coolingLevel = 1;
+    log(`Установлено улучшенное охлаждение за ${formatMoney(PRICES.cooling)}`);
+    save(); updateUI();
+  });
+
+  btnMaintenance.addEventListener('click', ()=>{
+    if(state.maintenance){ toast('Сервисная команда уже нанята'); return; }
+    if(state.usd < PRICES.maintenance){ toast('Недостаточно USD для сервисной команды'); return; }
+    state.usd -= PRICES.maintenance;
+    state.maintenance = true;
+    log(`Нанята сервисная команда за ${formatMoney(PRICES.maintenance)}`);
+    save(); updateUI();
+  });
+
+  btnBoost.addEventListener('click', ()=>{
+    if(state.usd < PRICES.boost){ toast('Недостаточно USD для Boost'); return; }
+    if(state.boostUntil > now()){ toast('Boost уже активен'); return; }
+    state.usd -= PRICES.boost;
+    state.boostUntil = now() + 60_000; // 60 sec
+    log('Boost активирован: +50% хеша на 60с');
+    save(); updateUI();
+  });
+
+  btnInsurance.addEventListener('click', ()=>{
+    if(state.insurance){ toast('Страховка уже оформлена'); return; }
+    if(state.usd < PRICES.insuranceMonthly){ toast('Недостаточно USD для страховки'); return; }
+    state.usd -= PRICES.insuranceMonthly; // first month upfront
+    state.insurance = true;
+    log(`Оформлена страховка за ${formatMoney(PRICES.insuranceMonthly)}/мес`);
+    save(); updateUI();
+  });
+
+  function buyGpu(gpuId){
+    const freeIndex = state.slots.findIndex(s=>!s.gpu);
+    if(freeIndex === -1){ toast('Нет свободного слота — купите слот'); return; }
+    const g = GPU_CATALOG.find(x=>x.id===gpuId);
+    if(!g) return;
+    if(state.usd < g.price){ toast('Недостаточно USD для покупки GPU'); return; }
+
+    const totals = computeTotals();
+    if(totals.power + g.power > state.powerCapacity){
+      toast('Недостаточно мощности питания — апгрейдите питание');
+      return;
+    }
+state.usd -= g.price;
+    state.slots[freeIndex].gpu = clone(g);
+    state.slots[freeIndex].oc = false;
+    state.slots[freeIndex].brokenUntil = null;
+    log(`Куплена ${g.name} за ${formatMoney(g.price)} и установлена в слот ${freeIndex+1}`);
+    save(); updateUI();
+  }
+
+  function buyGpuToSlot(gpuId, slotIndex){
+    const g = GPU_CATALOG.find(x=>x.id===gpuId);
+    if(!g){ toast('Неверный id GPU'); return; }
+    if(state.usd < g.price){ toast('Недостаточно USD'); return; }
+    const totals = computeTotals();
+    if(totals.power + g.power > state.powerCapacity){ toast('Недостаточно мощности'); return; }
+    state.usd -= g.price;
+    state.slots[slotIndex].gpu = clone(g);
+    state.slots[slotIndex].brokenUntil = null;
+    state.slots[slotIndex].oc = false;
+    log(`Куплена ${g.name} и установлена в слот ${slotIndex+1}`);
+    closeModal(); save(); updateUI();
+  }
+
+  function repairSlot(index){
+    const s = state.slots[index];
+    if(!s.gpu){ toast('Нет GPU'); return; }
+    if(!s.brokenUntil || s.brokenUntil <= now()){ toast('GPU не сломана'); return; }
+    const baseCost = s.gpu.price * s.gpu.repairFactor;
+    const cost = state.maintenance ? Math.round(baseCost * 0.6) : Math.round(baseCost);
+    if(state.usd < cost){ toast('Недостаточно USD для ремонта'); return; }
+    state.usd -= cost;
+    s.brokenUntil = null;
+    log(`${s.gpu.name} отремонтирована за ${formatMoney(cost)}`);
+    closeModal(); save(); updateUI();
+  }
+
+  function showGpuInfo(gpuId){
+    const g = GPU_CATALOG.find(x=>x.id===gpuId);
+    if(!g) return;
+    modalBack.style.display = 'flex';
+    modalName.textContent = g.name;
+    modalSub.textContent = `Цена: ${formatMoney(g.price)} • Хешрейт: ${g.hash} H/s • Потребление: ${g.power}W`;
+    modalBody.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
+      <div class="card"><div>Надёжность</div><div class="small muted">${(g.reliability*100).toFixed(2)}%</div></div>
+      <div class="card"><div>Фактор ремонта</div><div class="small muted">${(g.repairFactor*100).toFixed(1)}% от цены</div></div>
+      <button id="modalCloseBtn" class="btn full">Закрыть</button>
+    </div>`;
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  }
+
+  btnSellNow.addEventListener('click', ()=>{
+    const amount = parseFloat(sellAmountInput.value);
+    if(isNaN(amount) || amount <= 0){ toast('Введите корректное количество Coin'); return; }
+    if(state.coins < amount){ toast('Недостаточно Coin для продажи'); return; }
+    state.coins -= amount;
+    state.usd += amount * state.coinPrice;
+    log(`Продано ${formatCoins(amount)} Coin по ${formatMoney(state.coinPrice)}`);
+    sellAmountInput.value = '';
+    save(); updateUI();
+  });
+
+  btnPlaceOrder.addEventListener('click', ()=>{
+    const price = parseFloat(orderPriceInput.value);
+    if(isNaN(price) || price <= 0){ toast('Введите корректную цену для ордера'); return; }
+    state.orders.push({id:genId(), price:price});
+    log(`Ордер на авто-продажу при цене ${formatMoney(price)} установлен`);
+    orderPriceInput.value = '';
+    save(); updateUI();
+  });
+
+  btnReset.addEventListener('click', ()=>{
+    if(!confirm('Вы уверены, что хотите сбросить весь прогресс?')) return;
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  });
+
+  // -------------------------
+  // Logging
+  // -------------------------
+  function log(txt){
+    const t = new Date().toLocaleTimeString();
+    const el = document.createElement('div');
+    el.textContent = `[${t}] ${txt}`;
+    logEl.prepend(el);
+  }
+
+  // -------------------------
+  // Init & Loops
+  // -------------------------
+  load();
+  priceKwhInput.addEventListener('change', save); // save priceKwh
+  modalBack.addEventListener('click', (e)=>{ if(e.target === modalBack) closeModal(); });
+
+  // Telegram WebApp integration
+  try{
+    if(window.Telegram && window.Telegram.WebApp){
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      window.Telegram.WebApp.MainButton.setText('Сохранить игру').show();
+      window.Telegram.WebApp.MainButton.onClick(save);
+    }
+  }catch(e){ console.warn('Telegram WebApp not available', e); }
+
+  // initial render
+  updateUI();
+  log('Добро пожаловать в Miner Tycoon!');
+  log('Ваша первая видеокарта уже установлена.');
+
+  // game loops
+  setInterval(gameTick, 1000); // every second
+  setInterval(priceTick, 1000 * 60); // every minute
+  setInterval(save, 15000); // autosave every 15 seconds
+
+  // expose for debug
+  window.MINER = { state, GPU_CATALOG, computeTotals, save, load };
+})();
+</script>
+</body>
+    </html>
