@@ -85,3 +85,102 @@
         </div>
       </div>
     </div>
+    <div class="panel">
+      <div class="row"><div><strong>Магазин</strong><small class="info">Купите GPU в свободный слот</small></div></div>
+      <div class="store" id="storeArea"></div>
+      <div style="margin-top:8px">
+        <div class="row">
+          <div><strong>Улучшения / Сервисы</strong><small class="info">Покупайте апгрейды для роста</small></div>
+        </div>
+        <div style="margin-top:8px" class="row">
+          <button id="buyCooling" class="buy compact">Кулер+ (охлаждение) $350</button>
+          <button id="buyMaintenance" class="buy compact">Сервисная команда $500</button>
+          <button id="buyBoost" class="buy compact">Boost 60s $150</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row"><div><strong>Журнал</strong><small class="info">События и уведомления</small></div><div><button id="btnReset" class="compact">Сброс</button></div></div>
+      <div id="log" style="margin-top:8px;max-height:140px;overflow:auto;font-size:13px;color:var(--muted)"></div>
+    </div>
+
+    <footer>
+      <div>Автосохранение — localStorage • Попробуйте купить питание и слоты</div>
+    </footer>
+  </div>
+</div>
+
+<script>
+(() => {
+  // --- Game data & defaults ---
+  const SAVE_KEY = 'miner_tycoon_v1';
+  const startMoney = 1000;
+
+  const shopGPUs = [
+    { id:'starter', name:'Старая видеокарта', price:100, hashrate:10, power:75, reliability:0.998, repairFactor:0.2, desc:'Слабая, даёт ~1$/с (стартовый)'},
+    { id:'gpu1', name:'GTX 1060', price:300, hashrate:40, power:120, reliability:0.995, repairFactor:0.18, desc:'Бюджетная карта' },
+    { id:'gpu2', name:'RTX 2060', price:900, hashrate:130, power:160, reliability:0.992, repairFactor:0.16, desc:'Средний класс' },
+    { id:'gpu3', name:'RTX 3080', price:3200, hashrate:620, power:320, reliability:0.989, repairFactor:0.14, desc:'Топовая карта' },
+    { id:'asic', name:'ASIC Miner X', price:9000, hashrate:3500, power:1500, reliability:0.995, repairFactor:0.10, desc:'Специализированный майнер' }
+  ];
+
+  // improvements
+  const upgrades = {
+    slotBasePrice: 200,
+    powerUpgradeCost: 500, // +500W
+    coolingCost: 350,
+    maintenanceCost: 500,
+    boostCost: 150
+  };
+
+  // Conversion: H/s -> $/s base. We want starter(gpu starter) hashrate 10 -> ~$1/s => rate = 0.1 $ per H/s
+  const $perH = 0.1;
+
+  // --- State ---
+  let state = {
+    money: startMoney,
+    slotsTotal: 1,
+    slots: [], // each slot: { id, gpu: nullable, overclock:bool, brokenUntil: timestamp|null }
+    powerCapacity: 300, // Watts
+    boostActiveUntil: 0,
+    coolingLevel: 0, // reduces failure chance
+    maintenanceTeam: false,
+    timestamp: Date.now()
+  };
+
+  // init starter rig: old computer with starter gpu in slot 0
+  function initStarter() {
+    state.slotsTotal = 1;
+    state.slots = [{ id: genId(), gpu: cloneGpu('starter'), overclock:false, brokenUntil:null }];
+  }
+
+  // --- Utils ---
+  function now() { return Date.now(); }
+  function genId(){ return Math.random().toString(36).slice(2,9); }
+  function cloneGpu(id){
+    const g = shopGPUs.find(x=>x.id===id);
+    return g ? JSON.parse(JSON.stringify(g)) : null;
+  }
+
+  // load/save
+  function save(){
+    state.timestamp = now();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    log('Игра сохранена');
+  }
+  function load(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw){
+      try{
+        const s = JSON.parse(raw);
+        state = s;
+        log('Сохранение загружено');
+        return;
+      }catch(e){}
+    }
+    // default
+    initStarter();
+    state.money = startMoney;
+    state.powerCapacity = 300;
+  }
