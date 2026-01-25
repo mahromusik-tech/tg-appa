@@ -370,3 +370,175 @@
   function slotPrice(){ // price increases with number of slots owned
     return upgrades.slotBasePrice + (state.slotsTotal - 1) * 120;
   }
+  
+  btnAddSlot.addEventListener('click', ()=>{
+    const price = slotPrice();
+    if(state.money < price){ log('Недостаточно средств для покупки слота'); return; }
+    state.money -= price;
+    state.slotsTotal += 1;
+    state.slots.push({ id: genId(), gpu:null, overclock:false, brokenUntil:null });
+    log(`Куплен слот за $${price}`);
+    updateUI();
+    save();
+  });
+
+  btnPower.addEventListener('click', ()=>{
+    if(state.money < upgrades.powerUpgradeCost){ log('Нет денег на апгрейд питания'); return; }
+    state.money -= upgrades.powerUpgradeCost;
+    state.powerCapacity += 500;
+    log(`Мощность увеличена на 500W за $${upgrades.powerUpgradeCost}`);
+    updateUI(); save();
+  });
+
+  btnCooling.addEventListener('click', ()=>{
+    if(state.coolingLevel >= 1){ log('Охлаждение уже установлено'); return; }
+    if(state.money < upgrades.coolingCost){ log('Нет денег на охлаждение'); return; }
+    state.money -= upgrades.coolingCost;
+    state.coolingLevel = 1;
+    log(`Установлено улучшенное охлаждение за $${upgrades.coolingCost}`);
+    updateUI(); save();
+  });
+
+  btnMaintenance.addEventListener('click', ()=>{
+    if(state.maintenanceTeam){ log('Сервисная команда уже нанята'); return; }
+    if(state.money < upgrades.maintenanceCost){ log('Нет денег на сервисную команду'); return; }
+    state.money -= upgrades.maintenanceCost;
+    state.maintenanceTeam = true;
+    log(`Найнята сервисная команда за $${upgrades.maintenanceCost}`);
+    updateUI(); save();
+  });
+
+  btnBoost.addEventListener('click', ()=>{
+    if(state.money < upgrades.boostCost){ log('Нет денег на Boost'); return; }
+    state.money -= upgrades.boostCost;
+    state.boostActiveUntil = now() + 60_000; // 60 sec
+    log('Boost активирован: +50% хеша на 60с');
+    updateUI(); save();
+  });
+
+  // buy GPU: must have free slot and enough money and power capacity
+  function buyGpu(gpuId){
+    const freeIndex = state.slots.findIndex(s=>!s.gpu);
+    if(freeIndex === -1){ log('Нет свободного слота — купите слот'); return; }
+    const g = shopGPUs.find(x=>x.id===gpuId);
+    if(!g) return;
+    if(state.money < g.price){ log('Недостаточно денег для покупки GPU'); return; }
+
+    // check power capacity after install
+    const totals = computeTotals();
+    const currentPower = totals.totalPower;
+    if(currentPower + g.power > state.powerCapacity){
+      log('Недостаточно мощности питания — апгрейдите питание');
+      return;
+    }
+
+    state.money -= g.price;
+    state.slots[freeIndex].gpu = cloneGpu(gpuId);
+    state.slots[freeIndex].overclock = false;
+    state.slots[freeIndex].brokenUntil = null;
+    log(`Куплена ${g.name} за $${g.price} и установлена в слот ${freeIndex+1}`);
+    updateUI(); save();
+  }
+
+  // open install menu (simple: allow to buy from store then place here)
+  function openInstallMenu(slotIndex){
+    // show available GPUs to buy via prompt for simplicity
+    const choices = shopGPUs.filter(g=>g.id!=='starter').map(g=>`${g.name} — $${g.price} (id:${g.id})`).join('\n');
+    const sel = prompt(`Доступные GPU:\n${choices}\n\nВведите id (например: gpu1) или отмена:`);
+    if(sel){ buyGpuToSlot(sel.trim(), slotIndex); }
+  }
+
+  function buyGpuToSlot(id, slotIndex){
+    const g = shopGPUs.find(x=>x.id===id);
+    if(!g){ log('Неверный id GPU'); return; }
+    if(state.money < g.price){ log('Нет денег'); return; }
+    const totals = computeTotals();
+    if(totals.totalPower + g.power > state.powerCapacity){ log('Недостаточно мощности'); return; }
+    state.money -= g.price;
+    state.slots[slotIndex].gpu = cloneGpu(id);
+    state.slots[slotIndex].brokenUntil = null;
+    state.slots[slotIndex].overclock = false;
+    log(`Куплена ${g.name} и установлена в слот ${slotIndex+1}`);
+    updateUI(); save();
+  }
+
+  // sell GPU at 50%
+  function sellGpu(slotIndex){
+    const s = state.slots[slotIndex];
+    if(!s.gpu){ log('Слот пуст'); return; }
+    const price = Math.round(s.gpu.price * 0.5);
+    state.money += price;
+    log(`Продана ${s.gpu.name} за $${price}`);
+    s.gpu = null;
+    s.overclock = false;
+    s.brokenUntil = null;
+    updateUI(); save();
+  }
+
+  // toggle overclock: increases hashrate by 25% and power by 15%, increases failure chance; costs small fee to enable once
+  function toggleOC(slotIndex){
+    const s = state.slots[slotIndex];
+    if(!s.gpu){ log('Нет GPU'); return; }
+    s.overclock = !s.overclock;
+    log(`${s.gpu.name} overclock ${s.overclock ? 'включён' : 'выключен'}`);
+    updateUI(); save();
+  }
+
+  // repair now for money: cost = price * repairFactor (maybe reduced by maintenance)
+  function repairNow(slotIndex){
+    const s = state.slots[slotIndex];
+    if(!s.gpu){ log('Нет GPU'); return; }
+    if(!s.brokenUntil || s.brokenUntil <= now()){ log('GPU не сломана'); return; }
+    const baseCost = s.gpu.price * s.gpu.repairFactor;
+    const cost = state.maintenanceTeam ? Math.round(baseCost * 0.6) : Math.round(baseCost);
+    if(state.money < cost){ log('Недостаточно денег для ремонта'); return; }
+    state.money -= cost;
+    s.brokenUntil = null;
+    log(`${s.gpu.name} отремонтирована за $${cost}`);
+    updateUI(); save();
+  }
+
+  // logging
+  function log(msg){
+    const time = new Date().toLocaleTimeString();
+    const el = document.createElement('div');
+    el.textContent = `[${time}] ${msg}`;
+    logEl.prepend(el);
+    // keep log small
+    while(logEl.children.length > 200) logEl.removeChild(logEl.lastChild);
+  }
+
+  // reset
+  btnReset.addEventListener('click', ()=>{
+    if(!confirm('Сбросить прогресс?')) return;
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  });
+
+  // autosave interval
+  setInterval(save, 15000);
+
+  // game tick every second
+  setInterval(tick, 1000);
+
+  // initial UI update
+  updateUI();
+
+  // Telegram WebApp
+  try{
+    if(window.Telegram && window.Telegram.WebApp){
+      window.Telegram.WebApp.ready();
+      try{ window.Telegram.WebApp.expand(); }catch(e){}
+    }
+  }catch(e){}
+
+  // expose for debug
+  window.MINER = { state, shopGPUs, computeTotals, save, load };
+
+  // initial notifications
+  log('Старт игры. У вас $' + state.money.toFixed(2));
+  log('Первая видеокарта уже установлена в старом компьютере.');
+})();
+</script>
+</body>
+</html>
