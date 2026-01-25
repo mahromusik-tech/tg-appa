@@ -1,3 +1,162 @@
+  // -------------------------
+  // Rendering functions
+  // -------------------------
+  function renderSlots(){
+    slotsGrid.innerHTML = '';
+    // ensure array size
+    while(state.slots.length < state.slotsTotal) state.slots.push({id:genId(), gpu:null, oc:false, brokenUntil:null});
+    for(let i=0;i<state.slots.length;i++){
+      const s = state.slots[i];
+      const div = document.createElement('div');
+      div.className = 'slot' + (s.gpu ? '' : ' empty');
+      let inner = '';
+      if(!s.gpu){
+        inner = `<div style="text-align:center"><div style="font-weight:800">Пустой</div><div class="small muted">Клик чтобы установить</div></div>`;
+      } else {
+        const broken = s.brokenUntil && s.brokenUntil > now();
+        inner = `<div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="name">${s.gpu.name}</div>
+              <div class="small muted">${s.gpu.hash} H/s • ${s.gpu.power}W</div>
+            </div>
+            <div style="text-align:right">
+              <div class="small">${s.oc ? 'OC' : ''}</div>
+              <div class="small" style="color:${broken ? '#ff8b8b' : '#bff0dc'}">${broken ? 'Сломана' : 'Работает'}</div>
+            </div>
+          </div>`;
+      }
+      div.innerHTML = inner;
+      div.addEventListener('click', ()=>openSlotModal(i));
+      slotsGrid.appendChild(div);
+    }
+    slotsInfo.textContent = `${state.slotsTotal} слот(а)`;
+    powerInfo.textContent = `${state.powerCapacity}W`;
+  }
+
+  function renderStore(){
+    storeArea.innerHTML = '';
+    GPU_CATALOG.forEach(g=>{
+      // don't show starter for buy
+      if(g.id === 'starter') return;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div>
+        <div style="font-weight:800">${g.name}</div>
+        <div class="small muted">${g.hash} H/s • ${g.power}W • ${g.rarity}</div>
+        <div class="small muted">Цена ${formatMoney(g.price)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn" data-buy="${g.id}">Купить</button>
+        <button class="btn secondary" data-info="${g.id}" style="min-width:40px">Инфо</button>
+      </div>`;
+      storeArea.appendChild(card);
+      card.querySelector('[data-buy]').addEventListener('click', ()=>buyGpu(g.id));
+      card.querySelector('[data-info]').addEventListener('click', ()=>showGpuInfo(g.id));
+    });
+  }
+
+  function renderMarket(){
+    coinPriceEl.textContent = formatMoney(state.coinPrice);
+    // draw chart
+    const w = chart.width = chart.clientWidth;
+    const h = chart.height = chart.clientHeight;
+    const hist = state.coinHistory.slice(-60);
+    const max = Math.max(...hist);
+    const min = Math.min(...hist);
+    ctx.clearRect(0,0,w,h);
+    // background gradient
+    const g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'rgba(0,255,225,0.06)');
+    g.addColorStop(1,'rgba(255,77,182,0.02)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    // grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+    for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(0,h*(i/4)); ctx.lineTo(w,h*(i/4)); ctx.stroke(); }
+    if(hist.length>1){
+      ctx.beginPath();
+      for(let i=0;i<hist.length;i++){
+        const x = (i/(hist.length-1))*w;
+        const y = h - ((hist[i]-min)/(max-min||1))*h;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle = '#7be6c9'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    // orders
+    renderOrders();
+  }
+
+  function renderOrders(){
+    ordersList.innerHTML = '';
+    if(state.orders.length === 0){ ordersList.textContent = 'Нет ордеров'; return; }
+    state.orders.forEach(o=>{
+      const d = document.createElement('div');
+      d.style.display='flex'; d.style.justifyContent='space-between'; d.style.marginTop='6px';
+      d.innerHTML = `<div class="small muted">Авто‑продажа при ≥ ${formatMoney(o.price)}</div><div><button class="btn secondary" data-cancel="${o.id}">Отменить</button></div>`;
+      ordersList.appendChild(d);
+      d.querySelector('[data-cancel]').addEventListener('click', ()=>{ state.orders = state.orders.filter(x=>x.id!==o.id); log('Ордер отменён'); save(); renderMarket(); });
+    });
+  }
+
+  function updateUI(){
+    moneyEl.textContent = formatMoney(state.usd);
+    coinsEl.textContent = formatCoins(state.coins);
+    const totals = computeTotals();
+    totalHashEl.textContent = `${Math.round(totals.hash)} H/s`;
+    prodCoinsEl.textContent = `+${totals.coinPerSec.toFixed(3)} Coin/с`;
+    elecCostEl.textContent = `-${totals.elecPerSec.toFixed(4)} $/с`;
+    netUsdEl.textContent = `${totals.netUsd >= 0 ? '+' : ''}${totals.netUsd.toFixed(4)} $/с`;
+    renderSlots();
+    renderStore();
+    renderMarket();
+  }
+
+  // -------------------------
+  // Modal for slot (per GPU)
+  // -------------------------
+  function openSlotModal(index){
+    const s = state.slots[index];
+    modalBack.style.display = 'flex';
+    if(!s.gpu){
+      modalName.textContent = `Слот ${index+1}`;
+      modalSub.textContent = 'Пустой слот';
+      modalBody.innerHTML = `<div style="display:flex;gap:8px;flex-direction:column">
+        <div class="small muted">Установите GPU из магазина</div>
+        <div style="display:flex;gap:8px">
+          <button id="modalBuy" class="btn full">Купить и установить</button>
+          <button id="modalCloseBtn" class="btn secondary full">Отмена</button>
+        </div>
+      </div>`;
+      document.getElementById('modalBuy').addEventListener('click', ()=>{
+        // quick purchase prompt: choose id
+        const ids = GPU_CATALOG.filter(g=>g.id!=='starter').map(g=>`${g.name} (${g.id}) - ${formatMoney(g.price)}`).join('\n');
+        const sel = prompt('Введите id GPU для покупки:\n' + ids + '\nПример id: g4');
+        if(sel) buyGpuToSlot(sel.trim(), index);
+      });
+      document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+      return;
+    }
+    const g = s.gpu;
+    const broken = s.brokenUntil && s.brokenUntil > now();
+    modalName.textContent = g.name;
+    modalSub.textContent = `${g.hash} H/s • ${g.power}W • ${g.rarity}`;
+    modalBody.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card"><div>Статус</div><div class="small muted">${broken ? ('Сломана, осталось ' + Math.ceil((s.brokenUntil-now())/1000) + 's') : 'Работает'}</div></div>
+      <div class="card"><div>ROI</div><div class="small muted" id="roiText">расчет...</div></div>
+      <div style="display:flex;gap:8px">
+        <button id="sellBtn" class="btn full dangerBtn">Продать (50%)</button>
+        <button id="ocBtn" class="btn secondary full">${s.oc ? 'Выключить OC' : 'Включить OC'}</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="repairBtn" class="btn secondary full" ${!broken ? 'disabled' : ''}>Починить за $</button>
+        <button id="closeBtn" class="btn full">Закрыть</button>
+      </div>
+    </div>`;
+    // set ROI
+    const totals = computeTotals();
+    const coinPerSecThis = calcCoinProductionForSlot(s);
+    const usdPerSec = coinPerSecThis * state.coinPrice - elecForSlotInUsd(s);
+    const roiSec = g.price / (usdPerSec > 0 ? usdPerSec : 0.00001);
+    document.getElementById('roiText').textContent = usdPerSec>0 ? `Окупаемость: ${Math.round(roiSec/3600)} ч` : 'Отрицательная прибыль';
 
     // handlers
     document.getElementById('sellBtn').addEventListener('click', ()=>{
