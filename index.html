@@ -184,3 +184,189 @@
     state.money = startMoney;
     state.powerCapacity = 300;
   }
+
+  // --- UI refs ---
+  const moneyEl = document.getElementById('money');
+  const cashflowEl = document.getElementById('cashflow');
+  const slotsArea = document.getElementById('slotsArea');
+  const slotsCountEl = document.getElementById('slotsCount');
+  const slotsUsedEl = document.getElementById('slotsUsed');
+  const powerEl = document.getElementById('power');
+  const storeArea = document.getElementById('storeArea');
+  const totalHashEl = document.getElementById('totalHash');
+  const incomeEl = document.getElementById('income');
+  const elecEl = document.getElementById('elecCost');
+  const netEl = document.getElementById('net');
+  const logEl = document.getElementById('log');
+  const priceKwhEl = document.getElementById('priceKwh');
+
+  // buttons
+  const btnAddSlot = document.getElementById('btnAddSlot');
+  const btnPower = document.getElementById('btnPower');
+  const btnCooling = document.getElementById('buyCooling');
+  const btnMaintenance = document.getElementById('buyMaintenance');
+  const btnBoost = document.getElementById('buyBoost');
+  const btnReset = document.getElementById('btnReset');
+
+  // --- Game logic ---
+  load();
+  renderStore();
+  renderSlots();
+  updateUI();
+
+  // compute totals
+  function computeTotals(){
+    const activeSlots = state.slots;
+    let totalHash = 0;
+    let totalPower = 0;
+    let potentialHash = 0;
+    for(const s of activeSlots){
+      if(s.gpu){
+        const gpu = s.gpu;
+        // broken?
+        const broken = s.brokenUntil && s.brokenUntil > now();
+        if(!broken){
+          let hr = gpu.hashrate;
+          if(s.overclock) hr *= 1.25;
+          if(state.boostActiveUntil > now()) hr *= 1.5;
+          totalHash += hr;
+        }
+        // power always consumed even if broken (fans/case) at 30% if broken
+        let p = gpu.power;
+        if(s.overclock) p *= 1.15;
+        if(s.brokenUntil && s.brokenUntil > now()) p *= 0.3;
+        totalPower += p;
+      }
+    }
+    // revenue per sec
+    const income = totalHash * $perH;
+    // electricity cost per sec: (watts/1000)*($/kWh)/3600
+    const pricekwh = parseFloat(priceKwhEl.value) || 0.12;
+    const elecPerSec = totalPower/1000 * pricekwh / 3600;
+    const net = income - elecPerSec;
+    return { totalHash, totalPower, income, elecPerSec, net };
+  }
+
+  // tick (every second)
+  function tick(){
+    // generate income
+    const t = computeTotals();
+    state.money += t.net;
+    // passive failure checks: each functional GPU has small chance to break per minute
+    for(const s of state.slots){
+      if(!s.gpu) continue;
+      const broken = s.brokenUntil && s.brokenUntil > now();
+      if(broken) continue;
+      // base failure per minute = (1 - reliability) -> convert to per-second prob
+      const baseFailPerMin = 1 - s.gpu.reliability; // e.g., 0.002 => 0.2% per minute
+      const failProbPerSec = baseFailPerMin / 60;
+      // modifications: cooling reduces chance, maintenance team reduces chance
+      let mod = 1;
+      if(state.coolingLevel > 0) mod *= 0.6;
+      if(state.maintenanceTeam) mod *= 0.5;
+      // overclock increases risk
+      if(s.overclock) mod *= 1.6;
+      // apply chance
+      if(Math.random() < failProbPerSec * mod){
+        const downtime = 1000 * (60 * (1 + Math.random()*2)); // 1-3 minutes down
+        s.brokenUntil = now() + downtime;
+        log(`${s.gpu.name} в слоте вышла из строя на ${Math.round(downtime/1000)} с.`);
+      }
+    }
+
+    // auto-repair if maintenance team present (fast repair)
+    if(state.maintenanceTeam){
+      for(const s of state.slots){
+        if(s.brokenUntil && s.brokenUntil > now()){
+          // reduce remaining downtime
+          s.brokenUntil = Math.max(now(), s.brokenUntil - 1000*2); // repair 2 seconds faster per tick
+          if(s.brokenUntil <= now()){
+            s.brokenUntil = null;
+            log(`${s.gpu.name} починена командой`);
+          }
+        }
+      }
+    }
+
+    updateUI();
+  }
+
+  // UI render
+  function updateUI(){
+    moneyEl.textContent = `$${state.money.toFixed(2)}`;
+    const totals = computeTotals();
+    cashflowEl.textContent = `${totals.net >= 0 ? '+' : ''}${totals.net.toFixed(2) } $/с`;
+    slotsCountEl.textContent = state.slotsTotal;
+    const used = state.slots.filter(s=>s.gpu).length;
+    slotsUsedEl.textContent = used + ' / ' + state.slotsTotal;
+    powerEl.textContent = `${Math.round(totals.totalPower)}W / ${state.powerCapacity}W`;
+    totalHashEl.textContent = `${Math.round(totals.totalHash)} H/s`;
+    incomeEl.textContent = `+${totals.income.toFixed(2)} $/с`;
+    elecEl.textContent = `-${totals.elecPerSec.toFixed(3)} $/с`;
+    netEl.textContent = `${totals.net >= 0 ? '+' : ''}${totals.net.toFixed(3)} $/с`;
+
+    // highlight buttons availability
+    btnAddSlot.disabled = state.money < slotPrice();
+    btnPower.disabled = state.money < upgrades.powerUpgradeCost;
+    btnCooling.disabled = state.money < upgrades.coolingCost || state.coolingLevel >= 1;
+    btnMaintenance.disabled = state.money < upgrades.maintenanceCost || state.maintenanceTeam;
+    btnBoost.disabled = state.money < upgrades.boostCost || state.boostActiveUntil > now();
+
+    // render slots
+    renderSlots();
+  }
+
+  function renderSlots(){
+    slotsArea.innerHTML = '';
+    // ensure slots array length
+    while(state.slots.length < state.slotsTotal) state.slots.push({ id: genId(), gpu:null, overclock:false, brokenUntil:null });
+    for(let i=0;i<state.slots.length;i++){
+      const s = state.slots[i];
+      const div = document.createElement('div');
+      div.className = 'slot';
+      if(!s.gpu){
+        div.innerHTML = `<div style="font-size:13px">Пустой слот</div><div style="display:flex;gap:6px"><button class="buy compact" data-slot="${i}">Установить</button></div>`;
+        const btn = div.querySelector('button');
+        btn.addEventListener('click', ()=>{ openInstallMenu(i); });
+      } else {
+        const broken = s.brokenUntil && s.brokenUntil > now();
+        div.innerHTML = `<div style="font-weight:800">${s.gpu.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${s.gpu.hashrate} H/s • ${s.gpu.power}W</div>
+        <div style="display:flex;gap:6px">
+          <button class="compact" data-sell="${i}">Продать 50%</button>
+          <button class="compact" data-oc="${i}">${s.overclock? 'OC On' : 'OC Off'}</button>
+          <button class="compact" data-repair="${i}" ${!broken ? 'disabled' : ''}>Починить</button>
+        </div>
+        <small class="info">${broken ? 'Сломана, ремонт до: ' + Math.round((s.brokenUntil-now())/1000) + ' с' : 'Работает'}</small>`;
+        // sell
+        div.querySelector('[data-sell]').addEventListener('click', ()=>{ sellGpu(i); });
+        div.querySelector('[data-oc]').addEventListener('click', ()=>{ toggleOC(i); });
+        div.querySelector('[data-repair]').addEventListener('click', ()=>{ repairNow(i); });
+      }
+      slotsArea.appendChild(div);
+    }
+  }
+
+  // render store
+  function renderStore(){
+    storeArea.innerHTML = '';
+    for(const g of shopGPUs){
+      // disallow starter from store (already given)
+      if(g.id === 'starter') continue;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div>
+        <div style="font-weight:800">${g.name} — $${g.price}</div>
+        <small class="info">${g.hashrate} H/s • ${g.power}W • надёжность ${(g.reliability*100).toFixed(2)}%</small>
+        <small>${g.desc}</small>
+      </div>
+      <div><button class="buy compact" data-buy="${g.id}">Купить</button></div>`;
+      card.querySelector('[data-buy]').addEventListener('click', ()=>{ buyGpu(g.id); });
+      storeArea.appendChild(card);
+    }
+  }
+
+  // --- Actions ---
+  function slotPrice(){ // price increases with number of slots owned
+    return upgrades.slotBasePrice + (state.slotsTotal - 1) * 120;
+  }
