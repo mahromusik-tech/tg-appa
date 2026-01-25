@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+<title>Miner Tycoon — Симулятор майнинга</title>
+<style>
+  :root{--bg:#071428;--card:#0b2433;--accent:#00ffe1;--accent2:#ff4db6;--muted:rgba(255,255,255,0.7)}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#041e2f);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#fff;-webkit-tap-highlight-color:transparent}
+  .app{max-width:420px;margin:0 auto;padding:12px;box-sizing:border-box}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap}
+  .stat{background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:10px;font-weight:700;font-size:14px}
+  .main{display:flex;flex-direction:column;gap:10px}
+  .panel{background:var(--card);padding:10px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .slots{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .slot{width:100px;height:84px;background:rgba(255,255,255,0.03);border-radius:8px;padding:6px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between}
+  .btn{background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;padding:8px 10px;border-radius:10px;color:#031224;font-weight:800;cursor:pointer}
+  .buy{background:linear-gradient(90deg,#0fd1b8,#ff9ed6);border:none;padding:6px 8px;border-radius:8px;color:#021224;font-weight:700;cursor:pointer}
+  .store{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .card{background:linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+  small{color:var(--muted);display:block;margin-top:4px}
+  footer{margin-top:10px;text-align:center;color:rgba(255,255,255,0.45);font-size:13px}
+  .inline{display:flex;gap:8px;align-items:center}
+  .danger{color:#ff8b8b}
+  .info{color:var(--muted)}
+  .compact{font-size:13px;padding:6px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div style="font-weight:900;font-size:16px">Miner Tycoon</div>
+      <div style="font-size:12px;color:var(--muted)">Цель — построить крупнейшую майнинг‑ферму</div>
+    </div>
+    <div style="text-align:right">
+      <div id="money" style="font-weight:900;font-size:18px">$1000</div>
+      <div id="cashflow" class="info" style="font-size:12px">+0.00$/s</div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="panel">
+      <div class="row">
+        <div><strong>Оборудование</strong><small class="info">Слоты, мощность, состояние</small></div>
+        <div class="inline">
+          <button id="btnAddSlot" class="buy compact">Купить слот</button>
+          <button id="btnPower" class="buy compact">Ул. питание</button>
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <div class="row">
+          <div class="stat">Слотов <div id="slotsCount" style="font-size:14px">1</div></div>
+          <div class="stat">Занято <div id="slotsUsed" style="font-size:14px">1</div></div>
+          <div class="stat">Мощность <div id="power" style="font-size:14px">300W</div></div>
+        </div>
+
+        <div class="slots" id="slotsArea"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row">
+        <div><strong>Показатели</strong><small class="info">Хешрейт, доход, электросчет</small></div>
+        <div>
+          <div class="info" style="text-align:right">Эл. цена <input id="priceKwh" type="number" value="0.12" step="0.01" style="width:70px"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <div class="row">
+          <div>Хешрейт</div><div id="totalHash">0 H/s</div>
+        </div>
+        <div class="row">
+          <div>Доход</div><div id="income">+0.00 $/с</div>
+        </div>
+        <div class="row">
+          <div>Электро</div><div id="elecCost">-0.00 $/с</div>
+        </div>
+        <div class="row">
+          <div>Чистый</div><div id="net">+0.00 $/с</div>
+        </div>
+      </div>
+    </div>
