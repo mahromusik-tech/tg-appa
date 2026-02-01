@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Mini Football Manager — Prototype</title>
+<style>
+  :root{
+    --w:360px; --h:720px;
+    --bg:#0b1622; --card:#0f2432; --accent:#2ec4b6; --muted:#9fb6c3;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(#07101a,#05202a);display:flex;align-items:center;justify-content:center}
+  #app{width:100%;max-width:420px;height:100vh;background:linear-gradient(180deg,#07303b,#0d1d28);color:#e6f7f5;display:flex;flex-direction:column;border-left:1px solid rgba(255,255,255,0.03);border-right:1px solid rgba(0,0,0,0.2)}
+  header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.08)}
+  .brand{font-weight:700;letter-spacing:0.6px}
+  .topinfo{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center}
+  main{flex:1;overflow:auto;padding:12px}
+  .card{background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));padding:10px;border-radius:10px;margin-bottom:10px}
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{background:var(--accent);color:#05323a;padding:8px 10px;border-radius:8px;font-weight:700;border:none}
+  .tabbar{display:flex;gap:6px;justify-content:space-around;padding:10px;background:rgba(0,0,0,0.06)}
+  .tab{flex:1;padding:10px;border-radius:8px;text-align:center;color:var(--muted);background:transparent}
+  .tab.active{background:var(--accent);color:#052a27}
+  .player{display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:6px}
+  .small{font-size:12px;color:var(--muted)}
+  .center{display:flex;align-items:center;justify-content:center}
+  input,select{padding:8px;border-radius:8px;border:none}
+  .market-item{display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:rgba(0,0,0,0.08);margin-bottom:6px}
+  footer{padding:8px;background:linear-gradient(180deg, rgba(0,0,0,0.04), transparent)}
+  .notice{font-size:13px;color:var(--muted);padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.01)}
+  @media (max-width:420px){:root{--w:100%;--h:100vh}}
+</style>
+</head>
+<body>
+<div id="app" role="application">
+  <header>
+    <div class="brand">Mini FM</div>
+    <div class="topinfo">
+      <div id="money">₽0</div>
+      <div id="season">S1</div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Start / choose team -->
+    <div id="start-screen" class="card">
+      <h3>Выбери клуб</h3>
+      <p class="small">Начать карьеру менеджера. У каждой команды разные деньги и состав.</p>
+      <div id="team-choices" style="margin-top:8px"></div>
+      <div style="margin-top:10px" class="center"><button id="btn-start" class="btn" disabled>Старт</button></div>
+    </div>
+
+    <!-- Main game UI -->
+    <div id="game-ui" style="display:none">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div id="club-name" style="font-weight:700"></div>
+            <div class="small" id="stadium-level"></div>
+          </div>
+          <div style="text-align:right">
+            <div id="club-money" style="font-weight:700"></div>
+            <div class="small">Сезон <span id="season-num"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-squad" class="card" style="display:none">
+        <h4>Состав</h4>
+        <div id="squad-list"></div>
+      </div>
+
+      <div id="view-match" class="card" style="display:none">
+        <h4>Матч</h4>
+        <div class="small notice" id="match-info">Готов к матчу. Выберите оппонента (лига).</div>
+        <div style="margin-top:8px" id="league-fixtures"></div>
+        <div id="match-log" style="margin-top:8px"></div>
+      </div>
+
+      <div id="view-train" class="card" style="display:none">
+        <h4>Тренировка</h4>
+        <div class="small">Выбери фокус тренировки и игроков (увеличивает навыки, тратит день)</div>
+        <div style="margin-top:8px">
+          <select id="train-focus">
+            <option value="attack">Атака</option>
+            <option value="defense">Защита</option>
+            <option value="stamina">Выносливость</option>
+          </select>
+        </div>
+        <div style="margin-top:8px">
+          <label class="small">Игроки (Ctrl/Command для множественного):</label>
+          <select id="train-players" multiple style="width:100%;height:120px"></select>
+        </div>
+        <div style="margin-top:8px" class="center">
+          <button id="btn-train" class="btn">Провести тренировку (день)</button>
+        </div>
+      </div>
+
+      <div id="view-market" class="card" style="display:none">
+        <h4>Трансферы</h4>
+        <div class="small">Рынок свободных агентов. Купи игрока, если есть место и деньги.</div>
+        <div id="market-list" style="margin-top:8px"></div>
+      </div>
+
+      <div id="view-stadium" class="card" style="display:none">
+        <h4>Стадион</h4>
+        <div class="small" id="stadium-desc"></div>
+        <div style="margin-top:8px" class="center">
+          <button id="btn-upgrade-stadium" class="btn">Улучшить стадион</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div class="small">Очки: <span id="club-points">0</span></div>
+          <div class="small">Матчи в сезоне: <span id="matches-played">0</span>/<span id="matches-total">0</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="tabbar" id="tabs" style="display:none">
+    <div class="tab active" data-view="squad">Состав</div>
+    <div class="tab" data-view="match">Матч</div>
+    <div class="tab" data-view="train">Тренировка</div>
+    <div class="tab" data-view="market">Трансферы</div>
+    <div class="tab" data-view="stadium">Стадион</div>
+  </div>
+  <footer style="display:flex;justify-content:space-between;align-items:center">
+    <div class="small">Сохранение: <span id="save-status">auto</span></div>
+    <div><button id="btn-reset" class="btn" style="background:#ff7b7b">Сброс</button></div>
+  </footer>
+</div>
+
+<script>
+/*
+Mini Football Manager — prototype
+Single-file offline game using localStorage.
+Author: toolbox assistant (prototype), minimal and expandable.
+*/
+
+const STORAGE_KEY = 'mini_fm_save_v1';
+
+// Utility
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[randInt(0,arr.length-1)];}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+// Sample names and team presets
+const SAMPLE_NAMES = ["Алексей","Иван","Дмитрий","Максим","Никита","Михаил","Сергей","Антон","Роман","Егор","Влад","Павел","Кирилл","Олег","Тимофей"];
+const POSITIONS = ["GK","DEF","MID","FWD"];
+const TEAM_TEMPLATES = [
+  {id:'t1',name:'Северово',money:50000,stadium:1},
+  {id:'t2',name:'Южный Юнайтед',money:35000,stadium:1},
+  {id:'t3',name:'Горные Львы',money:42000,stadium:1}
+];
+
+// Create random player
+function genPlayer(pos){
+  const name = pick(SAMPLE_NAMES) + ' ' + String.fromCharCode(65+randInt(0,25)) + '.';
+  const base = {GK:50,DEF:55,MID:58,FWD:60}[pos] || 55;
+  return {
+    id: 'p'+Date.now()+Math.random().toString(36).slice(2,6),
+    name, position: pos,
+    attack: clamp(base + randInt(-12,12),30,90),
+    defense: clamp(base + randInt(-12,12),30,90),
+    stamina: clamp(60 + randInt(-25,15),20,90),
+    fitness: 90,
+    morale: 50,
+    value: 500 + randInt(500,8000),
+    wage: 100 + randInt(50,800)
+  };
+}
+// Create starting squad
+function createSquad(){
+  const squad = [];
+  // 2 GK, 6 DEF, 6 MID, 4 FWD = 18
+  for(let i=0;i<2;i++) squad.push(genPlayer('GK'));
+  for(let i=0;i<6;i++) squad.push(genPlayer('DEF'));
+  for(let i=0;i<6;i++) squad.push(genPlayer('MID'));
+  for(let i=0;i<4;i++) squad.push(genPlayer('FWD'));
+  return squad;
+}
+
+// Game state
+let state = {
+  club: null,
+  season: 1,
+  money: 0,
+  squad: [],
+  league: [],
+  fixtures: [],
+  points: 0,
+  matchesPlayed: 0,
+  matchesTotal: 0,
+  stadiumLevel: 1,
+  market: [],
+};
+
+// Save / Load
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  document.getElementById('save-status').innerText = 'saved';
+  setTimeout(()=>document.getElementById('save-status').innerText='auto',800);
+}
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ state = JSON.parse(raw); return true; }
+  return false;
+}
+function resetState(){
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// UI helpers
+const $ = id => document.getElementById(id);
+
+function formatMoney(n){ return '₽' + n.toLocaleString(); }
+
+function initStartScreen(){
+  const box = $('team-choices'); box.innerHTML = '';
+  TEAM_TEMPLATES.forEach(t=>{
+    const div = document.createElement('div');
+    div.className='card';
+    div.style.cursor='pointer';
+    div.innerHTML = `<div style="display:flex;justify-content:space-between">
+      <div><strong>${t.name}</strong><div class="small">Наличные: ${formatMoney(t.money)}</div></div>
+      <div class="small">Стадион: ${t.stadium}</div>
+    </div>`;
+    div.onclick = ()=> {
+      document.querySelectorAll('#team-choices .card').forEach(c=>c.style.outline='none');
+      div.style.outline='2px solid rgba(46,196,182,0.25)';
+      $('btn-start').disabled = false;
+      $('btn-start').dataset.team = t.id;
+    };
+    box.appendChild(div);
+  });
+  $('btn-start').onclick = startGame;
+  $('btn-reset').onclick = resetState;
+}
+
+// Initialize game (new)
+function startGame(){
+  const teamid = $('btn-start').dataset.team;
+  const tpl = TEAM_TEMPLATES.find(x=>x.id===teamid);
+  state.club = tpl.name;
+  state.season = 1;
+  state.money = tpl.money;
+  state.squad = createSquad();
+  state.stadiumLevel = tpl.stadium || 1;
+  // generate league opponents
+  state.league = [];
+  for(let i=0;i<5;i++){
+    state.league.push({
+      id:'opp'+i,
+      name: tpl.name + ' II ' + (i+1),
+      squad: createSquad(),
+      strength: randInt(45,75),
+      money: 20000
+    });
+  }
+  // fixtures: play each opponent twice
+  state.fixtures = [];
+  state.league.forEach(opp=>{
+    state.fixtures.push({opponent:opp.name, home:true, played:false});
+    state.fixtures.push({opponent:opp.name, home:false, played:false});
+  });
+  shuffleArray(state.fixtures);
+  state.points = 0; state.matchesPlayed = 0; state.matchesTotal = state.fixtures.length;
+  // generate market
+  state.market = [];
+  for(let i=0;i<8;i++) state.market.push(genPlayer(pick(POSITIONS)));
+  // UI switch
+  $('start-screen').style.display='none';
+  $('game-ui').style.display='block';
+  $('tabs').style.display='flex';
+  updateTop();
+  showView('squad');
+  saveState();
+}
+
+// Helpers
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+
+// UI update
+function updateTop(){
+  $('club-name').innerText = state.club;
+  $('club-money').innerText = formatMoney(state.money);
+  $('season-num').innerText = state.season;
+  $('stadium-level').innerText = 'Стадион: уровень ' + state.stadiumLevel;
+  $('club-points').innerText = state.points;
+  $('matches-played').innerText = state.matchesPlayed;
+  $('matches-total').innerText = state.matchesTotal;
+  $('money').innerText = formatMoney(state.money);
+  $('season').innerText = 'S' + state.season;
+}
+
+// Tab handling
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=> {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    showView(t.dataset.view);
+  });
+});
+function showView(name){
+  // hide all
+  ['squad','match','train','market','stadium'].forEach(v=>{
+    $('view-'+v).style.display='none';
+  });
+  $('view-'+name).style.display='block';
+  if(name==='squad') renderSquad();
+  if(name==='match') renderMatch();
+  if(name==='train') renderTrain();
+  if(name==='market') renderMarket();
+  if(name==='stadium') renderStadium();
+}
+
+// Render squad
+function renderSquad(){
+  $('view-squad').style.display='block';
+  const list = $('squad-list'); list.innerHTML='';
+  state.squad.forEach(p=>{
+    const div = document.createElement('div'); div.className='player';
+    div.innerHTML = `<div>
+        <div style="font-weight:700">${p.name} <span class="small">(${p.position})</span></div>
+        <div class="small">Atk ${p.attack} · Def ${p.defense} · Sta ${p.stamina}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="small">Фит ${p.fitness}%</div>
+        <div class="small">Мораль ${p.morale}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+// Match UI / fixtures
+function renderMatch(){
+  const fx = $('league-fixtures'); fx.innerHTML='';
+  state.fixtures.forEach((f,i)=>{
+    const btn = document.createElement('div'); btn.className='market-item';
+    btn.innerHTML = `<div>${f.opponent} ${f.home?'(дом)' : '(в гостях)'} ${f.played? '— сыграно':''}</div>
+      <div><button class="btn" ${f.played? 'disabled':''} data-fi="${i}">Играть</button></div>`;
+    fx.appendChild(btn);
+  });
+  // attach buttons
+  fx.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=> {
+      const idx = +b.dataset.fi;
+      playMatch(idx);
+    };
+  });
+  $('match-log').innerHTML = '';
+}
