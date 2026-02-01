@@ -353,3 +353,156 @@ function renderMatch(){
   });
   $('match-log').innerHTML = '';
 }
+// Simple team strength calc
+function teamStrength(squad, tactic='balanced'){
+  // average of players but weight positions
+  let atk=0,def=0,sta=0;
+  squad.forEach(p => { atk+=p.attack; def+=p.defense; sta+=p.stamina*(p.fitness/100); });
+  atk = atk / squad.length; def = def / squad.length; sta = sta / squad.length;
+  let factor = {attacking:1.05,balanced:1.0,defensive:0.95}[tactic] || 1.0;
+  return (atk*0.5 + def*0.4 + sta*0.1) * factor;
+}
+
+// Simulate a match (very simplified)
+function playMatch(fiIndex){
+  const fixture = state.fixtures[fiIndex];
+  if(!fixture || fixture.played) return;
+  // opponent find
+  const opp = state.league.find(o=>o.name===fixture.opponent);
+  // compute strengths
+  const tactic = 'balanced';
+  const ourStr = teamStrength(state.squad, tactic) * (1 + (randInt(-8,8)/100));
+  const oppStr = (opp.strength) * (1 + (randInt(-8,8)/100));
+  // simulate 90 minutes: generate events proportional to attack differences
+  let ourGoals = 0, oppGoals = 0;
+  let log = [];
+  for(let m=10;m<=90;m+=randInt(10,20)){
+    // chance to score for us and opp
+    const chanceOur = Math.max(0.02, (ourStr/(ourStr+oppStr))*0.4);
+    const chanceOpp = Math.max(0.02, (oppStr/(ourStr+oppStr))*0.4);
+    if(Math.random() < chanceOur) { ourGoals++; log.push(`${m}' — Гол! ${state.club} ${ourGoals}:${oppGoals}`); }
+    if(Math.random() < chanceOpp) { oppGoals++; log.push(`${m}' — Гол: ${opp.name} ${ourGoals}:${oppGoals}`); }
+    // injuries
+    if(Math.random() < 0.02){ const pl = pick(state.squad); pl.fitness = Math.max(30, pl.fitness - randInt(10,40)); log.push(`${m}' — Травма: ${pl.name}`); }
+  }
+  // finalize: change morale and money
+  if(ourGoals > oppGoals){ state.points += 3; state.money += 3000 + state.stadiumLevel*500; state.points += 0; log.unshift('Победа!'); }
+  else if(ourGoals === oppGoals){ state.points += 1; state.money += 1500 + state.stadiumLevel*200; log.unshift('Ничья'); }
+  else { state.money += 800 + state.stadiumLevel*100; log.unshift('Поражение'); }
+  fixture.played = true;
+  state.matchesPlayed++;
+  // small form changes
+  state.squad.forEach(p=>{ p.fitness = clamp(p.fitness - randInt(5,15), 30, 100); p.morale = clamp(p.morale + (ourGoals>oppGoals?5: ourGoals===oppGoals?0:-5), 0, 100); });
+  // random transfer offers / events
+  if(Math.random() < 0.15){
+    const p = pick(state.squad);
+    const offer = Math.floor(p.value * (0.6 + Math.random()*0.8));
+    log.push(`Клуб предлагает ${formatMoney(offer)} за ${p.name}`);
+    // nothing automatic; user can sell from squad in market view (not auto-accept)
+  }
+  // render result
+  const out = [`Игра ${state.club} vs ${opp.name}`, `Результат ${ourGoals}:${oppGoals}`, ...log];
+  $('match-log').innerHTML = out.map(l=>`<div class="small">${l}</div>`).join('');
+  updateTop();
+  saveState();
+}
+
+// Training UI
+function renderTrain(){
+  const sel = $('train-players'); sel.innerHTML='';
+  state.squad.forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.text = `${p.name} (${p.position}) — A${p.attack}/D${p.defense}/S${p.stamina}`;
+    sel.appendChild(opt);
+  });
+  $('btn-train').onclick = doTrain;
+}
+
+function doTrain(){
+  const focus = $('train-focus').value;
+  const sel = Array.from($('train-players').selectedOptions).map(o=>o.value);
+  if(sel.length===0){ alert('Выбери хотя бы одного игрока для тренировки'); return; }
+  // cost per player = wage * 0.5
+  let cost = 0;
+  sel.forEach(id=>{
+    const p = state.squad.find(x=>x.id===id);
+    if(p) cost += Math.ceil(p.wage*0.5);
+  });
+  if(state.money < cost){ if(!confirm('Недостаточно денег. Тренировка будет стоить ' + formatMoney(cost) + '. Провести в минус?')) return; }
+  state.money -= cost;
+  // improvement
+  sel.forEach(id=>{
+    const p = state.squad.find(x=>x.id===id);
+    if(p){
+      const gain = randInt(1,4);
+      if(focus==='attack') p.attack = clamp(p.attack + gain, 30, 99);
+      if(focus==='defense') p.defense = clamp(p.defense + gain, 30, 99);
+      if(focus==='stamina') p.stamina = clamp(p.stamina + gain, 20, 99);
+      p.fitness = clamp(p.fitness - randInt(2,8), 20, 100);
+      p.morale = clamp(p.morale + 2, 0, 100);
+    }
+  });
+  // time passes: simulate next fixture day -> no auto matches, user triggers matches
+  alert('Тренировка проведена. Потрачено ' + formatMoney(cost));
+  updateTop(); renderTrain(); saveState();
+}
+
+// Market UI
+function renderMarket(){
+  const ml = $('market-list'); ml.innerHTML='';
+  state.market.forEach((p,i)=>{
+    const div = document.createElement('div'); div.className='market-item';
+    div.innerHTML = `<div><strong>${p.name}</strong><div class="small">${p.position} · At:${p.attack} De:${p.defense} Sta:${p.stamina}</div></div>
+      <div style="text-align:right"><div class="small">${formatMoney(p.value)}</div><button class="btn buy" data-id="${p.id}">Купить</button></div>`;
+    ml.appendChild(div);
+  });
+  // buy handlers
+  ml.querySelectorAll('.buy').forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.dataset.id;
+      const ply = state.market.find(x=>x.id===id);
+      if(!ply) return;
+      if(state.squad.length >= 22){ alert('Нет места в заявке (макс 22). Продай кого-то.'); return; }
+      if(state.money < ply.value){ if(!confirm('Недостаточно денег. Купить в долг?')) return; }
+      state.money -= ply.value;
+      state.squad.push(ply);
+      // remove from market and add new offer
+      state.market = state.market.filter(m=>m.id!==id);
+      state.market.push(genPlayer(pick(POSITIONS)));
+      alert('Игрок куплен: ' + ply.name);
+      updateTop(); renderSquad(); renderMarket(); saveState();
+    };
+  });
+}
+
+// Stadium UI
+function renderStadium(){
+  $('stadium-desc').innerText = `Уровень ${state.stadiumLevel}. Повышает доход с матчей. Апгрейд стоит ${formatMoney(10000 * state.stadiumLevel)}.`;
+  $('btn-upgrade-stadium').onclick = ()=>{
+    const cost = 10000 * state.stadiumLevel;
+    if(state.money < cost){ if(!confirm('Недостаточно денег для улучшения. Тратить в долг?')){} }
+    state.money -= cost;
+    state.stadiumLevel++;
+    alert('Стадион улучшен!');
+    updateTop(); renderStadium(); saveState();
+  };
+}
+
+// On load: try restore
+if(loadState()){
+  // show game
+  $('start-screen').style.display = 'none';
+  $('game-ui').style.display = 'block';
+  $('tabs').style.display = 'flex';
+  updateTop();
+  showView('squad');
+} else {
+  initStartScreen();
+}
+
+// Expose reset for debug
+window._state = state;
+
+</script>
+</body>
+</html>
