@@ -306,6 +306,7 @@
                 { text: "Выкинуть собаке", effect: { happy: 5, health: 0 }, log: "Собака съела, мама довольна пустой тарелкой." }
             ]
         }
+        ];
 
     // --- ЛОГИКА ---
 
@@ -330,29 +331,53 @@
     }
 
     function nextYear() {
-        player.age++;
+       function nextMonth() {
+        player.month++;
         
-        // Проверка на особый выбор
-        if (choicesDb[player.age]) {
-            showChoice(choicesDb[player.age]);
-            return; // Прерываем, пока игрок не выберет
+        // Проверка смены года
+        if (player.month >= 12) {
+            player.age++;
+            player.month = 0;
+            addLog(`🎂 <b>С Днем Рождения! Вам исполнилось ${player.age} лет!</b>`);
         }
 
-        // Обычное случайное событие
+        // Проверка конца демо-версии
+        if (player.age > 6) {
+            alert("Демо-версия окончена! Вы выросли.");
+            return;
+        }
+
+        // 1. Сначала проверяем, выпадет ли событие с выбором (Scenario)
+        // Ищем подходящие сценарии по возрасту
+        const possibleScenarios = scenarios.filter(s => player.age >= s.minAge && player.age <= s.maxAge);
+        
+        // Пробуем запустить сценарий
+        for (let s of possibleScenarios) {
+            if (Math.random() < s.chance) {
+                showChoice(s);
+                updateStats(); // Обновляем цифры перед показом модалки
+                return; // Прерываем ход, ждем выбора игрока
+            }
+        }
+
+        // 2. Если выбора нет, просто случайное событие из базы
         processRandomEvent();
-        updateStats();
-    }
+        updateStats();}
 
     function processRandomEvent() {
-        const possibleEvents = eventsDb[player.age] || ["Ничего особенного не произошло."];
-        const randomEvent = possibleEvents[Math.floor(Math.random() * possibleEvents.length)];
+        const list = randomEvents[player.age];
+        if (!list) {
+            addLog("Обычный месяц. Ничего не произошло.");
+            return;
+        }
         
-        // Небольшие случайные изменения статов
-        player.happiness += Math.floor(Math.random() * 10) - 3;
-        player.health += Math.floor(Math.random() * 6) - 2;
+        const text = list[Math.floor(Math.random() * list.length)];
+        
+        // Случайные колебания статов каждый месяц
+        player.happiness += Math.floor(Math.random() * 5) - 1; // -1 до +3
+        player.health += Math.floor(Math.random() * 3) - 1;    // -1 до +1
 
-        addLog(randomEvent);
-    }
+        addLog(text);}
 
     function showChoice(choiceData) {
         const modal = document.getElementById('choiceModal');
@@ -392,17 +417,9 @@
         log.prepend(entry); // Новые сверху
     }
 
-    function updateStats() {
-        // Ограничители
-        if (player.health > 100) player.health = 100;
-        if (player.happiness > 100) player.happiness = 100;
-        if (player.health < 0) player.health = 0; // Тут можно добавить смерть
-
-        document.getElementById('ageVal').innerText = player.age;
-        document.getElementById('healthVal').innerText = player.health;
-        document.getElementById('happyVal').innerText = player.happiness;
-        document.getElementById('moneyVal').innerText = player.money;
-    }
+    // Было: document.getElementById('ageVal').innerText = player.age;
+    // Стало:
+    document.getElementById('ageVal').innerText = `${player.age} лет, ${player.month} мес.`
 
 </script>
 
