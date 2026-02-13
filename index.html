@@ -2,464 +2,472 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Life Simulator: Детство</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Sim: Evolution</title>
     <style>
         :root {
-            --primary: #6c5ce7;
-            --bg: #dfe6e9;
+            --primary: #4a90e2;
+            --bg: #f4f7f6;
             --card: #ffffff;
-            --text: #2d3436;
+            --text: #2c3e50;
+            --accent: #e67e22;
+            --danger: #e74c3c;
+            --success: #2ecc71;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
-            height: 100vh;
-            overflow: hidden; /* Чтобы не скроллился весь боди */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
         }
-
-        .container {
+        .app {
             width: 100%;
-            max-width: 450px;
+            max-width: 420px;
             background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             position: relative;
-            height: 100%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 85vh;
         }
-
-        /* --- ЭКРАНЫ --- */
-        .screen {
+        
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
             padding: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .name { font-size: 22px; font-weight: bold; margin: 0; }
+        .age { font-size: 14px; opacity: 0.9; margin-top: 5px; background: rgba(0,0,0,0.2); display: inline-block; padding: 2px 10px; border-radius: 10px; }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .stat-box {
+            background: white;
+            padding: 8px 4px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+        .stat-val { font-weight: bold; font-size: 14px; display: block; margin-top: 4px; }
+        .stat-icon { font-size: 18px; }
+
+        /* Log */
+        .log-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #fff;
+        }
+        .log-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #ddd;
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+            line-height: 1.4;
+        }
+        .log-item.good { border-left-color: var(--success); background: #f0fff4; }
+        .log-item.bad { border-left-color: var(--danger); background: #fff5f5; }
+        .log-item.info { border-left-color: var(--primary); }
+        .log-meta { font-size: 11px; color: #999; margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Controls */
+        .controls {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .main-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+        .main-btn:active { transform: scale(0.98); }
+
+        /* Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal {
+            background: white;
+            width: 85%;
+            max-width: 320px;
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+ .event-emoji { font-size: 60px; margin-bottom: 15px; display: block; }
+ .event-text { font-size: 16px; margin-bottom: 20px; line-height: 1.5; color: #333; font-weight: 500; }
+        
+ .выбор-btn {
+ ширина: 100%;
+ отступ: 14px;
+ нижнее поле: 10px;
+ фон: #f8f9fa;
+ граница: 1px сплошная #e1e4e8;
+ радиус границы: 12px;
+ размер шрифта: 14px;
+ курсор: указатель;
+ выравнивание текста: по левому краю;
+ переход: 0.2с;
+ цвет: #333;
+ положение: относительное;
+ переполнение: скрытое;
+ }
+ .выбор-btn: наведение курсора { фон: #eef2f5; border-color: #d1d5db; }
+ .choice-btn strong { отображение: блок; margin-bottom: 2px; размер шрифта: 15px; }
+ .choice-btn small { цвет: #777; размер шрифта: 12px; }
+
+        /* Start Screen */
+        #startScreen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 200;
             display: flex;
             flex-direction: column;
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        /* СТАРТ */
-        #startScreen {
+            align-items: center;
             justify-content: center;
-            gap: 20px;
-        }
-        
-        h1 { text-align: center; margin-bottom: 10px; color: var(--primary); }
-        
-        input, select {
-            padding: 15px;
-            border-radius: 12px;
-            border: 2px solid #eee;
-            font-size: 16px;
-            width: 100%;
+            padding: 30px;
             box-sizing: border-box;
+        }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 16px;
             outline: none;
             background: #f9f9f9;
         }
         input:focus, select:focus { border-color: var(--primary); background: #fff; }
-
-        .main-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 18px;
-            border-radius: 16px;
-            font-size: 18px;
-            cursor: pointer;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 10px;
-            transition: transform 0.1s;
-        }
-        .main-btn:active { transform: scale(0.98); }
-
-        /* ИГРА */
-        #gameScreen { display: none; }
-
-        .top-panel {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .avatar-img {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #eee;
-            border: 3px solid var(--primary);
-        }
-
-        .info-box h2 { margin: 0; font-size: 20px; }
-        .age-badge { 
-            background: var(--primary); 
-            color: white; 
-            padding: 4px 10px; 
-            border-radius: 20px; 
-            font-size: 12px; 
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 5px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .stat-card {
-            background: #f1f2f6;
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .stat-icon { font-size: 20px; display: block; margin-bottom: 5px; }
-        .stat-value { font-weight: 800; font-size: 16px; }
-
-        .log-container {
-            flex-grow: 1;
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 15px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            border: 1px solid #eee;
-            display: flex;
-            flex-direction: column-reverse; /* Новые сообщения снизу, но прижаты к низу */
-        }
-
-        .log-msg {
-            background: white;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            font-size: 14px;
-            line-height: 1.4;
-            animation: slideIn 0.3s ease;
-        }
-        .log-msg.special { border-left: 4px solid var(--primary); }
-        .log-date { font-size: 11px; color: #aaa; display: block; margin-bottom: 4px; }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* МОДАЛКА */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(5px);
-            z-index: 100;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-        }
-        .modal-content {
-            width: 100%;
-            text-align: center;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .choice-emoji { font-size: 60px; margin-bottom: 15px; display: block; }
-        .choice-text { font-size: 18px; font-weight: bold; margin-bottom: 25px; color: #333; }
-        
-        .choice-btn {
-            background: white;
-            border: 2px solid var(--primary);
-            color: var(--text);
-            padding: 15px;
-            border-radius: 12px;
-            width: 100%;
-            margin-bottom: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .choice-btn:hover { background: var(--primary); color: white; }
-
     </style>
 </head>
 <body>
 
-<div class="container">
-    
-    <!-- ЭКРАН 1: СТАРТ -->
-    <div id="startScreen" class="screen">
-        <h1>👶 Начало пути</h1>
-        <div style="text-align: center; color: #888;">Симулятор жизни: Детство</div>
+<div class="app">
+    <!-- Start Screen -->
+    <div id="startScreen">
+        <h1 style="color: var(--primary); margin-bottom: 10px;">Симулятор Жизни</h1>
+        <p style="color: #777; margin-bottom: 40px;">Создайте свою уникальную историю</p>
         
-        <div style="margin-top: 20px;">
-            <label style="font-weight: bold; display: block; margin-bottom: 5px;">Имя</label>
-            <input type="text" id="nameInput" placeholder="Введите имя..." maxlength="15">
-        </div>
-
-        <div>
-            <label style="font-weight: bold; display: block; margin-bottom: 5px;">Пол</label>
-            <select id="genderInput">
-                <option value="male">Мальчик</option>
-                <option value="female">Девочка</option>
-            </select>
-        </div>
-
-        <button class="main-btn" onclick="game.start()">Родиться</button>
+        <input type="text" id="nameInput" placeholder="Введите имя" maxlength="15">
+        <select id="genderInput">
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+        </select>
+        
+        <button class="main-btn" onclick="game.init()">Начать новую жизнь</button>
     </div>
 
-    <!-- ЭКРАН 2: ИГРОВОЙ ПРОЦЕСС -->
-    <div id="gameScreen" class="screen">
-        <div class="top-panel">
-            <img id="avatarImg" class="avatar-img" src="" alt="Avatar">
-            <div class="info-box">
-                <h2 id="displayName">Имя</h2>
-                <span class="age-badge" id="ageDisplay">0 лет</span>
-            </div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-icon">❤️</span>
-                <div class="stat-value" id="healthVal">100%</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">😊</span>
-                <div class="stat-value" id="happyVal">100%</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">🧠</span>
-                <div class="stat-value" id="smartVal">0</div>
-            </div>
-        </div>
-
-        <div id="logContainer" class="log-container">
-            <!-- Сюда падают сообщения -->
-        </div>
-
-        <button id="nextBtn" class="main-btn" onclick="game.nextMonth()">Прожить месяц</button>
+    <!-- Game UI -->
+    <div class="header">
+        <div class="avatar"><img id="avatarImg" src="" alt="Avatar"></div>
+        <h2 class="name" id="uiName">Имя</h2>
+        <div class="age" id="uiAge">0 лет</div>
     </div>
 
-    <!-- МОДАЛКА ВЫБОРА -->
-    <div id="choiceModal" class="modal-overlay">
-        <div class="modal-content">
-            <span id="cEmoji" class="choice-emoji">🤔</span>
-            <div id="cText" class="choice-text">Вопрос?</div>
-            <div id="cButtons"></div>
-        </div>
+    <div class="stats">
+        <div class="stat-box"><span class="stat-icon">❤️</span><span class="stat-val" id="uiHealth">100%</span></div>
+        <div class="stat-box"><span class="stat-icon">😄</span><span class="stat-val" id="uiHappy">100%</span></div>
+        <div class="stat-box"><span class="stat-icon">🧠</span><span class="stat-val" id="uiSmart">0</span></div>
+        <div class="stat-box"><span class="stat-icon">💵</span><span class="stat-val" id="uiMoney">0$</span></div>
     </div>
 
+    <div class="log-area" id="logArea">
+        <!-- Логи будут здесь -->
+    </div>
+
+    <div class="controls">
+        <button class="main-btn" id="nextBtn" onclick="game.nextTurn()">Прожить полгода</button>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <span class="event-emoji" id="mEmoji">❓</span>
+            <div class="event-text" id="mText">Текст события</div>
+            <div id="mChoices"></div>
+        </div>
+    </div>
 </div>
 
+<!-- Подключаем файл со сценариями -->
+<script src="scenarios.js"></script>
+
 <script>
-    // --- ДАННЫЕ ИГРЫ ---
-
-    const SCENARIOS = [
-        // 0 ЛЕТ
-        { min: 0, max: 0, text: "Вам дали соску, но она невкусная.", emoji: "🍼", options: [
-            { txt: "Выплюнуть", eff: { happy: 5 }, log: "Соска улетела под диван. Свобода!" },
-            { txt: "Терпеть", eff: { happy: -5, smart: 1 }, log: "Вы смирились с судьбой." }
-        ]},
-        { min: 0, max: 0, text: "Вы хотите на ручки.", emoji: "😭", options: [
-            { txt: "Орать", eff: { happy: 5, health: -2 }, log: "Мама взяла вас на руки. Победа!" },
-            { txt: "Лежать тихо", eff: { happy: -5, smart: 1 }, log: "Никто не пришел. Грустно." }
-        ]},
-        
-        // 1 ГОД
-        { min: 1, max: 1, text: "Кот спит рядом. Его хвост так и манит.", emoji: "🐈", options: [
-            { txt: "Куснуть хвост", eff: { health: -10, happy: -5 }, log: "Кот вас цапнул! Больно!" },
-            { txt: "Погладить", eff: { happy: 10, smart: 1 }, log: "Кот замурчал. Вы друзья." }
-        ]},
-        { min: 1, max: 1, text: "Вы нашли мамину помаду.", emoji: "💄", options: [
-            { txt: "Съесть", eff: { health: -5, happy: 5 }, log: "Живот болит, но было вкусно." },
-            { txt: "Рисовать на полу", eff: { happy: 10, smart: 2 }, log: "Мама в шоке от вашего искусства." }
-        ]},
-
-        // 2 ГОДА
-        { min: 2, max: 2, text: "В магазине вы увидели шоколадку.", emoji: "🍫", options: [
-            { txt: "Истерика!", eff: { happy: -10 }, log: "Вас вынесли из магазина. Шоколадку не дали." },
-            { txt: "Попросить мило", eff: { happy: 5, smart: 2 }, log: "Сработало! Вам купили киндер." }
-        ]},
-        { min: 2, max: 2, text: "Горшок зовет.", emoji: "🚽", options: [
-            { txt: "Сделать дела", eff: { happy: 5, smart: 3 }, log: "Родители хлопают в ладоши!" },
-            { txt: "В штаны!", eff: { happy: 5, health: -2 }, log: "Тепло, но мокро." }
-        ]},
-
-        // 3 ГОДА
-        { min: 3, max: 3, text: "В садике мальчик отобрал машинку.", emoji: "🚗", options: [
-            { txt: "Ударить", eff: { health: -5, happy: 5 }, log: "Вы победили, но вас поставили в угол." },
-            { txt: "Пожаловаться", eff: { smart: 2 }, log: "Воспитательница вернула игрушку." }
-        ]},
-        { min: 3, max: 3, text: "Вы нашли жука.", emoji: "🪲", options: [
-            { txt: "Радавить", eff: { happy: -2 }, log: "Фу, гадость." },
-            { txt: "Изучить", eff: { smart: 3, happy: 5 }, log: "У него 6 лапок! Интересно." }
-        ]},
-
-        // 4 ГОДА
-        { min: 4, max: 4, text: "Папа чинит кран и ругается.", emoji: "🔧", options: [
-            { txt: "Запомнить слова", eff: { smart: 2 }, log: "Вы выучили новые 'волшебные' слова." },
-            { txt: "Помочь", eff: { happy: 5, smart: 1 }, log: "Вы подали ключ. Папа горд." }
-        ]},
-        
-        // 5 ЛЕТ
-        { min: 5, max: 5, text: "Вы нашли 100 рублей на улице.", emoji: "💰", options: [
-            { txt: "Купить жвачки", eff: { happy: 10, health: -2 }, log: "Пир на весь мир!" },
-            { txt: "Отдать маме", eff: { smart: 2, happy: 2 }, log: "Мама купила вам мороженое за честность." }
-        ]},
-
-        // 6 ЛЕТ
-        { min: 6, max: 6, text: "Зуб шатается.", emoji: "🦷", options: [
-            { txt: "Вырвать ниткой", eff: { health: -2, happy: 5 }, log: "Зуб под подушкой! Ждем фею." },
-            { txt: "Бояться", eff: { happy: -5 }, log: "Он выпал сам во время еды." }
-        ]}
-    ];
-
-    const RANDOM_EVENTS = [
-        "Вы весь день смотрели мультики.",
-        "Бабушка приехала и зацеловала вас.",
-        "Вы построили крутой замок из кубиков.",
-        "Вы упали, но не заплакали. Герой!",
-        "На обед был суп. Вы его ненавидите.",
-        "Вы нашли красивый камень.",
-        "Вы научились свистеть (почти).",
-        "Вам приснился страшный сон."
-    ];
-
-    // --- ДВИЖОК ИГРЫ ---
-
     const game = {
-        player: {
+        data: {
+            age: 0, // в полугодиях (0.5 года = 1 ход)
             name: "",
             gender: "male",
-            age: 0,
-            month: 0,
-            health: 100,
-            happiness: 100,
-            smart: 0,
-            avatar: ""
+            stats: { health: 100, happy: 100, smart: 0, money: 0, reputation: 0 },
+            flags: {}, // Память игры (какие события произошли)
+            isGameOver: false
         },
 
-        start: function() {
-            const name = document.getElementById('nameInput').value;
-            if(!name) return alert("Введите имя!");
+        init: function() {
+            const name = document.getElementById('nameInput').value.trim();
+            if(!name) return alert("Пожалуйста, введите имя!");
             
-            this.player.name = name;
-            this.player.gender = document.getElementById('genderInput').value;
+            this.data.name = name;
+            this.data.gender = document.getElementById('genderInput').value;
             
-            // Генерация аватара через DiceBear API
+            // Генерация аватара
             const seed = Math.random().toString(36).substring(7);
-            const style = this.player.gender === 'male' ? 'short' : 'long';
-            this.player.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&hair=${style}01,${style}02`;
-
-            // UI
+            const hair = this.data.gender === 'male' ? 'short01,short02,short03' : 'long01,long02,long03';
+            document.getElementById('avatarImg').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&hair=${hair}&backgroundColor=b6e3f4`;
+            
             document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'flex';
-            document.getElementById('displayName').innerText = this.player.name;
-            document.getElementById('avatarImg').src = this.player.avatar;
+            this.updateUI();
+            this.log("Вы родились! Добро пожаловать в этот мир.", "info");
+        },
+
+        nextTurn: function() {
+            if(this.data.isGameOver) return location.reload();
+
+            this.data.age++;
+            const years = Math.floor(this.data.age / 2);
+
+            // Проверка условий поражения
+            if(this.data.stats.health <= 0) return this.gameOver("Здоровье упало до нуля. R.I.P.");
+            if(this.data.stats.happy <= 0) return this.gameOver("Депрессия поглотила вас. Вы сдались.");
+            if(years > 18) return this.gameOver("Совершеннолетие! Демо-версия окончена.");
+
+            // Поиск события
+            const event = this.findEvent(years);
             
-            this.log("Вы родились! Добро пожаловать в этот мир.", true);
+            if(event) {
+                this.showEvent(event);
+            } else {
+                this.passiveTurn(years);
+            }
+            
             this.updateUI();
         },
 
-        nextMonth: function() {
-            this.player.month++;
-            
-            // Смена года
-            if(this.player.month >= 12) {
-                this.player.age++;
-                this.player.month = 0;
-                this.log(`🎂 С Днем Рождения! Вам ${this.player.age}!`, true);
+        findEvent: function(years) {
+            // Проверка наличия базы сценариев
+            if(typeof SCENARIOS === 'undefined') {
+                this.log("Ошибка: файл scenarios.js не найден!", "bad");
+                return null;
             }
 
-            // Конец демо
-            if(this.player.age >= 7) {
-                document.getElementById('nextBtn').style.display = 'none';
-                alert("Детство закончилось! Вы идете в школу.");
-                return;
-            }
-
-            // Попытка сценария (шанс 50%)
-            if(Math.random() < 0.5) {
-                const validScenarios = SCENARIOS.filter(s => 
-                    this.player.age >= s.min && this.player.age <= s.max
-                );
-                if(validScenarios.length > 0) {
-                    const s = validScenarios[Math.floor(Math.random() * validScenarios.length)];
-                    this.showChoice(s);
-                    this.updateUI();
-                    return;
+            // Фильтр доступных событий
+            const available = SCENARIOS.filter(s => {
+                // 1. Проверка возраста (точное число или диапазон [min, max])
+                if(Array.isArray(s.age)) {
+                    if(years < s.age[0] || years > s.age[1]) return false;
+                } else {
+                    if(s.age !== years) return false;
                 }
-            }
+                
+                // 2. Проверка повторов (если событие уже было, не показываем)
+                if(this.data.flags[s.id]) return false;
 
-            // Иначе случайное событие
-            this.randomEvent();
-            this.updateUI();
-        },
+                // 3. Проверка требований (req)
+                if(s.req) {
+                    // Пол
+                    if(s.req.gender && s.req.gender !== this.data.gender) return false;
+                    
+                    // Статы (например, smart >= 50)
+                    if(s.req.stat) {
+                        // Парсим требование вида { stat: "smart", val: 50 }
+                        // В scenarios.js это может быть записано как req: { stat: "smart", val: 50 }
+                        // Или упрощенно, если мы договоримся о структуре.
+                        // Сейчас код ожидает структуру: req: { stat: "smart", val: 50 }
+                        if(this.data.stats[s.req.stat] < s.req.val) return false;
+                    }
+                    
+                    // Флаги (нужно, чтобы событие X уже случилось)
+                    if(s.req.flag && !this.data.flags[s.req.flag]) return false;
+                    
+                    // Анти-флаги (событие не должно было случиться)
+                    if(s.req.noFlag && this.data.flags[s.req.noFlag]) return false;
+                }
 
-        randomEvent: function() {
-            const txt = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
-            // Рандом статы
-            this.player.happiness += Math.floor(Math.random() * 5) - 2;
-            this.player.health += Math.floor(Math.random() * 3) - 1;
-            this.log(txt);
-        },
+                return true;
+            });
 
-        showChoice: function(scenario) {
-            const modal = document.getElementById('choiceModal');
-            document.getElementById('cEmoji').innerText = scenario.emoji;
-            document.getElementById('cText').innerText = scenario.text;
+            if(available.length === 0) return null;
             
-            const btns = document.getElementById('cButtons');
-            btns.innerHTML = '';
+            // Выбираем случайное из доступных
+            return available[Math.floor(Math.random() * available.length)];
+        },
 
-            scenario.options.forEach(opt => {
+        showEvent: function(event) {
+            const modal = document.getElementById('modalOverlay');
+            document.getElementById('mEmoji').innerText = event.emoji;
+            document.getElementById('mText').innerText = event.text;
+            
+            const choicesDiv = document.getElementById('mChoices');
+            choicesDiv.innerHTML = '';
+
+            event.choices.forEach(choice => {
+                // Проверка требований для конкретного выбора
+                if(choice.req) {
+                    if(choice.req.stat && this.data.stats[choice.req.stat] < choice.req.val) return;
+                    if(choice.req.flag && !this.data.flags[choice.req.flag]) return;
+                    if(choice.req.money && this.data.stats.money < choice.req.money) return;
+                }
+
                 const btn = document.createElement('button');
                 btn.className = 'choice-btn';
-                btn.innerText = opt.txt;
+                btn.innerHTML = `<strong>${choice.txt}</strong>`;
+                
                 btn.onclick = () => {
-                    this.applyEffect(opt);
+                    this.resolveChoice(event, choice);
                     modal.style.display = 'none';
                 };
-                btns.appendChild(btn);
+                choicesDiv.appendChild(btn);
             });
 
             modal.style.display = 'flex';
         },
 
-        applyEffect: function(opt) {
-            if(opt.eff.happy) this.player.happiness += opt.eff.happy;
-            if(opt.eff.health) this.player.health += opt.eff.health;
-            if(opt.eff.smart) this.player.smart += opt.eff.smart;
-            this.log(opt.log, true);
+        resolveChoice: function(event, choice) {
+            this.data.flags[event.id] = true; // Запоминаем, что событие произошло
+
+            let outcome = choice;
+            
+            // Обработка шанса (если есть chance: 50)
+            if(choice.chance) {
+                const roll = Math.random() * 100;
+                // Если успех - берем объект success, иначе fail (или сам choice если fail нет)
+                if (roll <= choice.chance && choice.success) {
+                    outcome = choice.success;
+                } else if (choice.fail) {
+                    outcome = choice.fail;
+                }
+            }
+
+            // Применяем эффекты (eff)
+            if(outcome.eff) {
+                for(let key in outcome.eff) {
+                    if(this.data.stats[key] !== undefined) {
+                        this.data.stats[key] += outcome.eff[key];
+                    }
+                }
+            }
+
+            // Ставим флаг выбора (если есть)
+            if(outcome.flag) this.data.flags[outcome.flag] = true;
+
+            // Логирование
+            // Определяем тип сообщения (плохое/хорошее)
+            let type = 'info';
+            if (outcome.eff) {
+                if (outcome.eff.health < 0 || outcome.eff.happy < -5 || outcome.eff.money < 0) type = 'bad';
+                if (outcome.eff.health > 0 || outcome.eff.happy > 5 || outcome.eff.money > 0) type = 'good';
+            }
+            
+            this.log(outcome.log || "Вы сделали выбор.", type);
             this.updateUI();
         },
 
-        log: function(text, isSpecial = false) {
-            const box = document.getElementById('logContainer');
+        passiveTurn: function(years) {
+            // Если события нет, просто меняем статы немного
+            const happyChange = Math.floor(Math.random() * 5) - 2;
+            this.data.stats.happy += happyChange;
+            
+            // Иногда пишем в лог
+            if(Math.random() > 0.7) {
+                this.log(`Возраст ${years} лет. Жизнь идет своим чередом.`, "info");
+            }
+        },
+
+        log: function(msg, type) {
+            const area = document.getElementById('logArea');
             const div = document.createElement('div');
-            div.className = `log-msg ${isSpecial ? 'special' : ''}`;
-            div.innerHTML = `<span class="log-date">${this.player.age} г. ${this.player.month} мес.</span>${text}`;
-            box.insertBefore(div, box.firstChild);
+            div.className = `log-item ${type}`;
+            
+            const years = Math.floor(this.data.age / 2);
+            const half = this.data.age % 2 === 0 ? "II" : "I";
+            
+            div.innerHTML = `<span class="log-meta">${years} лет (${half} пол.)</span>${msg}`;
+            area.prepend(div);
         },
 
         updateUI: function() {
-            // Лимиты
-            if(this.player.health > 100) this.player.health = 100;
-            if(this.player.health < 0) this.player.health = 0;
-            if(this.player.happiness > 100) this.player.happiness = 100;
+            // Ограничители (0-100)
+            this.data.stats.health = Math.min(100, Math.max(0, this.data.stats.health));
+            this.data.stats.happy = Math.min(100, Math.max(0, this.data.stats.happy));
 
-            document.getElementById('ageDisplay').innerText = `${this.player.age} лет, ${this.player.month} мес.`;
-            document.getElementById('healthVal').innerText = this.player.health + '%';
-            document.getElementById('happyVal').innerText = this.player.happiness + '%';
-            document.getElementById('smartVal').innerText = this.player.smart;
+            document.getElementById('uiName').innerText = this.data.name;
+            document.getElementById('uiAge').innerText = Math.floor(this.data.age / 2) + " лет";
+            
+            document.getElementById('uiHealth').innerText = this.data.stats.health + "%";
+            document.getElementById('uiHappy').innerText = this.data.stats.happy + "%";
+            document.getElementById('uiSmart').innerText = this.data.stats.smart;
+            document.getElementById('uiMoney').innerText = this.data.stats.money + "$";
+        },
+
+        gameOver: function(reason) {
+            this.data.isGameOver = true;
+            this.log(`🏁 ИГРА ОКОНЧЕНА: ${reason}`, "bad");
+            
+            // Меняем кнопку
+            const btn = document.getElementById('nextBtn');
+            btn.innerText = "Начать заново";
+            btn.style.background = "#e74c3c";
+            btn.onclick = () => location.reload();
+            
+            // Скрываем модалку если открыта
+            document.getElementById('modalOverlay').style.display = 'none';
         }
     };
 </script>
