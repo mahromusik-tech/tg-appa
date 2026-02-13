@@ -2,14 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Life Simulator: Детство</title>
     <style>
         :root {
-            --primary: #5c9ded;
-            --bg: #f0f2f5;
+            --primary: #6c5ce7;
+            --bg: #dfe6e9;
             --card: #ffffff;
-            --text: #333;
+            --text: #2d3436;
         }
 
         body {
@@ -17,419 +17,452 @@
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 0;
             display: flex;
             justify-content: center;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden; /* Чтобы не скроллился весь боди */
         }
 
         .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             background: var(--card);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             position: relative;
+            height: 100%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
 
-        h1, h2 { text-align: center; margin-top: 0; }
+        /* --- ЭКРАНЫ --- */
+        .screen {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }
 
-        /* Стили для стартового экрана */
-        .start-screen { display: flex; flex-direction: column; gap: 15px; }
+        /* СТАРТ */
+        #startScreen {
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        h1 { text-align: center; margin-bottom: 10px; color: var(--primary); }
+        
         input, select {
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #eee;
             font-size: 16px;
             width: 100%;
             box-sizing: border-box;
+            outline: none;
+            background: #f9f9f9;
         }
-        
-        button {
+        input:focus, select:focus { border-color: var(--primary); background: #fff; }
+
+        .main-btn {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 18px;
+            border-radius: 16px;
             font-size: 18px;
             cursor: pointer;
             font-weight: bold;
-            transition: transform 0.1s;
             width: 100%;
+            margin-top: 10px;
+            transition: transform 0.1s;
         }
-        button:active { transform: scale(0.98); }
+        .main-btn:active { transform: scale(0.98); }
 
-        /* Стили для основного экрана */
-        .game-screen { display: none; }
-        
-        .stats-bar {
+        /* ИГРА */
+        #gameScreen { display: none; }
+
+        .top-panel {
             display: flex;
-            justify-content: space-between;
-            background: #f8f9fa;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .avatar-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #eee;
+            border: 3px solid var(--primary);
+        }
+
+        .info-box h2 { margin: 0; font-size: 20px; }
+        .age-badge { 
+            background: var(--primary); 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: #f1f2f6;
             padding: 10px;
             border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .stat-item { display: flex; flex-direction: column; align-items: center; }
-        .stat-val { font-weight: bold; font-size: 16px; }
-
-        .avatar-container {
             text-align: center;
-            margin-bottom: 20px;
         }
-        .avatar-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--primary);
-            background: #eee;
-        }
+        .stat-icon { font-size: 20px; display: block; margin-bottom: 5px; }
+        .stat-value { font-weight: 800; font-size: 16px; }
 
-        .event-log {
+        .log-container {
             flex-grow: 1;
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 12px;
+            background: #f8f9fa;
+            border-radius: 16px;
             padding: 15px;
-            margin-bottom: 20px;
-            min-height: 150px;
-            max-height: 300px;
             overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column-reverse; /* Новые сообщения снизу, но прижаты к низу */
         }
-        .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
-        .log-age { font-weight: bold; color: var(--primary); }
 
-        /* Модальное окно выбора */
+        .log-msg {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            font-size: 14px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease;
+        }
+        .log-msg.special { border-left: 4px solid var(--primary); }
+        .log-date { font-size: 11px; color: #aaa; display: block; margin-bottom: 4px; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* МОДАЛКА */
         .modal-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            border-radius: 20px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(5px);
+            z-index: 100;
             display: none;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-            z-index: 100;
+            padding: 30px;
         }
         .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
             width: 100%;
             text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .choice-emoji { font-size: 60px; margin-bottom: 15px; display: block; }
+        .choice-text { font-size: 18px; font-weight: bold; margin-bottom: 25px; color: #333; }
+        
         .choice-btn {
-            margin-top: 10px;
-            background: #fff;
-            color: var(--text);
+            background: white;
             border: 2px solid var(--primary);
+            color: var(--text);
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 600;
         }
-        .choice-btn:hover { background: #f0f7ff; }
+        .choice-btn:hover { background: var(--primary); color: white; }
 
     </style>
 </head>
 <body>
-  <div class="container">
-      <!-- Экран создания -->
-    <div id="startScreen" class="start-screen">
-        <h2>Новая жизнь</h2>
-        <input type="text" id="nameInput" placeholder="Введите имя" maxlength="15">
-        <select id="genderInput">
-            <option value="male">Мальчик</option>
-            <option value="female">Девочка</option>
-        </select>
-        <button onclick="startGame()">Родиться</button>
-    </div>
 
-    <!-- Экран игры -->
-    <div id="gameScreen" class="game-screen">
-        <div class="stats-bar">
-            <div class="stat-item">❤️ <span class="stat-val" id="healthVal">100</span></div>
-            <div class="stat-item">😊 <span class="stat-val" id="happyVal">100</span></div>
-            <div class="stat-item">💰 <span class="stat-val" id="moneyVal">0</span></div>
+<div class="container">
+    
+    <!-- ЭКРАН 1: СТАРТ -->
+    <div id="startScreen" class="screen">
+        <h1>👶 Начало пути</h1>
+        <div style="text-align: center; color: #888;">Симулятор жизни: Детство</div>
+        
+        <div style="margin-top: 20px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 5px;">Имя</label>
+            <input type="text" id="nameInput" placeholder="Введите имя..." maxlength="15">
         </div>
 
-        <div class="avatar-container">
+        <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 5px;">Пол</label>
+            <select id="genderInput">
+                <option value="male">Мальчик</option>
+                <option value="female">Девочка</option>
+            </select>
+        </div>
+
+        <button class="main-btn" onclick="game.start()">Родиться</button>
+    </div>
+
+    <!-- ЭКРАН 2: ИГРОВОЙ ПРОЦЕСС -->
+    <div id="gameScreen" class="screen">
+        <div class="top-panel">
             <img id="avatarImg" class="avatar-img" src="" alt="Avatar">
-            <h2 id="displayName" style="margin: 10px 0 5px;">Имя</h2>
-            <div style="color: #666;">Возраст: <span id="ageVal">0</span> лет</div>
+            <div class="info-box">
+                <h2 id="displayName">Имя</h2>
+                <span class="age-badge" id="ageDisplay">0 лет</span>
+            </div>
         </div>
 
-        <div id="eventLog" class="event-log">
-            <div class="log-entry">Вы родились! Добро пожаловать в этот мир.</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">❤️</span>
+                <div class="stat-value" id="healthVal">100%</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">😊</span>
+                <div class="stat-value" id="happyVal">100%</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🧠</span>
+                <div class="stat-value" id="smartVal">0</div>
+            </div>
         </div>
 
-        <button id="ageBtn" onclick="nextYear()">Прожить год</button>
+        <div id="logContainer" class="log-container">
+            <!-- Сюда падают сообщения -->
+        </div>
+
+        <button id="nextBtn" class="main-btn" onclick="game.nextMonth()">Прожить месяц</button>
     </div>
 
-    <!-- Модалка выбора -->
+    <!-- МОДАЛКА ВЫБОРА -->
     <div id="choiceModal" class="modal-overlay">
         <div class="modal-content">
-            <h3 id="choiceTitle">Выбор</h3>
-            <div id="choiceButtons"></div>
+            <span id="cEmoji" class="choice-emoji">🤔</span>
+            <div id="cText" class="choice-text">Вопрос?</div>
+            <div id="cButtons"></div>
         </div>
     </div>
+
 </div>
 
 <script>
-    // --- ДАННЫЕ ---
-    
-    // Заглушки для картинок (Вам нужно заменить их на реальные пути к файлам)
-    // Например: 'img/boy1.png', 'img/boy2.png'...
-    const avatars = {
-        male: [
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix', 
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Max', 
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex'
-        ],
-        female: [
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Bella', 
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie', 
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Lilly'
-        ]
-    };
+    // --- ДАННЫЕ ИГРЫ ---
 
-    let player = {
-        name: "",
-        gender: "male",
-        age: 0,
-        month: 0, // Добавили счетчик месяцев
-        health: 100,
-        happiness: 100,
-        money: 0,
-        avatar: ""
-    };
+    const SCENARIOS = [
+        // 0 ЛЕТ
+        { min: 0, max: 0, text: "Вам дали соску, но она невкусная.", emoji: "🍼", options: [
+            { txt: "Выплюнуть", eff: { happy: 5 }, log: "Соска улетела под диван. Свобода!" },
+            { txt: "Терпеть", eff: { happy: -5, smart: 1 }, log: "Вы смирились с судьбой." }
+        ]},
+        { min: 0, max: 0, text: "Вы хотите на ручки.", emoji: "😭", options: [
+            { txt: "Орать", eff: { happy: 5, health: -2 }, log: "Мама взяла вас на руки. Победа!" },
+            { txt: "Лежать тихо", eff: { happy: -5, smart: 1 }, log: "Никто не пришел. Грустно." }
+        ]},
+        
+        // 1 ГОД
+        { min: 1, max: 1, text: "Кот спит рядом. Его хвост так и манит.", emoji: "🐈", options: [
+            { txt: "Куснуть хвост", eff: { health: -10, happy: -5 }, log: "Кот вас цапнул! Больно!" },
+            { txt: "Погладить", eff: { happy: 10, smart: 1 }, log: "Кот замурчал. Вы друзья." }
+        ]},
+        { min: 1, max: 1, text: "Вы нашли мамину помаду.", emoji: "💄", options: [
+            { txt: "Съесть", eff: { health: -5, happy: 5 }, log: "Живот болит, но было вкусно." },
+            { txt: "Рисовать на полу", eff: { happy: 10, smart: 2 }, log: "Мама в шоке от вашего искусства." }
+        ]},
 
-    // --- СЦЕНАРИИ (0-6 лет) ---
-     eventsDb = {
-       // --- БАЗА СОБЫТИЙ (0-6 ЛЕТ) ---
-    
-    // Случайные события (без выбора), привязанные к возрасту
-    const randomEvents = {
-        0: [
-            "Вы смачно срыгнули на плечо папе.",
-            "Вы обнаружили, что у вас есть ноги. Шок!",
-            "Вам приснилась гигантская сиська.",
-            "Вы орали 3 часа подряд без причины. Родители в восторге.",
-            "Вас искупали в травах. Вы пахнете как чайный пакетик.",
-            "Вы научились переворачиваться на живот. Теперь мир выглядит иначе.",
-            "Бабушка сказала, что вы копия деда. Надеемся, это комплимент."
-        ],
-        1: [
-            "Вы попробовали на вкус кошачий хвост. Шерстисто.",
-            "Вы научились говорить 'НЕТ'. Теперь это ваш ответ на всё.",
-            "Вы размазали кашу по лицу. Это абстракционизм.",
-            "Вы сделали первые шаги и сразу упали на попу.",
-            "Вы нашли пульт от телевизора и спрятали его в кастрюлю.",
-            "Вам подарили плюшевого медведя. Он теперь ваш лучший друг."
-        ],
-        2: [
-            "Вы разрисовали обои фломастерами. Мама плачет, папа смеется.",
-            "Вы научились прыгать на двух ногах.",
-            "Вы отказались есть суп и потребовали конфету.",
-            "Вы увидели голубя и побежали за ним с криком 'Гуля!'",
-            "Вы надели мамины туфли и упали.",
-            "Вы выучили плохое слово, услышав, как папа чинит кран."
-        ],
-        3: [
-            "В садике давали манную кашу с комочками. Фу.",
-            "Вы подружились с мальчиком, у которого есть крутая машинка.",
-            "Вы слепили из пластилина нечто похожее на червяка.",
-            "Вы научились врать, что это не вы разбили чашку.",
-            "Вы нашли жука. Он красивый и блестящий.",
-            "Вас укусил комар. Чешется!"
-        ],
-        4: [
-            "Вы научились кататься на трехколесном велосипеде.",
-            "Вы спросили у мамы, откуда берутся дети. Мама покраснела.",
-            "Вы построили шалаш из подушек и одеял.",
-            "Вы нашли 10 рублей на улице. Богатство!",
-            "Вы посмотрели страшный мультик и боялись спать.",
-            "Вы помогали папе забивать гвоздь (держали молоток)."
-        ],
-        5: [
-            "У вас выпал первый молочный зуб. Ждете фею.",
-            "Вы научились читать по слогам: 'МА-МА МЫ-ЛА РА-МУ'.",
-            "Вы влюбились в девочку/мальчика из старшей группы.",
-            "Вы украли конфету из вазы, пока никто не видел.",
-            "Вы научились свистеть (почти).",
-            "Вы поймали лягушку на даче."
-        ],
-        6: [
-            "Вам купили портфель. Он огромный.",
-            "Вы научились завязывать шнурки (с третьей попытки).",
-            "Вы разбили коленку, но не плакали. Герой!",
-            "Вы играли в прятки и уснули в шкафу.",
-            "Скоро в школу. Все говорят об этом с ужасом.",
-            "Вы нашли старый журнал с картинками."
-        ]
-    };
+        // 2 ГОДА
+        { min: 2, max: 2, text: "В магазине вы увидели шоколадку.", emoji: "🍫", options: [
+            { txt: "Истерика!", eff: { happy: -10 }, log: "Вас вынесли из магазина. Шоколадку не дали." },
+            { txt: "Попросить мило", eff: { happy: 5, smart: 2 }, log: "Сработало! Вам купили киндер." }
+        ]},
+        { min: 2, max: 2, text: "Горшок зовет.", emoji: "🚽", options: [
+            { txt: "Сделать дела", eff: { happy: 5, smart: 3 }, log: "Родители хлопают в ладоши!" },
+            { txt: "В штаны!", eff: { happy: 5, health: -2 }, log: "Тепло, но мокро." }
+        ]},
+
+        // 3 ГОДА
+        { min: 3, max: 3, text: "В садике мальчик отобрал машинку.", emoji: "🚗", options: [
+            { txt: "Ударить", eff: { health: -5, happy: 5 }, log: "Вы победили, но вас поставили в угол." },
+            { txt: "Пожаловаться", eff: { smart: 2 }, log: "Воспитательница вернула игрушку." }
+        ]},
+        { min: 3, max: 3, text: "Вы нашли жука.", emoji: "🪲", options: [
+            { txt: "Радавить", eff: { happy: -2 }, log: "Фу, гадость." },
+            { txt: "Изучить", eff: { smart: 3, happy: 5 }, log: "У него 6 лапок! Интересно." }
+        ]},
+
+        // 4 ГОДА
+        { min: 4, max: 4, text: "Папа чинит кран и ругается.", emoji: "🔧", options: [
+            { txt: "Запомнить слова", eff: { smart: 2 }, log: "Вы выучили новые 'волшебные' слова." },
+            { txt: "Помочь", eff: { happy: 5, smart: 1 }, log: "Вы подали ключ. Папа горд." }
+        ]},
+        
+        // 5 ЛЕТ
+        { min: 5, max: 5, text: "Вы нашли 100 рублей на улице.", emoji: "💰", options: [
+            { txt: "Купить жвачки", eff: { happy: 10, health: -2 }, log: "Пир на весь мир!" },
+            { txt: "Отдать маме", eff: { smart: 2, happy: 2 }, log: "Мама купила вам мороженое за честность." }
+        ]},
+
+        // 6 ЛЕТ
+        { min: 6, max: 6, text: "Зуб шатается.", emoji: "🦷", options: [
+            { txt: "Вырвать ниткой", eff: { health: -2, happy: 5 }, log: "Зуб под подушкой! Ждем фею." },
+            { txt: "Бояться", eff: { happy: -5 }, log: "Он выпал сам во время еды." }
+        ]}
     ];
 
-    // Сценарные выборы (триггеры), срабатывают с шансом
-      // Сценарные выборы (триггеры), срабатывают с шансом
-    const scenarios = [
-        {
-            minAge: 0, maxAge: 0, chance: 0.1, // 10% шанс каждый месяц в 0 лет
-            text: "Вам предлагают соску. Ваши действия?",
-            options: [
-                { text: "Взять и сосать", effect: { happy: 5, health: 0 }, log: "Успокоение. Жизнь хороша." },
-                { text: "Выплюнуть далеко", effect: { happy: 10, health: 0 }, log: "Соска улетела под диван. Свобода!" }
-            ]
+    const RANDOM_EVENTS = [
+        "Вы весь день смотрели мультики.",
+        "Бабушка приехала и зацеловала вас.",
+        "Вы построили крутой замок из кубиков.",
+        "Вы упали, но не заплакали. Герой!",
+        "На обед был суп. Вы его ненавидите.",
+        "Вы нашли красивый камень.",
+        "Вы научились свистеть (почти).",
+        "Вам приснился страшный сон."
+    ];
+
+    // --- ДВИЖОК ИГРЫ ---
+
+    const game = {
+        player: {
+            name: "",
+            gender: "male",
+            age: 0,
+            month: 0,
+            health: 100,
+            happiness: 100,
+            smart: 0,
+            avatar: ""
         },
-        {
-            minAge: 1, maxAge: 2, chance: 0.05,
-            text: "Вы видите розетку. Она выглядит как пятачок свиньи.",
-            options: [
-                { text: "Сунуть пальцы", effect: { happy: -20, health: -10 }, log: "Вас ударило током! Больно и обидно." },
-                { text: "Пройти мимо", effect: { happy: 0, health: 0 }, log: "Инстинкт самосохранения сработал." }
-            ]
+
+        start: function() {
+            const name = document.getElementById('nameInput').value;
+            if(!name) return alert("Введите имя!");
+            
+            this.player.name = name;
+            this.player.gender = document.getElementById('genderInput').value;
+            
+            // Генерация аватара через DiceBear API
+            const seed = Math.random().toString(36).substring(7);
+            const style = this.player.gender === 'male' ? 'short' : 'long';
+            this.player.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&hair=${style}01,${style}02`;
+
+            // UI
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'flex';
+            document.getElementById('displayName').innerText = this.player.name;
+            document.getElementById('avatarImg').src = this.player.avatar;
+            
+            this.log("Вы родились! Добро пожаловать в этот мир.", true);
+            this.updateUI();
         },
-        {
-            minAge: 3, maxAge: 4, chance: 0.08,
-            text: "В песочнице у вас отбирают лопатку.",
-            options: [
-                { text: "Драться!", effect: { happy: 5, health: -5 }, log: "Вы победили, но получили песком в глаза." },
-                { text: "Отдать и плакать", effect: { happy: -10, health: 0 }, log: "Лопатку забрали, зато мама пожалела." }
-            ]
-        },
-        {
-            minAge: 5, maxAge: 6, chance: 0.08,
-            text: "Мама заставляет есть брокколи.",
-            options: [
-                { text: "Съесть через силу", effect: { happy: -5, health: 5 }, log: "Гадость, зато полезно." },
-                { text: "Выкинуть собаке", effect: { happy: 5, health: 0 }, log: "Собака съела, мама довольна пустой тарелкой." }
-            ]
-        }
-        ];
 
-    // --- ЛОГИКА ---
-
-    function startGame() {
-        const name = document.getElementById('nameInput').value;
-        if (!name) return alert("Введите имя!");
-
-        player.name = name;
-        player.gender = document.getElementById('genderInput').value;
-        
-        // Рандомный выбор аватара
-        const avatarList = avatars[player.gender];
-        player.avatar = avatarList[Math.floor(Math.random() * avatarList.length)];
-
-        // Обновление UI
-        document.getElementById('startScreen').style.display = 'none';
-        document.getElementById('gameScreen').style.display = 'block';
-        document.getElementById('displayName').innerText = player.name;
-        document.getElementById('avatarImg').src = player.avatar;
-        
-        updateStats();
-    }
-
-    function nextYear() {
-       function nextMonth() {
-        player.month++;
-        
-        // Проверка смены года
-        if (player.month >= 12) {
-            player.age++;
-            player.month = 0;
-            addLog(`🎂 <b>С Днем Рождения! Вам исполнилось ${player.age} лет!</b>`);
-        }
-
-        // Проверка конца демо-версии
-        if (player.age > 6) {
-            alert("Демо-версия окончена! Вы выросли.");
-            return;
-        }
-
-        // 1. Сначала проверяем, выпадет ли событие с выбором (Scenario)
-        // Ищем подходящие сценарии по возрасту
-        const possibleScenarios = scenarios.filter(s => player.age >= s.minAge && player.age <= s.maxAge);
-        
-        // Пробуем запустить сценарий
-        for (let s of possibleScenarios) {
-            if (Math.random() < s.chance) {
-                showChoice(s);
-                updateStats(); // Обновляем цифры перед показом модалки
-                return; // Прерываем ход, ждем выбора игрока
+        nextMonth: function() {
+            this.player.month++;
+            
+            // Смена года
+            if(this.player.month >= 12) {
+                this.player.age++;
+                this.player.month = 0;
+                this.log(`🎂 С Днем Рождения! Вам ${this.player.age}!`, true);
             }
-        }
 
-        // 2. Если выбора нет, просто случайное событие из базы
-        processRandomEvent();
-        updateStats();}
-
-    function processRandomEvent() {
-        const list = randomEvents[player.age];
-        if (!list) {
-            addLog("Обычный месяц. Ничего не произошло.");
-            return;
-        }
-        
-        const text = list[Math.floor(Math.random() * list.length)];
-        
-        // Случайные колебания статов каждый месяц
-        player.happiness += Math.floor(Math.random() * 5) - 1; // -1 до +3
-        player.health += Math.floor(Math.random() * 3) - 1;    // -1 до +1
-
-        addLog(text);}
-
-    function showChoice(choiceData) {
-        const modal = document.getElementById('choiceModal');
-        const title = document.getElementById('choiceTitle');
-        const btnContainer = document.getElementById('choiceButtons');
-
-        title.innerText = choiceData.text;
-        btnContainer.innerHTML = '';
-
-        choiceData.options.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.className = 'choice-btn';
-            btn.innerText = opt.text;
-            btn.onclick = () => makeChoice(opt);
-            btnContainer.appendChild(btn);
-        });
-
-        modal.style.display = 'flex';
-    }
-
-    function makeChoice(option) {
-        // Применяем эффекты
-        if (option.effect.happy) player.happiness += option.effect.happy;
-        if (option.effect.health) player.health += option.effect.health;
-        if (option.effect.money) player.money += option.effect.money;
-
-        addLog(option.log);
-        updateStats();
-        document.getElementById('choiceModal').style.display = 'none';
-    }
-
-    function addLog(text) {
-        const log = document.getElementById('eventLog');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `<span class="log-age">${player.age} лет:</span> ${text}`;
-        log.prepend(entry); // Новые сверху
-    }
-
-function updateStats() {
-        // Ограничители
-        if (player.health > 100) player.health = 100;
-        if (player.happiness > 100) player.happiness = 100;
-        if (player.health < 0) player.health = 0; // Тут можно добавить смерть
-// Было: document.getElementById('ageVal').innerText = player.age;
-    // Стало:
-    document.getElementById('ageVal').innerText = `${player.age} лет, ${player.month} мес.`;
-        document.getElementById('healthVal').innerText = player.health;
-        document.getElementById('happyVal').innerText = player.happiness;
-        document.getElementById('moneyVal').innerText = player.money;
+            // Конец демо
+            if(this.player.age >= 7) {
+                document.getElementById('nextBtn').style.display = 'none';
+                alert("Детство закончилось! Вы идете в школу.");
+                return;
             }
+
+            // Попытка сценария (шанс 50%)
+            if(Math.random() < 0.5) {
+                const validScenarios = SCENARIOS.filter(s => 
+                    this.player.age >= s.min && this.player.age <= s.max
+                );
+                if(validScenarios.length > 0) {
+                    const s = validScenarios[Math.floor(Math.random() * validScenarios.length)];
+                    this.showChoice(s);
+                    this.updateUI();
+                    return;
+                }
+            }
+
+            // Иначе случайное событие
+            this.randomEvent();
+            this.updateUI();
+        },
+
+        randomEvent: function() {
+            const txt = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+            // Рандом статы
+            this.player.happiness += Math.floor(Math.random() * 5) - 2;
+            this.player.health += Math.floor(Math.random() * 3) - 1;
+            this.log(txt);
+        },
+
+        showChoice: function(scenario) {
+            const modal = document.getElementById('choiceModal');
+            document.getElementById('cEmoji').innerText = scenario.emoji;
+            document.getElementById('cText').innerText = scenario.text;
+            
+            const btns = document.getElementById('cButtons');
+            btns.innerHTML = '';
+
+            scenario.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = opt.txt;
+                btn.onclick = () => {
+                    this.applyEffect(opt);
+                    modal.style.display = 'none';
+                };
+                btns.appendChild(btn);
+            });
+
+            modal.style.display = 'flex';
+        },
+
+        applyEffect: function(opt) {
+            if(opt.eff.happy) this.player.happiness += opt.eff.happy;
+            if(opt.eff.health) this.player.health += opt.eff.health;
+            if(opt.eff.smart) this.player.smart += opt.eff.smart;
+            this.log(opt.log, true);
+            this.updateUI();
+        },
+
+        log: function(text, isSpecial = false) {
+            const box = document.getElementById('logContainer');
+            const div = document.createElement('div');
+            div.className = `log-msg ${isSpecial ? 'special' : ''}`;
+            div.innerHTML = `<span class="log-date">${this.player.age} г. ${this.player.month} мес.</span>${text}`;
+            box.insertBefore(div, box.firstChild);
+        },
+
+        updateUI: function() {
+            // Лимиты
+            if(this.player.health > 100) this.player.health = 100;
+            if(this.player.health < 0) this.player.health = 0;
+            if(this.player.happiness > 100) this.player.happiness = 100;
+
+            document.getElementById('ageDisplay').innerText = `${this.player.age} лет, ${this.player.month} мес.`;
+            document.getElementById('healthVal').innerText = this.player.health + '%';
+            document.getElementById('happyVal').innerText = this.player.happiness + '%';
+            document.getElementById('smartVal').innerText = this.player.smart;
+        }
+    };
 </script>
 
-  </body>
+</body>
 </html>
