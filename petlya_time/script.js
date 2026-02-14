@@ -74,12 +74,16 @@ const Game = {
     },
 
     // Добавь эту функцию в объект Game
-    checkSaveFile: function() {
-        const btnContinue = document.getElementById('btn-continue');
+        checkSaveFile: function() {
+        // Ищем новый блок кнопки
+        const btnContinue = document.getElementById('btn-continue-block');
+
         if (StoryEngine && StoryEngine.hasSave()) {
-            btnContinue.style.display = 'block'; // Показываем кнопку
+            // Если сохранение есть - показываем кнопку (flex, чтобы не ломать верстку)
+            btnContinue.style.display = 'flex'; 
         } else {
-            btnContinue.style.display = 'none'; // Скрываем
+            // Если нет - скрываем
+            btnContinue.style.display = 'none'; 
         }
     },
 
