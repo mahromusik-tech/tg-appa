@@ -146,3 +146,50 @@ h1 { font-size: 32px; margin-bottom: 0; }
 
 .btn-swipe.left { background: #ff4d4d; color: white; }
 .btn-swipe.right { background: #4dff88; color: black;}
+
+/* Добавляем анимации для карточек */
+@keyframes slideIn {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideOutLeft {
+    to { transform: translateX(-150%) rotate(-20deg); opacity: 0; }
+}
+
+@keyframes slideOutRight {
+    to { transform: translateX(150%) rotate(20deg); opacity: 0; }
+}
+
+.card {
+    /* ... твои старые стили ... */
+    transition: transform 0.3s ease; /* Плавность */
+    animation: slideIn 0.4s ease-out; /* Анимация появления */
+}
+
+/* Классы для улетания карточки */
+.card.swipe-left {
+    animation: slideOutLeft 0.4s forwards;
+}
+
+.card.swipe-right {
+    animation: slideOutRight 0.4s forwards;
+}
+
+/* Всплывающий урон/прибыль */
+.floating-text {
+    position: absolute;
+    font-weight: bold;
+    font-size: 20px;
+    animation: floatUp 1s forwards;
+    pointer-events: none; /* Чтобы не мешал кликать */
+    z-index: 100;
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-30px); opacity: 0; }
+}
+
+.damage { color: #ff4d4d; } /* Красный для минуса */
+.heal { color: #4dff88; }   /* Зеленый для плюса */
