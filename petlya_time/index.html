@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Day Zero</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключаем Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: ГЛАВНОЕ МЕНЮ -->
+    <div id="screen-menu" class="screen active">
+        <div class="menu-content">
+            <h1>DAY ZERO</h1>
+            <p class="subtitle">Петля времени</p>
+            
+            <button class="btn-main" onclick="Game.startStory()">
+                📖 ИСТОРИЯ
+                <span>Сюжетный режим</span>
+            </button>
+            
+            <button class="btn-main" onclick="Game.startArcade()">
+                🔥 ВЫЖИВАНИЕ
+                <span>Аркадный режим</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 2: ИСТОРИЯ (НОВЕЛЛА) -->
+    <div id="screen-story" class="screen">
+        <div class="story-bg"></div> <!-- Место для фона -->
+        
+        <div class="story-ui">
+            <div class="character-sprite"></div> <!-- Место для персонажа -->
+            
+            <div class="dialog-box">
+                <h3 id="story-speaker">Неизвестный</h3>
+                <p id="story-text">Здесь будет текст диалога...</p>
+                <div class="story-choices">
+                    <button class="btn-choice">Вариант 1</button>
+                    <button class="btn-choice">Вариант 2</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: АРКАДА (REIGNS) -->
+    <div id="screen-arcade" class="screen">
+        <!-- Ресурсы сверху -->
+        <div class="resources">
+            <div class="res-item">❤️ <span id="res-hp">50</span></div>
+            <div class="res-item">💰 <span id="res-money">50</span></div>
+            <div class="res-item">🎓 <span id="res-study">50</span></div>
+            <div class="res-item">🧠 <span id="res-sanity">50</span></div>
+        </div>
+
+        <!-- Карточка по центру -->
+        <div class="card-container">
+            <div class="card">
+                <div class="card-image"></div>
+                <p class="card-text">Макс зовет прогулять пары и пойти в бар.</p>
+            </div>
+            <!-- Кнопки действий (вместо свайпа пока кнопки) -->
+            <div class="card-controls">
+                <button class="btn-swipe left">Нет</button>
+                <button class="btn-swipe right">Да</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
