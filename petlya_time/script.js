@@ -196,8 +196,14 @@ const Game = {
     },
 
     // --- ИСТОРИЯ ---
+        // --- ИСТОРИЯ ---
     startStory: function() {
-        StoryEngine.start();
+        // Сначала показываем экран
+        this.showScreen('story');
+        // Потом запускаем движок
+        if (typeof StoryEngine !== 'undefined') {
+            StoryEngine.start();
+        }
     }
 };
 
