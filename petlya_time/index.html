@@ -73,5 +73,18 @@
 
     <script src="story.js"></script>
     <script src="script.js"></script>
+
+        <!-- МОДАЛЬНОЕ ОКНО GAME OVER -->
+    <div id="modal-gameover" class="modal-overlay">
+        <div class="modal-box">
+            <h2>💀 GAME OVER</h2>
+            <p id="gameover-reason">Причина смерти...</p>
+            <div class="modal-stats">
+                Прожито дней: <span id="final-days">0</span>
+            </div>
+            <button class="btn-restart" onclick="Game.restartArcade()">ПОПРОБОВАТЬ СНОВА</button>
+            <button class="btn-menu" onclick="Game.showScreen('menu'); document.getElementById('modal-gameover').classList.remove('active')">В МЕНЮ</button>
+        </div>
+    </div>
 </body>
 </html>
