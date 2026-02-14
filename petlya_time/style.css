@@ -538,6 +538,7 @@ body {
 }
 
 /* --- ВИЗУАЛЬНАЯ НОВЕЛЛА --- */
+/* --- ВИЗУАЛЬНАЯ НОВЕЛЛА --- */
 .story-mode {
     position: relative;
     width: 100%;
@@ -546,7 +547,6 @@ body {
     background: #000;
 }
 
-/* Слои (фон и персонаж) */
 .story-layer {
     position: absolute;
     top: 0;
@@ -555,18 +555,28 @@ body {
     height: 100%;
     background-size: cover;
     background-position: center;
-    transition: all 0.5s ease;
+    z-index: 0; /* Самый низ */
 }
 
-/* Заглушка для спрайта (пока нет картинок) */
 #story-sprite {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: bottom center;
-    transform: translateY(50px); /* Чуть опущен */
+    z-index: 1;
 }
 
-/* Интерфейс внизу */
+/* ЗОНА КЛИКА - ТЕПЕРЬ НА ВЕСЬ ЭКРАН */
+#story-click-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Поверх картинок, но под кнопками */
+    cursor: pointer;
+    /* background: rgba(255,0,0,0.1);  Включи это, если хочешь видеть зону клика для теста */
+}
+
 .story-ui {
     position: absolute;
     bottom: 0;
@@ -574,25 +584,24 @@ body {
     width: 100%;
     padding: 20px;
     box-sizing: border-box;
-    z-index: 10;
+    z-index: 20; /* Поверх зоны клика */
     display: flex;
     flex-direction: column;
     gap: 10px;
+    pointer-events: none; /* Чтобы клики сквозь пустые места UI проходили на зону клика */
 }
 
-/* Имя персонажа */
 .story-name-box {
     background: #e67e22;
     color: white;
     padding: 5px 15px;
     border-radius: 5px;
-    align-self: flex-start; /* Слева */
+    align-self: flex-start;
     font-weight: bold;
     font-size: 14px;
-    display: none; /* Скрыто по умолчанию */
+    display: none;
 }
 
-/* Текстовое поле */
 .story-text-box {
     background: rgba(0, 0, 0, 0.85);
     color: white;
@@ -602,26 +611,14 @@ body {
     min-height: 80px;
     font-size: 16px;
     line-height: 1.4;
-    position: relative;
 }
 
-/* Зона клика (чтобы кликать по всему низу для продолжения) */
-.story-click-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1; /* Под кнопками, но над фоном UI */
-    cursor: pointer;
-}
-
-/* Кнопки выбора (поверх зоны клика) */
 .story-choices-box {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 20; /* Самый верх */
+    z-index: 30; /* Самый верх, чтобы кнопки работали */
+    pointer-events: auto; /* Включаем клики для кнопок */
 }
 
 .btn-story-choice {
