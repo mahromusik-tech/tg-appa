@@ -1,68 +1,175 @@
-// Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
-tg.expand(); // Раскрыть на весь экран
+tg.expand();
+
+// --- СОСТОЯНИЕ ИГРЫ ---
+let gameState = {
+    sanity: 5,      // Рассудок (старт с 5, чтобы было куда падать)
+    knowledge: 0,   // Знание
+    rel_dimon: 0,   // Отношения с Димоном
+    rel_lena: 0     // Отношения с Леной
+};
 
 // --- СЦЕНАРИЙ ---
-// Структура: id сцены -> объект с данными
 const script = {
+    // --- СЦЕНА 1: ПРОБУЖДЕНИЕ ---
     start: {
-        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')", // Замените на свои картинки
-        speaker: "Незнакомец",
-        sprite: null,
-        text: "Эй, проснись! Ты слышишь меня?",
-        next: "scene2"
+        bg: "url('https://via.placeholder.com/800x600/333/fff?text=Dorm+Room')", // Общага
+        speaker: "Герой (мысли)",
+        isThought: true, // Флаг: это мысли
+        text: "7:00. Голова как свинцом налита. Кажется, я видел этот сон... или это было вчера? 15 октября. Среда.",
+        next: "scene1_dimon"
     },
-    scene2: {
-        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')",
-        speaker: "Герой",
-        sprite: "https://via.placeholder.com/300x600/e94560/ffffff?text=Hero", // Замените на спрайт
-        text: "Голова раскалывается... Где я?",
-        next: "choice1"
-    },
-    choice1: {
-        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')",
-        speaker: "",
-        sprite: "https://via.placeholder.com/300x600/e94560/ffffff?text=Hero",
-        text: "Нужно решить, что делать дальше.",
+    scene1_dimon: {
+        bg: "url('https://via.placeholder.com/800x600/333/fff?text=Dorm+Room')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon",
+        text: "Макс, выруби его... Кстати, ты не видел мой зарядник? Вчера на столе лежал.",
         choices: [
-            { text: "Осмотреться вокруг", next: "look_around", karma: 0 },
-            { text: "Попытаться встать", next: "stand_up", karma: 1 }
+            { 
+                text: "Он под тумбочкой, Димон", 
+                next: "scene2_start", 
+                stats: { knowledge: 1, rel_dimon: 1 } // Влияние на статы
+            },
+            { 
+                text: "Ищи сам, я не нанимался", 
+                next: "scene2_start", 
+                stats: { rel_dimon: -1 } 
+            },
+            { 
+                text: "Молча встать и пойти в душ", 
+                next: "scene2_start", 
+                stats: {} 
+            }
         ]
     },
-    look_around: {
-        bg: "url('https://via.placeholder.com/800x600/16213e/ffffff?text=Classroom')",
-        speaker: "Герой",
-        sprite: null,
-        text: "Похоже на заброшенный класс. Парты перевернуты.",
-        next: "ending_bad"
+
+    // --- СЦЕНА 2: КОРИДОР ---
+    scene2_start: {
+        bg: "url('https://via.placeholder.com/800x600/222/fff?text=Corridor')", // Коридор
+        speaker: "",
+        text: "*В умывальнике парень из соседней комнаты задевает тебя плечом.*",
+        next: "scene2_thought"
     },
-    stand_up: {
-        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')",
-        speaker: "Герой",
-        sprite: "https://via.placeholder.com/300x600/e94560/ffffff?text=Hero",
-        text: "Я встал, но ноги подкашиваются. Зато я нашел ключ!",
-        next: "ending_good"
+    scene2_thought: {
+        bg: "url('https://via.placeholder.com/800x600/222/fff?text=Corridor')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Сейчас он уронит мыльницу. Раз, два... (Стук пластика). Точно. Это просто дежавю. Нужно умыться ледяной водой.",
+        choices: [
+            { 
+                text: "Ущипнуть себя за руку до синяка", 
+                next: "scene3_start", 
+                stats: { sanity: -1 } 
+            },
+            { 
+                text: "Смотреть в зеркало и считать до десяти", 
+                next: "scene3_start", 
+                stats: { sanity: 1 } 
+            }
+        ]
     },
-    // Концовки
-    ending_bad: {
+
+    // --- СЦЕНА 3: КРЫЛЬЦО ---
+    scene3_start: {
+        bg: "url('https://via.placeholder.com/800x600/555/fff?text=University+Porch')", // Универ
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena",
+        text: "Макс! Ты лабу сделал? Аркадий сегодня в ярости, он уже троих отправил на пересдачу.",
+        choices: [
+            { 
+                text: "Дай посмотрю твою, я помогу исправить ошибку", 
+                next: "scene4_start", 
+                stats: { rel_lena: 1, knowledge: 1 } 
+            },
+            { 
+                text: "Прости, я сам по нулям. Пойду кофе возьму", 
+                next: "scene4_start", 
+                stats: { rel_lena: -1 } 
+            }
+        ]
+    },
+
+    // --- СЦЕНА 4: ЛЕКЦИЯ ---
+    scene4_start: {
+        bg: "url('https://via.placeholder.com/800x600/444/fff?text=Lecture+Hall')", // Лекция
+        speaker: "Аркадий Петрович",
+        sprite: "https://via.placeholder.com/300x600/888/fff?text=Teacher",
+        text: "Кто желает к доске? Или мне самому выбрать жертву?",
+        next: "scene4_thought"
+    },
+    scene4_thought: {
+        bg: "url('https://via.placeholder.com/800x600/444/fff?text=Lecture+Hall')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Он сейчас вызовет Кузнецова. Я помню, как тот позорился.",
+        choices: [
+            { 
+                text: "Вызваться самому и решить задачу", 
+                next: "scene5_start", 
+                stats: { knowledge: 1 } 
+            },
+            { 
+                text: "Сидеть тихо", 
+                next: "scene5_start", 
+                stats: {} // Кузнецова унижают
+            }
+        ]
+    },
+
+    // --- СЦЕНА 5: ОБЕД ---
+    scene5_start: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen')", // Столовая
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Я знаю каждое его слово. Сейчас он скажет про баланс классов...",
+        next: "scene5_dimon"
+    },
+    scene5_dimon: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon",
+        text: "...и вот баланс классов они вообще убили, прикинь?",
+        choices: [
+            { 
+                text: "Перебить его и закончить фразу за него", 
+                next: "scene6_ending_demo", // Временная концовка
+                stats: { sanity: -1 } 
+            },
+            { 
+                text: "Сказать, что тебе плохо, и уйти в библиотеку", 
+                next: "scene6A_library", 
+                stats: {} 
+            },
+            { 
+                text: "Предложить прогулять пары в парке", 
+                next: "scene6B_park", 
+                stats: {} 
+            }
+        ]
+    },
+
+    // --- ЗАГЛУШКИ ДЛЯ СЛЕДУЮЩИХ СЦЕН ---
+    scene6_ending_demo: {
         isEnding: true,
-        title: "Плохая концовка",
-        desc: "Вы остались лежать и вас нашли монстры."
+        title: "Конец демо",
+        desc: "Вы напугали Димона. День продолжается..."
     },
-    ending_good: {
+    scene6A_library: {
         isEnding: true,
-        title: "Хорошая концовка",
-        desc: "Вы нашли выход и спаслись!"
+        title: "Ветка Библиотеки",
+        desc: "Вы ушли в тишину книг. (Продолжение следует)"
+    },
+    scene6B_park: {
+        isEnding: true,
+        title: "Ветка Парка",
+        desc: "Вы решили подышать воздухом. (Продолжение следует)"
     }
 };
 
-// --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
+// --- ПЕРЕМЕННЫЕ ДВИЖКА ---
 let currentSceneId = 'start';
 let isTyping = false;
 let typeInterval;
-let gameState = {
-    karma: 0 // Пример переменной, на которую влияют выборы
-};
 
 // --- ЭЛЕМЕНТЫ DOM ---
 const screens = document.querySelectorAll('.screen');
@@ -73,7 +180,22 @@ const textEl = document.getElementById('dialogue-text');
 const choicesEl = document.getElementById('choices-container');
 const dialogueBox = document.getElementById('dialogue-box');
 
+// Элементы статистики
+const statEls = {
+    sanity: document.getElementById('stat-sanity'),
+    knowledge: document.getElementById('stat-knowledge'),
+    dimon: document.getElementById('stat-dimon'),
+    lena: document.getElementById('stat-lena')
+};
+
 // --- ФУНКЦИИ ---
+
+function updateStatsUI() {
+    statEls.sanity.innerText = gameState.sanity;
+    statEls.knowledge.innerText = gameState.knowledge;
+    statEls.dimon.innerText = gameState.rel_dimon;
+    statEls.lena.innerText = gameState.rel_lena;
+}
 
 function showScreen(id) {
     screens.forEach(s => s.classList.remove('active'));
@@ -82,18 +204,17 @@ function showScreen(id) {
 
 function startGame() {
     currentSceneId = 'start';
-    gameState.karma = 0;
+    // Сброс статов
+    gameState = { sanity: 5, knowledge: 0, rel_dimon: 0, rel_lena: 0 };
+    updateStatsUI();
     showScreen('game-screen');
     renderScene(currentSceneId);
 }
 
-// Эффект печатной машинки
 function typeText(text, callback) {
     textEl.innerHTML = "";
     isTyping = true;
     let i = 0;
-    
-    // Очищаем предыдущие выборы пока печатаем
     choicesEl.innerHTML = "";
 
     clearInterval(typeInterval);
@@ -105,14 +226,11 @@ function typeText(text, callback) {
             isTyping = false;
             if (callback) callback();
         }
-    }, 30); // Скорость печати (мс)
+    }, 25); 
 }
 
-// Обработка клика по диалоговому окну (пропуск анимации или след. сцена)
 dialogueBox.addEventListener('click', () => {
     const scene = script[currentSceneId];
-    
-    // Если текст еще печатается — завершить мгновенно
     if (isTyping) {
         clearInterval(typeInterval);
         textEl.innerHTML = scene.text;
@@ -120,11 +238,7 @@ dialogueBox.addEventListener('click', () => {
         showChoicesOrNext(scene);
         return;
     }
-
-    // Если есть выборы, клик не должен переключать сцену (игрок должен нажать кнопку)
     if (scene.choices) return;
-
-    // Переход к следующей сцене
     if (scene.next) {
         currentSceneId = scene.next;
         renderScene(currentSceneId);
@@ -144,8 +258,18 @@ function renderChoices(choices) {
         btn.className = 'choice-btn';
         btn.innerText = choice.text;
         btn.onclick = (e) => {
-            e.stopPropagation(); // Чтобы не сработал клик по dialogueBox
-            if (choice.karma) gameState.karma += choice.karma;
+            e.stopPropagation();
+            
+            // Применение изменений статистики
+            if (choice.stats) {
+                for (let key in choice.stats) {
+                    if (gameState.hasOwnProperty(key)) {
+                        gameState[key] += choice.stats[key];
+                    }
+                }
+                updateStatsUI();
+            }
+
             currentSceneId = choice.next;
             renderScene(currentSceneId);
         };
@@ -156,7 +280,6 @@ function renderChoices(choices) {
 function renderScene(sceneId) {
     const scene = script[sceneId];
 
-    // Проверка на концовку
     if (scene.isEnding) {
         showScreen('ending-screen');
         document.getElementById('ending-title').innerText = scene.title;
@@ -164,12 +287,8 @@ function renderScene(sceneId) {
         return;
     }
 
-    // Обновление фона
-    if (scene.bg) {
-        bgEl.style.backgroundImage = scene.bg;
-    }
+    if (scene.bg) bgEl.style.backgroundImage = scene.bg;
 
-    // Обновление спрайта
     if (scene.sprite) {
         spriteEl.src = scene.sprite;
         spriteEl.classList.remove('hidden');
@@ -177,9 +296,15 @@ function renderScene(sceneId) {
         spriteEl.classList.add('hidden');
     }
 
-    // Имя говорящего
+    // Обработка мыслей vs речи
     nameEl.innerText = scene.speaker;
+    if (scene.isThought) {
+        textEl.classList.add('thought-text');
+        nameEl.classList.add('thought-name');
+    } else {
+        textEl.classList.remove('thought-text');
+        nameEl.classList.remove('thought-name');
+    }
 
-    // Запуск текста
     typeText(scene.text, () => showChoicesOrNext(scene));
 }
