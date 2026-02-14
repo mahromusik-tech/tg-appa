@@ -59,9 +59,7 @@
         </div>
     </div>
 
-    <!-- ИСТОРИЯ -->
-      <!-- ЭКРАН СЮЖЕТА -->
-    <!-- ЭКРАН СЮЖЕТА (Визуальная новелла) -->
+     <!-- ЭКРАН СЮЖЕТА -->
     <div id="screen-story" class="screen story-mode">
         <!-- Слой 1: Фон -->
         <div id="story-bg" class="story-layer"></div>
@@ -69,17 +67,23 @@
         <!-- Слой 2: Персонаж -->
         <div id="story-sprite" class="story-layer"></div>
         
-        <!-- Слой 3: Интерфейс (Текст и кнопки) -->
+        <!-- Слой 3: ЗОНА КЛИКА (На весь экран) -->
+        <div id="story-click-area"></div>
+
+        <!-- Слой 4: Интерфейс (Текст и кнопки) -->
         <div id="story-ui" class="story-ui">
             <div id="story-name-box" class="story-name-box">Имя</div>
-            <div id="story-text-box" class="story-text-box">Текст диалога...</div>
+            <div id="story-text-box" class="story-text-box">Текст...</div>
+            
+            <!-- Кнопки выбора (должны быть поверх всего) -->
             <div id="story-choices-box" class="story-choices-box"></div>
-            <div id="story-click-area" class="story-click-area"></div> <!-- Невидимая зона для клика -->
         </div>
 
         <!-- Кнопка выхода -->
         <button class="btn-menu-small" onclick="Game.showScreen('menu')">🏠</button>
     </div>
+
+        
 
     <script src="story.js"></script>
     <script src="script.js"></script>
