@@ -48,7 +48,11 @@ const CARDS = [
         }
     }
     ];
-
+startStory: function() {
+        console.log("Запуск Истории...");
+        // Делегируем управление движку истории
+        StoryEngine.start();
+    },
 const tg = window.Telegram.WebApp;
 
 // Сообщаем Телеграму, что приложение готово
