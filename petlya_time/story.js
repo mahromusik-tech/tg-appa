@@ -135,4 +135,4 @@ const StoryEngine = {
         return !!localStorage.getItem('student_story_scene');
     }
 };
-};
+
