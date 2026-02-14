@@ -29,20 +29,20 @@
     </div>
 
     <!-- ЭКРАН 2: ИСТОРИЯ (НОВЕЛЛА) -->
-    <div id="screen-story" class="screen">
-        <div class="story-bg"></div> <!-- Место для фона -->
+     <div id="screen-menu" class="screen active">
+        <h1>Student Life</h1>
         
-        <div class="story-ui">
-            <div class="character-sprite"></div> <!-- Место для персонажа -->
+        <div class="menu-buttons">
+            <!-- Кнопка Аркады -->
+            <button class="btn-menu" onclick="Game.startArcade()">Аркада (Reigns)</button>
             
-            <div class="dialog-box">
-                <h3 id="story-speaker">Неизвестный</h3>
-                <p id="story-text">Здесь будет текст диалога...</p>
-                <div class="story-choices">
-                    <button class="btn-choice">Вариант 1</button>
-                    <button class="btn-choice">Вариант 2</button>
-                </div>
-            </div>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+            
+            <!-- Кнопки Истории -->
+            <button id="btn-continue" class="btn-menu" onclick="Game.continueStory()" style="display: none; background: #4a90e2;">Продолжить историю</button>
+            <button class="btn-menu" onclick="Game.startStory()">Новая история</button>
+        </div>
+     </div>
         </div>
     </div>
 
