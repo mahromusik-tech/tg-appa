@@ -1,203 +1,321 @@
-:root {
-    /* Используем переменные Telegram для цветов */
-    --bg-color: var(--tg-theme-bg-color, #212121);
-    --text-color: var(--tg-theme-text-color, #ffffff);
-    --button-color: var(--tg-theme-button-color, #3390ec);
-    --button-text: var(--tg-theme-button-text-color, #ffffff);
-    --secondary-bg: var(--tg-theme-secondary-bg-color, #2f2f2f);
-}
-
+/* --- ОБЩИЕ СТИЛИ --- */
 body {
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: #1c1c1e; /* Темный фон Telegram */
+    color: #ffffff;
     overflow: hidden; /* Чтобы не скроллилось */
     height: 100vh;
+    width: 100vw;
 }
 
-/* Управление экранами */
+/* Скрываем все экраны по умолчанию */
 .screen {
     display: none;
-    width: 100%;
     height: 100%;
+    width: 100%;
+    flex-direction: column;
     position: absolute;
     top: 0;
     left: 0;
-    flex-direction: column;
 }
 
+/* Показываем активный экран */
 .screen.active {
     display: flex;
 }
 
-/* МЕНЮ */
+/* --- ГЛАВНОЕ МЕНЮ (DAY ZERO) --- */
+#screen-menu {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 .menu-content {
+    width: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
+}
+
+.game-title {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 5px;
+    margin: 0;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.game-subtitle {
+    font-size: 1rem;
+    opacity: 0.6;
+    margin-top: 5px;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.menu-buttons-list {
+    width: 85%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Карточка меню (Кнопка) */
+.menu-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 15px 20px;
+    display: flex; /* ВАЖНО: Делает кнопку видимой */
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    backdrop-filter: blur(10px);
+    user-select: none;
+}
+
+.menu-card:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.menu-card .icon {
+    font-size: 24px;
+    margin-right: 15px;
+    width: 40px;
+    text-align: center;
+}
+
+.menu-card .text-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.menu-card h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.menu-card p {
+    margin: 3px 0 0 0;
+    font-size: 12px;
+    opacity: 0.5;
+}
+
+/* Стиль для кнопки Продолжить */
+.menu-card.continue {
+    border: 1px solid #4a90e2;
+    background: rgba(74, 144, 226, 0.15);
+    box-shadow: 0 0 20px rgba(74, 144, 226, 0.1);
+}
+
+/* --- ЭКРАН АРКАДЫ (REIGNS) --- */
+#screen-arcade {
+    background: #222;
+    padding: 20px;
+    box-sizing: border-box;
+    justify-content: space-between;
+}
+
+.resources {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    padding: 10px 0;
+    background: rgba(0,0,0,0.3);
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.res-item {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.card-container {
+    flex-grow: 1;
+    display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    gap: 20px;
+    position: relative;
+    perspective: 1000px;
 }
 
-h1 { font-size: 32px; margin-bottom: 0; }
-.subtitle { opacity: 0.7; margin-top: 5px; margin-bottom: 40px; }
-
-.btn-main {
-    background: var(--secondary-bg);
-    color: var(--text-color);
-    border: 1px solid var(--button-color);
-    padding: 15px 30px;
-    border-radius: 12px;
-    width: 80%;
-    font-size: 18px;
-    cursor: pointer;
+.card {
+    width: 300px;
+    height: 400px;
+    background: #fff;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    color: #000;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    transition: transform 0.1s;
 }
 
-.btn-main span { font-size: 12px; opacity: 0.6; margin-top: 5px; }
+.card-image {
+    height: 60%;
+    background-color: #ccc;
+    background-position: center;
+    background-size: cover;
+}
 
-/* ИСТОРИЯ */
-.story-ui {
-    margin-top: auto; /* Прижать вниз */
+.card-text {
     padding: 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    font-size: 18px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40%;
 }
 
-.dialog-box {
-    background: var(--secondary-bg);
+.controls {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.btn-swipe {
+    width: 48%;
     padding: 15px;
-    border-radius: 10px;
-    border: 1px solid var(--button-color);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-swipe.left { background: #ff4757; color: white; }
+.btn-swipe.right { background: #2ed573; color: white; }
+
+/* Анимации карточек */
+@keyframes slideIn {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.card { animation: slideIn 0.4s ease-out; }
+
+.swipe-left {
+    transform: translateX(-150%) rotate(-20deg) !important;
+    transition: transform 0.4s ease-in !important;
+}
+
+.swipe-right {
+    transform: translateX(150%) rotate(20deg) !important;
+    transition: transform 0.4s ease-in !important;
+}
+
+/* Всплывающий текст урона/хила */
+.floating-text {
+    position: fixed;
+    font-weight: bold;
+    font-size: 20px;
+    pointer-events: none;
+    animation: floatUp 1s forwards;
+    z-index: 100;
+}
+.floating-text.heal { color: #2ed573; }
+.floating-text.damage { color: #ff4757; }
+
+@keyframes floatUp {
+    to { transform: translateY(-50px); opacity: 0; }
+}
+
+/* --- ЭКРАН ИСТОРИИ (НОВЕЛЛА) --- */
+#screen-story {
+    background: #333;
+    background-size: cover;
+    background-position: center;
+}
+
+.character-sprite {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 500px; /* Высота спрайта */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Анимация появления персонажа */
+@keyframes fadeInSprite {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.character-sprite.fade-in {
+    animation: fadeInSprite 0.5s ease-out forwards;
+}
+
+.story-ui {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.story-box {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 15px;
+    backdrop-filter: blur(5px);
+}
+
+.story-speaker {
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.story-text {
+    font-size: 16px;
+    line-height: 1.4;
 }
 
 .story-choices {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 15px;
 }
 
 .btn-choice {
-    background: var(--button-color);
-    color: var(--button-text);
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-/* АРКАДА */
-.resources {
-    display: flex;
-    justify-content: space-around;
-    padding: 15px;
-    background: var(--secondary-bg);
-}
-
-.card-container {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.card {
-    width: 80%;
-    height: 60%;
-    background: #fff; /* Карточка всегда светлая или по дизайну */
-    color: #000;
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.card-image {
-    width: 100%;
-    height: 60%;
-    background: #ccc; /* Заглушка для картинки */
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px;
     border-radius: 10px;
-    margin-bottom: 15px;
-}
-
-.card-controls {
-    display: flex;
-    gap: 20px;
-    margin-top: 20px;
-    width: 100%;
-    justify-content: center;
-}
-
-.btn-swipe {
-    padding: 15px 30px;
-    border-radius: 50px;
-    border: none;
-    font-weight: bold;
+    text-align: left;
+    font-size: 14px;
     cursor: pointer;
 }
 
-.btn-swipe.left { background: #ff4d4d; color: white; }
-.btn-swipe.right { background: #4dff88; color: black;}
-
-/* Добавляем анимации для карточек */
-@keyframes slideIn {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+.btn-choice:active {
+    background: rgba(255, 255, 255, 0.3);
 }
-
-@keyframes slideOutLeft {
-    to { transform: translateX(-150%) rotate(-20deg); opacity: 0; }
-}
-
-@keyframes slideOutRight {
-    to { transform: translateX(150%) rotate(20deg); opacity: 0; }
-}
-
-.card {
-    /* ... твои старые стили ... */
-    transition: transform 0.3s ease; /* Плавность */
-    animation: slideIn 0.4s ease-out; /* Анимация появления */
-}
-
-/* Классы для улетания карточки */
-.card.swipe-left {
-    animation: slideOutLeft 0.4s forwards;
-}
-
-.card.swipe-right {
-    animation: slideOutRight 0.4s forwards;
-}
-
-/* Всплывающий урон/прибыль */
-.floating-text {
-    position: absolute;
-    font-weight: bold;
-    font-size: 20px;
-    animation: floatUp 1s forwards;
-    pointer-events: none; /* Чтобы не мешал кликать */
-    z-index: 100;
-}
-
-@keyframes floatUp {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(-30px); opacity: 0; }
-}
-
-.damage { color: #ff4d4d; } /* Красный для минуса */
-.heal { color: #4dff88; }   /* Зеленый для плюса */
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-.character-sprite.fade-in {
-    animation: fadeIn 0.5s ease-out forwards;}
