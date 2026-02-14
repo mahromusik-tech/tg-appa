@@ -193,3 +193,11 @@ h1 { font-size: 32px; margin-bottom: 0; }
 
 .damage { color: #ff4d4d; } /* Красный для минуса */
 .heal { color: #4dff88; }   /* Зеленый для плюса */
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.character-sprite.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;}
