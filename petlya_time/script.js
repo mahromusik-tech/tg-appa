@@ -120,30 +120,96 @@ const Game = {
         document.querySelector('.btn-swipe.left').innerText = this.currentCard.left.text;
         document.querySelector('.btn-swipe.right').innerText = this.currentCard.right.text;
     },
-
-    makeChoice: function(side) {
+  
+makeChoice: function(side) {
         if (!this.currentCard) return;
 
-        const choice = this.currentCard[side]; // left или right
+        const cardEl = document.querySelector('.card');
+        
+        // 1. Запускаем анимацию улетания
+        if (side === 'left') {
+            cardEl.classList.add('swipe-left');
+        } else {
+            cardEl.classList.add('swipe-right');
+        }
+
+        // 2. Применяем эффекты (математика)
+        const choice = side === 'left' ? this.currentCard.left : this.currentCard.right;
         const effects = choice.effect;
 
-        // Применяем эффекты
         for (let key in effects) {
             if (RESOURCES.hasOwnProperty(key)) {
-                RESOURCES[key] += effects[key];
-                // Ограничиваем от 0 до 100
+                const val = effects[key];
+                RESOURCES[key] += val;
+                
+                // Ограничиваем
                 if (RESOURCES[key] > 100) RESOURCES[key] = 100;
+                if (RESOURCES[key] < 0) RESOURCES[key] = 0;
+
+                // Показываем всплывающий текст (визуальный эффект)
+                this.showFloatingText(key, val);
             }
         }
 
         this.updateUI();
-        this.checkGameOver();
-        
-        // Если игра не закончилась, следующая карта
-        if (this.currentScreen === 'arcade') {
+
+        // 3. Ждем окончания анимации (400мс), потом проверяем проигрыш и меняем карту
+        setTimeout(() => {
+            // Убираем классы анимации, чтобы новая карта была чистой
+            cardEl.classList.remove('swipe-left', 'swipe-right');
+            
+            // Проверка на проигрыш
+            if (this.checkGameOver()) return;
+
+            // Следующая карта
             this.nextCard();
-        }
+            
+            // Перезапуск анимации появления (хак через reflow)
+            void cardEl.offsetWidth; 
+            cardEl.style.animation = 'none';
+            cardEl.offsetHeight; /* trigger reflow */
+            cardEl.style.animation = 'slideIn 0.4s ease-out';
+
+        }, 400);
     },
+
+    // Новая функция для всплывающих цифр
+    showFloatingText: function(resourceKey, value) {
+        if (value === 0) return;
+        
+        const el = document.getElementById('res-' + resourceKey);
+        if (!el) return;
+
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-text ' + (value > 0 ? 'heal' : 'damage');
+        floatEl.innerText = (value > 0 ? '+' : '') + value;
+        
+        // Позиционируем над иконкой ресурса
+        const rect = el.getBoundingClientRect();
+        floatEl.style.left = rect.left + 'px';
+        floatEl.style.top = rect.top + 'px';
+        
+        document.body.appendChild(floatEl);
+        
+        // Удаляем элемент через 1 секунду
+        setTimeout(() => floatEl.remove(), 1000);
+    },
+
+    // Обнови checkGameOver, чтобы он возвращал true/false
+    checkGameOver: function() {
+        let reason = "";
+        if (RESOURCES.hp <= 0) reason = "Вы умерли от истощения.";
+        if (RESOURCES.money <= 0) reason = "Вы банкрот.";
+        if (RESOURCES.study <= 0) reason = "Вас отчислили.";
+        if (RESOURCES.sanity <= 0) reason = "Вы сошли с ума.";
+
+        if (reason) {
+            alert("GAME OVER: " + reason);
+            this.showScreen('menu');
+            return true; // Игра окончена
+        }
+        return false; // Игра продолжается
+    }, 
 
     updateUI: function() {
         document.getElementById('res-hp').innerText = RESOURCES.hp;
