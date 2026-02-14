@@ -4,38 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Day Zero: Student Life</title>
-    
-    <!-- Подключение Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Подключение стилей -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ЭКРАН МЕНЮ -->
-        <div id="screen-menu" class="screen active">
+    <!-- МЕНЮ -->
+    <div id="screen-menu" class="screen active">
         <div class="menu-content">
             <h1 class="game-title">DAY ZERO</h1>
             <p class="game-subtitle">Петля времени</p>
 
-            <!-- СПИСОК КНОПОК -->
             <div class="menu-buttons-list">
-
-                <!-- Кнопка ПРОДОЛЖИТЬ -->
-                <div id="btn-continue-block" class="menu-card continue" onclick="Game.continueStory()" style="display: none;">
-                    <div class="icon">⏯️</div>
-                    <div class="text-group">
-                        <h3>ПРОДОЛЖИТЬ</h3>
-                        <p>Вернуться в петлю</p>
-                    </div>
-                </div>
-
-                <!-- Кнопка НОВАЯ ИСТОРИЯ -->
+                <!-- Кнопка ИСТОРИЯ -->
                 <div class="menu-card" onclick="Game.startStory()">
                     <div class="icon">📖</div>
                     <div class="text-group">
-                        <h3>НОВАЯ ИСТОРИЯ</h3>
+                        <h3>ИСТОРИЯ</h3>
                         <p>Сюжетный режим</p>
                     </div>
                 </div>
@@ -48,59 +33,43 @@
                         <p>Аркадный режим</p>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-
-    <!-- ЭКРАН АРКАДЫ (REIGNS) -->
+    <!-- АРКАДА -->
     <div id="screen-arcade" class="screen">
-        <!-- Верхняя панель ресурсов -->
         <div class="resources">
             <div class="res-item">❤️ <span id="res-hp">50</span></div>
             <div class="res-item">💰 <span id="res-money">50</span></div>
             <div class="res-item">📚 <span id="res-study">50</span></div>
             <div class="res-item">🧠 <span id="res-sanity">50</span></div>
         </div>
-
-        <!-- Карточка -->
         <div class="card-container">
             <div class="card">
                 <div class="card-image"></div>
                 <div class="card-text">Загрузка...</div>
             </div>
         </div>
-
-        <!-- Кнопки управления -->
         <div class="controls">
             <button class="btn-swipe left">Нет</button>
             <button class="btn-swipe right">Да</button>
         </div>
     </div>
 
-    <!-- ЭКРАН ИСТОРИИ (НОВЕЛЛА) -->
+    <!-- ИСТОРИЯ -->
     <div id="screen-story" class="screen">
-        <!-- Спрайт персонажа -->
         <div class="character-sprite"></div>
-
-        <!-- Интерфейс диалога -->
         <div class="story-ui">
             <div class="story-box">
                 <div id="story-speaker" class="story-speaker">Имя</div>
-                <div id="story-text" class="story-text">Текст истории...</div>
+                <div id="story-text" class="story-text">Текст...</div>
             </div>
-            
-            <!-- Кнопки выбора -->
-            <div class="story-choices">
-                <!-- Кнопки генерируются через JS -->
-            </div>
+            <div class="story-choices"></div>
         </div>
     </div>
 
-    <!-- СКРИПТЫ (Важен порядок!) -->
-    <script src="story.js"></script> <!-- Сначала движок истории -->
-    <script src="script.js"></script> <!-- Потом основной код -->
-
+    <script src="story.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
