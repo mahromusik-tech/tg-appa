@@ -48,11 +48,7 @@ const CARDS = [
         }
     }
     ];
-startStory: function() {
-        console.log("Запуск Истории...");
-        // Делегируем управление движку истории
-        StoryEngine.start();
-    },
+
 const tg = window.Telegram.WebApp;
 
 // Сообщаем Телеграму, что приложение готово
@@ -226,6 +222,12 @@ makeChoice: function(side) {
         document.getElementById('res-sanity').innerText = RESOURCES.sanity;
     },
 
+    startStory: function() {
+        console.log("Запуск Истории...");
+        // Делегируем управление движку истории
+        StoryEngine.start();
+    },
+
     checkGameOver: function() {
         let reason = "";
         if (RESOURCES.hp <= 0) reason = "Вы умерли от истощения.";
@@ -238,6 +240,7 @@ makeChoice: function(side) {
             this.showScreen('menu'); // Возврат в меню
         }
     }
+    
 };
 
 // Запуск
