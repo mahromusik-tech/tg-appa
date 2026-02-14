@@ -6,20 +6,16 @@ const Game = {
         hp: 50,
         money: 50,
         study: 50,
-        sanity: 50
+        sanity: 50,
+        day: 1 // Добавили счетчик дней
     },
     currentCard: null,
 
     init: function() {
-        // Настройка кнопки "Назад"
         tg.BackButton.onClick(() => {
             this.showScreen('menu');
         });
-        
-        // Инициализация свайпов для Аркады
         this.initSwipe();
-        
-        // Инициализация Истории
         if (typeof StoryEngine !== 'undefined') {
             StoryEngine.init();
         }
@@ -38,23 +34,36 @@ const Game = {
 
     // --- АРКАДА ---
     startArcade: function() {
+        // Сброс при старте новой игры
+        this.state = { hp: 50, money: 50, study: 50, sanity: 50, day: 1 };
         this.showScreen('arcade');
+        this.updateResources();
         this.nextCard();
     },
 
+    // Перезапуск из окна Game Over
+    restartArcade: function() {
+        document.getElementById('modal-gameover').classList.remove('active');
+        this.startArcade();
+    },
+
     updateResources: function() {
-        document.getElementById('res-hp').innerText = this.state.hp;
-        document.getElementById('res-money').innerText = this.state.money;
-        document.getElementById('res-study').innerText = this.state.study;
-        document.getElementById('res-sanity').innerText = this.state.sanity;
+        document.getElementById('res-hp').innerText = Math.floor(this.state.hp);
+        document.getElementById('res-money').innerText = Math.floor(this.state.money);
+        document.getElementById('res-study').innerText = Math.floor(this.state.study);
+        document.getElementById('res-sanity').innerText = Math.floor(this.state.sanity);
+        
+        // Обновляем день
+        document.getElementById('day-count').innerText = this.state.day;
     },
 
     nextCard: function() {
-        // Простая генерация карточки (заглушка)
         const scenarios = [
             { text: "Пара в 8 утра. Идти?", yes: { study: 10, sanity: -10 }, no: { study: -10, sanity: 5 } },
             { text: "Друзья зовут пить пиво.", yes: { money: -20, sanity: 20 }, no: { money: 0, sanity: -5 } },
-            { text: "Купить доширак?", yes: { money: -5, hp: 5 }, no: { hp: -5 } }
+            { text: "Купить доширак?", yes: { money: -5, hp: 5 }, no: { hp: -5 } },
+            { text: "Препод валит на экзамене. Дать взятку?", yes: { money: -30, study: 20 }, no: { study: -20 } },
+            { text: "Нашел 100 рублей на полу.", yes: { money: 10 }, no: { sanity: -5 } }
         ];
         this.currentCard = scenarios[Math.floor(Math.random() * scenarios.length)];
         
@@ -62,67 +71,59 @@ const Game = {
         this.updateResources();
     },
 
-       applyChoice: function(isYes) {
-        // 1. Получаем эффекты от карточки
+    applyChoice: function(isYes) {
         const effects = isYes ? this.currentCard.yes : this.currentCard.no;
         
-        // 2. Применяем изменения
         for (let key in effects) {
             if (this.state.hasOwnProperty(key)) {
                 this.state[key] += effects[key];
-                
-                // Ограничиваем от 0 до 100
                 if (this.state[key] > 100) this.state[key] = 100;
                 if (this.state[key] < 0) this.state[key] = 0;
             }
         }
+
+        // Увеличиваем день (каждая карта = полдня или день, давай считать как 1 день)
+        this.state.day += 1;
         
-        // 3. Обновляем цифры на экране
         this.updateResources();
 
-        // 4. ПРОВЕРКА НА ПРОИГРЫШ
         if (this.checkGameOver()) {
-            return; // Если проиграли, дальше не идем
+            return;
         }
         
-        // 5. Если живы — следующая карта
         this.nextCard();
     },
 
-    // Новая функция проверки проигрыша
     checkGameOver: function() {
-        if (this.state.hp <= 0) {
-            this.showGameOver("Ты умер от истощения. Здоровье кончилось.");
-            return true;
-        }
-        if (this.state.money <= 0) {
-            this.showGameOver("Ты бомж. Денег нет, тебя выгнали из общаги.");
-            return true;
-        }
-        if (this.state.sanity <= 0) {
-            this.showGameOver("Ты сошел с ума. Дурка уже выехала.");
-            return true;
-        }
-        if (this.state.study <= 0) {
-            this.showGameOver("Тебя отчислили за неуспеваемость. Военкомат ждет.");
+        let reason = "";
+        if (this.state.hp <= 0) reason = "Здоровье на нуле. Ты попал в больницу и вылетел из универа.";
+        else if (this.state.money <= 0) reason = "Ты банкрот. Пришлось бросить учебу и идти работать на завод.";
+        else if (this.state.sanity <= 0) reason = "Кукуха поехала. Тебя увезли в желтый дом.";
+        else if (this.state.study <= 0) reason = "Отчисление. Военком уже стучится в дверь.";
+
+        if (reason) {
+            this.showGameOver(reason);
             return true;
         }
         return false;
     },
 
-    // Экран проигрыша (пока просто алерт, потом сделаем красиво)
     showGameOver: function(reason) {
-        alert("GAME OVER\n" + reason);
-        this.showScreen('menu'); // Возвращаем в меню
+        // Заполняем текст
+        document.getElementById('gameover-reason').innerText = reason;
+        document.getElementById('final-days').innerText = this.state.day;
         
-        // Сбрасываем статы для новой игры
-        this.state = { hp: 50, money: 50, study: 50, sanity: 50 };
-        this.updateResources();
+        // Показываем окно
+        document.getElementById('modal-gameover').classList.add('active');
     },
 
     initSwipe: function() {
         const btnLeft = document.querySelector('.btn-swipe.left');
         const btnRight = document.querySelector('.btn-swipe.right');
+
+        // Удаляем старые обработчики, чтобы не дублировались (на всякий случай)
+        btnLeft.onclick = null;
+        btnRight.onclick = null;
 
         btnLeft.onclick = () => this.applyChoice(false);
         btnRight.onclick = () => this.applyChoice(true);
@@ -134,7 +135,6 @@ const Game = {
     }
 };
 
-// Запуск
 document.addEventListener('DOMContentLoaded', () => {
     Game.init();
 });
