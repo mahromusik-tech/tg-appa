@@ -449,3 +449,53 @@ body {
     0% { transform: translateY(0) scale(1); opacity: 1; }
     100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
 }
+
+/* Стили для истории */
+.story-text {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    line-height: 1.5;
+    border: 1px solid #fff;
+    transition: opacity 0.5s;
+}
+
+.next-hint {
+    color: #f1c40f;
+    font-size: 14px;
+    margin-top: 10px;
+    animation: blink 1.5s infinite;
+    text-align: center;
+    cursor: pointer;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.story-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.btn-choice {
+    background: #34495e;
+    color: white;
+    border: 1px solid #7f8c8d;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-choice:active {
+    background: #2c3e50;
+    transform: scale(0.98);
+}
