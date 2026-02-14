@@ -14,13 +14,15 @@
 <body>
 
     <!-- ЭКРАН МЕНЮ -->
-    <div id="screen-menu" class="screen active">
+        <div id="screen-menu" class="screen active">
         <div class="menu-content">
             <h1 class="game-title">DAY ZERO</h1>
             <p class="game-subtitle">Петля времени</p>
 
+            <!-- СПИСОК КНОПОК -->
             <div class="menu-buttons-list">
-                <!-- Кнопка ПРОДОЛЖИТЬ (Скрыта по умолчанию, ID: btn-continue-block) -->
+
+                <!-- Кнопка ПРОДОЛЖИТЬ -->
                 <div id="btn-continue-block" class="menu-card continue" onclick="Game.continueStory()" style="display: none;">
                     <div class="icon">⏯️</div>
                     <div class="text-group">
@@ -46,9 +48,11 @@
                         <p>Аркадный режим</p>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
+
 
     <!-- ЭКРАН АРКАДЫ (REIGNS) -->
     <div id="screen-arcade" class="screen">
