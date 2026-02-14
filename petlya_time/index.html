@@ -3,102 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Day Zero: Student Life</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Visual Novel TMA</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Подключаем SDK Телеграма -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
-    <!-- МЕНЮ -->
-    <div id="screen-menu" class="screen active">
-        <div class="menu-content">
-            <h1 class="game-title">DAY ZERO</h1>
-            <p class="game-subtitle">Петля времени</p>
+    <!-- Главное меню -->
+    <div id="main-menu" class="screen active">
+        <h1>Моя Новелла</h1>
+        <button onclick="startGame()">Начать игру</button>
+        <button onclick="showCredits()">Авторы</button>
+    </div>
 
-            <div class="menu-buttons-list">
-                <!-- Кнопка ИСТОРИЯ -->
-                <div class="menu-card" onclick="Game.startStory()">
-                    <div class="icon">📖</div>
-                    <div class="text-group">
-                        <h3>ИСТОРИЯ</h3>
-                        <p>Сюжетный режим</p>
-                    </div>
-                </div>
+    <!-- Игровой экран -->
+    <div id="game-screen" class="screen">
+        <div id="background"></div>
+        
+        <div id="character-container">
+            <!-- Сюда будут добавляться спрайты персонажей -->
+            <img id="character-sprite" src="" alt="" class="hidden">
+        </div>
 
-                <!-- Кнопка АРКАДА -->
-                <div class="menu-card" onclick="Game.startArcade()">
-                    <div class="icon">🔥</div>
-                    <div class="text-group">
-                        <h3>ВЫЖИВАНИЕ</h3>
-                        <p>Аркадный режим</p>
-                    </div>
-                </div>
-            </div>
+        <div id="dialogue-box">
+            <div id="speaker-name"></div>
+            <div id="dialogue-text"></div>
+            <div id="choices-container"></div>
         </div>
     </div>
 
-    <!-- АРКАДА -->
-    <div id="screen-arcade" class="screen">
-        <!-- Счетчик дней -->
-        <div class="day-counter">ДЕНЬ <span id="day-count">1</span></div>
-        <div class="resources">
-            <div class="res-item">❤️ <span id="res-hp">50</span></div>
-            <div class="res-item">💰 <span id="res-money">50</span></div>
-            <div class="res-item">📚 <span id="res-study">50</span></div>
-            <div class="res-item">🧠 <span id="res-sanity">50</span></div>
-        </div>
-        <div class="card-container">
-            <div class="card">
-                <div class="card-image"></div>
-                <div class="card-text">Загрузка...</div>
-            </div>
-        </div>
-        <div class="controls">
-            <button class="btn-swipe left">Нет</button>
-            <button class="btn-swipe right">Да</button>
-        </div>
+    <!-- Экран концовки -->
+    <div id="ending-screen" class="screen">
+        <h2 id="ending-title"></h2>
+        <p id="ending-desc"></p>
+        <button onclick="location.reload()">В меню</button>
     </div>
 
-     <!-- ЭКРАН СЮЖЕТА -->
-    <div id="screen-story" class="screen story-mode">
-        <!-- Слой 1: Фон -->
-        <div id="story-bg" class="story-layer"></div>
-        
-        <!-- Слой 2: Персонаж -->
-        <div id="story-sprite" class="story-layer"></div>
-        
-        <!-- Слой 3: ЗОНА КЛИКА (На весь экран) -->
-        <div id="story-click-area"></div>
-
-        <!-- Слой 4: Интерфейс (Текст и кнопки) -->
-        <div id="story-ui" class="story-ui">
-            <div id="story-name-box" class="story-name-box">Имя</div>
-            <div id="story-text-box" class="story-text-box">Текст...</div>
-            
-            <!-- Кнопки выбора (должны быть поверх всего) -->
-            <div id="story-choices-box" class="story-choices-box"></div>
-        </div>
-
-        <!-- Кнопка выхода -->
-        <button class="btn-menu-small" onclick="Game.showScreen('menu')">🏠</button>
-    </div>
-
-        
-
-    <script src="story.js"></script>
     <script src="script.js"></script>
-
-        <!-- МОДАЛЬНОЕ ОКНО GAME OVER -->
-    <div id="modal-gameover" class="modal-overlay">
-        <div class="modal-box">
-            <h2>💀 GAME OVER</h2>
-            <p id="gameover-reason">Причина смерти...</p>
-            <div class="modal-stats">
-                Прожито дней: <span id="final-days">0</span>
-            </div>
-            <button class="btn-restart" onclick="Game.restartArcade()">ПОПРОБОВАТЬ СНОВА</button>
-            <button class="btn-menu" onclick="Game.showScreen('menu'); document.getElementById('modal-gameover').classList.remove('active')">В МЕНЮ</button>
-        </div>
-    </div>
 </body>
 </html>
