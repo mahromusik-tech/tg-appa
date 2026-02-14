@@ -416,3 +416,36 @@ body {
     width: 100%;
     cursor: pointer;
 }
+/* --- АНИМАЦИИ --- */
+
+/* Классы для свайпа карточки (добавляются JS-ом) */
+.swipe-left {
+    transform: translateX(-200%) rotate(-30deg) !important;
+    opacity: 0;
+    transition: all 0.4s ease-in;
+}
+
+.swipe-right {
+    transform: translateX(200%) rotate(30deg) !important;
+    opacity: 0;
+    transition: all 0.4s ease-in;
+}
+
+/* Всплывающие цифры урона/хила */
+.floating-text {
+    position: fixed;
+    font-weight: 900;
+    font-size: 24px;
+    pointer-events: none;
+    animation: floatUp 1.5s forwards;
+    z-index: 9999;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.floating-text.positive { color: #2ecc71; } /* Зеленый */
+.floating-text.negative { color: #e74c3c; } /* Красный */
+
+@keyframes floatUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+}
