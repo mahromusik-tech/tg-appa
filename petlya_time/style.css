@@ -536,3 +536,101 @@ body {
     cursor: pointer;
     z-index: 100;
 }
+
+/* --- ВИЗУАЛЬНАЯ НОВЕЛЛА --- */
+.story-mode {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Слои (фон и персонаж) */
+.story-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: all 0.5s ease;
+}
+
+/* Заглушка для спрайта (пока нет картинок) */
+#story-sprite {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    transform: translateY(50px); /* Чуть опущен */
+}
+
+/* Интерфейс внизу */
+.story-ui {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Имя персонажа */
+.story-name-box {
+    background: #e67e22;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    align-self: flex-start; /* Слева */
+    font-weight: bold;
+    font-size: 14px;
+    display: none; /* Скрыто по умолчанию */
+}
+
+/* Текстовое поле */
+.story-text-box {
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #555;
+    min-height: 80px;
+    font-size: 16px;
+    line-height: 1.4;
+    position: relative;
+}
+
+/* Зона клика (чтобы кликать по всему низу для продолжения) */
+.story-click-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Под кнопками, но над фоном UI */
+    cursor: pointer;
+}
+
+/* Кнопки выбора (поверх зоны клика) */
+.story-choices-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 20; /* Самый верх */
+}
+
+.btn-story-choice {
+    background: #2980b9;
+    color: white;
+    border: 1px solid #3498db;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+}
