@@ -62,17 +62,62 @@ const Game = {
         this.updateResources();
     },
 
-    applyChoice: function(isYes) {
+       applyChoice: function(isYes) {
+        // 1. Получаем эффекты от карточки
         const effects = isYes ? this.currentCard.yes : this.currentCard.no;
         
+        // 2. Применяем изменения
         for (let key in effects) {
-            this.state[key] += effects[key];
-            // Ограничения 0-100
-            if (this.state[key] > 100) this.state[key] = 100;
-            if (this.state[key] < 0) this.state[key] = 0;
+            if (this.state.hasOwnProperty(key)) {
+                this.state[key] += effects[key];
+                
+                // Ограничиваем от 0 до 100
+                if (this.state[key] > 100) this.state[key] = 100;
+                if (this.state[key] < 0) this.state[key] = 0;
+            }
         }
         
+        // 3. Обновляем цифры на экране
+        this.updateResources();
+
+        // 4. ПРОВЕРКА НА ПРОИГРЫШ
+        if (this.checkGameOver()) {
+            return; // Если проиграли, дальше не идем
+        }
+        
+        // 5. Если живы — следующая карта
         this.nextCard();
+    },
+
+    // Новая функция проверки проигрыша
+    checkGameOver: function() {
+        if (this.state.hp <= 0) {
+            this.showGameOver("Ты умер от истощения. Здоровье кончилось.");
+            return true;
+        }
+        if (this.state.money <= 0) {
+            this.showGameOver("Ты бомж. Денег нет, тебя выгнали из общаги.");
+            return true;
+        }
+        if (this.state.sanity <= 0) {
+            this.showGameOver("Ты сошел с ума. Дурка уже выехала.");
+            return true;
+        }
+        if (this.state.study <= 0) {
+            this.showGameOver("Тебя отчислили за неуспеваемость. Военкомат ждет.");
+            return true;
+        }
+        return false;
+    },
+
+    // Экран проигрыша (пока просто алерт, потом сделаем красиво)
+    showGameOver: function(reason) {
+        alert("GAME OVER\n" + reason);
+        this.showScreen('menu'); // Возвращаем в меню
+        
+        // Сбрасываем статы для новой игры
+        this.state = { hp: 50, money: 50, study: 50, sanity: 50 };
+        this.updateResources();
     },
 
     initSwipe: function() {
