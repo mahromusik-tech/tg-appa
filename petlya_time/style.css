@@ -499,3 +499,40 @@ body {
     background: #2c3e50;
     transform: scale(0.98);
 }
+
+/* Стили для экрана истории */
+#screen-story {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Центрируем по вертикали */
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+    background: #2c3e50; /* Темный фон для истории */
+    color: white;
+    position: relative;
+}
+
+#story-container {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+}
+
+/* Кнопка домой в углу */
+.btn-menu-small {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    font-size: 24px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 100;
+}
