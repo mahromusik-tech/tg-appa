@@ -201,9 +201,9 @@ const Game = {
         // Сначала показываем экран
         this.showScreen('story');
         // Потом запускаем движок
-        if (typeof StoryEngine !== 'undefined') {
+        
             StoryEngine.start();
-        }
+        
     }
 };
 
