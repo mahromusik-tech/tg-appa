@@ -153,25 +153,29 @@ makeChoice: function(side) {
 
         this.updateUI();
 
-        // 3. Ждем окончания анимации (400мс), потом проверяем проигрыш и меняем карту
-        setTimeout(() => {
-            // Убираем классы анимации, чтобы новая карта была чистой
-            cardEl.classList.remove('swipe-left', 'swipe-right');
-            
-            // Проверка на проигрыш
-            if (this.checkGameOver()) return;
+        / 3. Ждем окончания анимации (400мс)
+    setTimeout(() => {
+        // Сначала убираем классы свайпа
+        cardEl.classList.remove('swipe-left', 'swipe-right');
+        
+        // Проверка на проигрыш
+        if (this.checkGameOver()) return;
 
-            // Следующая карта
-            this.nextCard();
-            
-            // Перезапуск анимации появления (хак через reflow)
-            void cardEl.offsetWidth; 
-            cardEl.style.animation = 'none';
-            cardEl.offsetHeight; /* trigger reflow */
-            cardEl.style.animation = 'slideIn 0.4s ease-out';
+        // Генерируем следующую карту (меняем текст и картинку)
+        this.nextCard();
+        
+        // --- ВОТ ЗДЕСЬ МАГИЯ ПЕРЕЗАПУСКА АНИМАЦИИ ---
+        
+        // 1. Удаляем анимацию полностью
+        cardEl.style.animation = 'none';
+        
+        // 2. Форсируем перерисовку (браузер обязан это сделать)
+        void cardEl.offsetWidth; 
+        
+        // 3. Возвращаем анимацию появления
+        cardEl.style.animation = 'slideIn 0.4s ease-out';
 
-        }, 400);
-    },
+    }, 400); }, // Время должно совпадать с длительностью анимации в CSS (0.4s
 
     // Новая функция для всплывающих цифр
     showFloatingText: function(resourceKey, value) {
