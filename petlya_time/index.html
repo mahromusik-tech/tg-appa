@@ -61,14 +61,24 @@
 
     <!-- ИСТОРИЯ -->
       <!-- ЭКРАН СЮЖЕТА -->
-    <div id="screen-story" class="screen">
-        <!-- Кнопка назад в меню -->
-        <button class="btn-menu-small" onclick="Game.showScreen('menu')">🏠</button>
+    <!-- ЭКРАН СЮЖЕТА (Визуальная новелла) -->
+    <div id="screen-story" class="screen story-mode">
+        <!-- Слой 1: Фон -->
+        <div id="story-bg" class="story-layer"></div>
         
-        <!-- Контейнер для текста и выборов -->
-        <div id="story-container">
-            <!-- Сюда скрипт будет добавлять текст и кнопки -->
+        <!-- Слой 2: Персонаж -->
+        <div id="story-sprite" class="story-layer"></div>
+        
+        <!-- Слой 3: Интерфейс (Текст и кнопки) -->
+        <div id="story-ui" class="story-ui">
+            <div id="story-name-box" class="story-name-box">Имя</div>
+            <div id="story-text-box" class="story-text-box">Текст диалога...</div>
+            <div id="story-choices-box" class="story-choices-box"></div>
+            <div id="story-click-area" class="story-click-area"></div> <!-- Невидимая зона для клика -->
         </div>
+
+        <!-- Кнопка выхода -->
+        <button class="btn-menu-small" onclick="Game.showScreen('menu')">🏠</button>
     </div>
 
     <script src="story.js"></script>
