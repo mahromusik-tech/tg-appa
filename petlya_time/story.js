@@ -1,92 +1,122 @@
-// Данные истории
-const STORY_DATA = {
-    "start": {
-        text: "Ты просыпаешься от звонка будильника. На часах 7:00. Сегодня первый день в универе.",
-        bg: "https://via.placeholder.com/400x800/333/fff?text=Room", 
-        sprite: "", 
-        speaker: "",
-        choices: [
-            { text: "Встать и собраться", next: "kitchen" },
-            { text: "Поспать еще 5 минут", next: "late" }
-        ]
-    },
-    "kitchen": {
-        text: "На кухне мама готовит завтрак. 'Доброе утро, студент! Волнуешься?'",
-        bg: "https://via.placeholder.com/400x800/555/fff?text=Kitchen",
-        sprite: "https://via.placeholder.com/300x500/f00/fff?text=Mom",
-        speaker: "Мама",
-        choices: [
-            { text: "Немного", next: "university" },
-            { text: "Вообще нет", next: "university" }
-        ]
-    },
-    "late": {
-        text: "Ты проспал! Придется бежать без завтрака.",
-        bg: "https://via.placeholder.com/400x800/333/fff?text=Room",
-        sprite: "",
-        speaker: "",
-        choices: [
-            { text: "Бежать на автобус", next: "university" }
-        ]
-    },
-    "university": {
-        text: "Ты стоишь перед огромным зданием университета. Твоя новая жизнь начинается здесь.",
-        bg: "https://via.placeholder.com/400x800/777/fff?text=University",
-        sprite: "",
-        speaker: "",
-        choices: [
-            { text: "Войти внутрь", next: "start" } // Зацикливаем для теста
-        ]
-    }
-};
-
 const StoryEngine = {
+    currentSceneId: 'start',
+    
+    // База данных сцен
+    scenes: {
+        'start': {
+            text: "Ох... голова... Как будто по ней ударили учебником по матану.",
+            type: 'monologue', // Новый тип: просто мысли
+            next: 'start_2'    // Куда переходим по клику
+        },
+        'start_2': {
+            text: "Стоп. Я же вчера... Я вчера умер? Меня сбила маршрутка?",
+            type: 'monologue',
+            next: 'start_3'
+        },
+        'start_3': {
+            text: "Смотрю на телефон. 1 сентября. Опять. Не может быть.",
+            type: 'monologue',
+            next: 'corridor_1'
+        },
+        'corridor_1': {
+            text: "Ты выходишь в коридор. Навстречу несется староста с безумными глазами.",
+            type: 'choice', // Тип: выбор
+            choices: [
+                { text: "Спрятаться в туалете", next: 'toilet_hide' },
+                { text: "Поздороваться", next: 'meet_starosta' }
+            ]
+        },
+        'toilet_hide': {
+            text: "Ты ныряешь в мужской туалет. Здесь пахнет безысходностью и хлоркой.",
+            type: 'monologue',
+            next: 'game_over_coward'
+        },
+        'meet_starosta': {
+            text: "Староста: 'О! Ты-то мне и нужен! Сдаем на шторы по 500р!'",
+            type: 'choice',
+            choices: [
+                { text: "Отдать последние деньги", next: 'poor_student' },
+                { text: "Сказать, что ты бомж", next: 'angry_starosta' }
+            ]
+        },
+        'game_over_coward': {
+            text: "Ты просидел в туалете весь день. Петля не разорвана.",
+            type: 'ending' // Тип: конец
+        }
+        // ... можно добавлять бесконечно
+    },
+
     init: function() {
-        console.log("Story Engine Ready");
+        // Находим контейнер истории
+        this.container = document.getElementById('story-container');
     },
 
     start: function() {
         Game.showScreen('story');
-        this.loadScene("start");
+        this.loadScene('start');
     },
 
     loadScene: function(sceneId) {
-        const scene = STORY_DATA[sceneId];
-        if (!scene) return;
-
-        // 1. Фон
-        const storyScreen = document.getElementById('screen-story');
-        storyScreen.style.background = `url('${scene.bg}') center/cover no-repeat, #333`;
-
-        // 2. Спрайт
-        const spriteEl = document.querySelector('.character-sprite');
-        if (scene.sprite) {
-            spriteEl.style.backgroundImage = `url('${scene.sprite}')`;
-            spriteEl.style.display = 'block';
-        } else {
-            spriteEl.style.display = 'none';
+        const scene = this.scenes[sceneId];
+        if (!scene) {
+            console.error('Сцена не найдена: ' + sceneId);
+            return;
         }
+        this.currentSceneId = sceneId;
 
-        // 3. Текст и Имя
-        document.getElementById('story-text').innerText = scene.text;
-        const speakerEl = document.getElementById('story-speaker');
-        if (scene.speaker) {
-            speakerEl.innerText = scene.speaker;
-            speakerEl.style.display = 'block';
-        } else {
-            speakerEl.style.display = 'none';
-        }
+        // Очищаем экран
+        this.container.innerHTML = '';
 
-        // 4. Кнопки
-        const choicesContainer = document.querySelector('.story-choices');
-        choicesContainer.innerHTML = '';
+        // 1. Создаем текст
+        const textBlock = document.createElement('div');
+        textBlock.className = 'story-text';
+        textBlock.innerText = scene.text;
+        
+        // Анимация появления текста
+        textBlock.style.opacity = 0;
+        this.container.appendChild(textBlock);
+        setTimeout(() => textBlock.style.opacity = 1, 100);
 
-        scene.choices.forEach(choice => {
+        // 2. Логика в зависимости от типа сцены
+        if (scene.type === 'monologue') {
+            // Если это монолог — весь экран кликабелен
+            const nextHint = document.createElement('div');
+            nextHint.className = 'next-hint';
+            nextHint.innerText = '▼ Нажми, чтобы продолжить';
+            this.container.appendChild(nextHint);
+
+            // Клик по всему контейнеру ведет дальше
+            this.container.onclick = () => {
+                this.container.onclick = null; // Убираем клик, чтобы не спамить
+                this.loadScene(scene.next);
+            };
+
+        } else if (scene.type === 'choice') {
+            // Если выбор — рисуем кнопки
+            this.container.onclick = null; // Убираем клик по фону
+            
+            const choicesDiv = document.createElement('div');
+            choicesDiv.className = 'story-choices';
+
+            scene.choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-choice';
+                btn.innerText = choice.text;
+                btn.onclick = (e) => {
+                    e.stopPropagation(); // Чтобы не сработал клик по фону (если он есть)
+                    this.loadScene(choice.next);
+                };
+                choicesDiv.appendChild(btn);
+            });
+            this.container.appendChild(choicesDiv);
+        
+        } else if (scene.type === 'ending') {
+            // Конец
             const btn = document.createElement('button');
-            btn.className = 'btn-choice';
-            btn.innerText = choice.text;
-            btn.onclick = () => this.loadScene(choice.next);
-            choicesContainer.appendChild(btn);
-        });
+            btn.className = 'btn-restart';
+            btn.innerText = 'В МЕНЮ';
+            btn.onclick = () => Game.showScreen('menu');
+            this.container.appendChild(btn);
+        }
     }
 };
