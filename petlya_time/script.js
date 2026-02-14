@@ -64,11 +64,42 @@ const Game = {
     currentCard: null, // Текущая карточка в аркаде
 
     // Инициализация
+    // Внутри объекта Game...
+
     init: function() {
-        // Настройка кнопки "Назад" (системная кнопка Телеграма)
-        tg.BackButton.onClick(() => {
-            this.showScreen('menu');
-        });
+        // ... старый код (BackButton и т.д.) ...
+
+        // ПРОВЕРКА СОХРАНЕНИЯ ПРИ ЗАПУСКЕ
+        this.checkSaveFile();
+    },
+
+    // Добавь эту функцию в объект Game
+    checkSaveFile: function() {
+        const btnContinue = document.getElementById('btn-continue');
+        if (StoryEngine && StoryEngine.hasSave()) {
+            btnContinue.style.display = 'block'; // Показываем кнопку
+        } else {
+            btnContinue.style.display = 'none'; // Скрываем
+        }
+    },
+
+    // И эту функцию для вызова из HTML
+    continueStory: function() {
+        StoryEngine.continueGame();
+    },
+    
+    // Обнови showScreen, чтобы проверять кнопку каждый раз при выходе в меню
+    showScreen: function(screenName) {
+        // ... старый код скрытия/показа экранов ...
+        
+        // Если вернулись в меню, снова проверяем наличие сохранения
+        if (screenName === 'menu') {
+            tg.BackButton.hide();
+            this.checkSaveFile(); // <--- ДОБАВИЛ ЭТО
+        } else {
+            tg.BackButton.show();
+        }
+    }, 
 
         // Навешиваем обработчики на кнопки Аркады (Свайпы)
         const btnLeft = document.querySelector('.btn-swipe.left');
