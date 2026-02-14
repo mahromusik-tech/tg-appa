@@ -51,28 +51,40 @@ const STORY_DATA = {
 
 // --- ДВИЖОК НОВЕЛЛЫ ---
 const StoryEngine = {
+    currentScene: null, // Запоминаем текущую сцену
+
     init: function() {
-        // Здесь можно делать предзагрузку картинок, если нужно
         console.log("Story Engine Ready");
     },
 
     start: function() {
-        // Скрываем меню, показываем экран истории (через глобальный Game объект)
         Game.showScreen('story');
         this.loadScene("start");
     },
 
+    // НОВАЯ ФУНКЦИЯ: Продолжить с сохранения
+    continueGame: function() {
+        const savedScene = localStorage.getItem('student_story_scene');
+        if (savedScene && STORY_DATA[savedScene]) {
+            Game.showScreen('story');
+            this.loadScene(savedScene);
+        } else {
+            this.start(); // Если сохранения нет, начинаем сначала
+        }
+    },
+
     loadScene: function(sceneId) {
         const scene = STORY_DATA[sceneId];
+        if (!scene) return;
+
+        this.currentScene = sceneId;
         
-        if (!scene) {
-            console.error("Сцена не найдена: " + sceneId);
-            return;
-        }
+        // --- СОХРАНЕНИЕ ---
+        // Сохраняем id сцены в память телефона
+        localStorage.setItem('student_story_scene', sceneId);
 
         // 1. Фон
         const storyScreen = document.getElementById('screen-story');
-        // Используем заглушку цвета, если картинка не прогрузилась
         storyScreen.style.background = `url('${scene.bg}') center/cover no-repeat, #333`;
 
         // 2. Спрайт
@@ -80,19 +92,15 @@ const StoryEngine = {
         if (scene.sprite) {
             spriteEl.style.backgroundImage = `url('${scene.sprite}')`;
             spriteEl.style.display = 'block';
-            // Анимация появления спрайта
             spriteEl.classList.remove('fade-in');
-            void spriteEl.offsetWidth; // Хак для перезапуска анимации
+            void spriteEl.offsetWidth;
             spriteEl.classList.add('fade-in');
         } else {
             spriteEl.style.display = 'none';
         }
 
-        // 3. Текст
-        const textEl = document.getElementById('story-text');
-        textEl.innerText = scene.text;
-
-        // 4. Имя говорящего
+        // 3. Текст и Имя
+        document.getElementById('story-text').innerText = scene.text;
         const speakerEl = document.getElementById('story-speaker');
         if (scene.speaker) {
             speakerEl.innerText = scene.speaker;
@@ -101,9 +109,9 @@ const StoryEngine = {
             speakerEl.style.display = 'none';
         }
 
-        // 5. Кнопки выбора
+        // 4. Кнопки
         const choicesContainer = document.querySelector('.story-choices');
-        choicesContainer.innerHTML = ''; // Очистка
+        choicesContainer.innerHTML = '';
 
         scene.choices.forEach(choice => {
             const btn = document.createElement('button');
@@ -111,10 +119,20 @@ const StoryEngine = {
             btn.innerText = choice.text;
             
             btn.onclick = () => {
+                // Если выбор ведет к Game Over или концу, можно очищать сохранение
+                if (choice.next === 'start') {
+                    localStorage.removeItem('student_story_scene');
+                }
                 this.loadScene(choice.next);
             };
             
             choicesContainer.appendChild(btn);
         });
-                          }
+    },
+    
+    // Проверка, есть ли сохранение (для меню)
+    hasSave: function() {
+        return !!localStorage.getItem('student_story_scene');
+    }
+};
 };
