@@ -1,215 +1,185 @@
+// Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
-tg.expand();
+tg.expand(); // Раскрыть на весь экран
 
-const Game = {
-    state: {
-        hp: 50,
-        money: 50,
-        study: 50,
-        sanity: 50,
-        day: 1
+// --- СЦЕНАРИЙ ---
+// Структура: id сцены -> объект с данными
+const script = {
+    start: {
+        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')", // Замените на свои картинки
+        speaker: "Незнакомец",
+        sprite: null,
+        text: "Эй, проснись! Ты слышишь меня?",
+        next: "scene2"
     },
-    currentCard: null,
-    isAnimating: false, // Блокировка нажатий во время анимации
-
-    init: function() {
-        tg.BackButton.onClick(() => {
-            this.showScreen('menu');
-        });
-        
-        this.initSwipe();
-        
-        if (typeof StoryEngine !== 'undefined') {
-            StoryEngine.init();
-        }
+    scene2: {
+        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')",
+        speaker: "Герой",
+        sprite: "https://via.placeholder.com/300x600/e94560/ffffff?text=Hero", // Замените на спрайт
+        text: "Голова раскалывается... Где я?",
+        next: "choice1"
     },
-
-    showScreen: function(screenName) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('screen-' + screenName).classList.add('active');
-
-        if (screenName === 'menu') {
-            tg.BackButton.hide();
-        } else {
-            tg.BackButton.show();
-        }
+    choice1: {
+        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')",
+        speaker: "",
+        sprite: "https://via.placeholder.com/300x600/e94560/ffffff?text=Hero",
+        text: "Нужно решить, что делать дальше.",
+        choices: [
+            { text: "Осмотреться вокруг", next: "look_around", karma: 0 },
+            { text: "Попытаться встать", next: "stand_up", karma: 1 }
+        ]
     },
-
-    // --- АРКАДА ---
-    startArcade: function() {
-        this.state = { hp: 50, money: 50, study: 50, sanity: 50, day: 1 };
-        this.showScreen('arcade');
-        this.updateResources();
-        this.nextCard();
+    look_around: {
+        bg: "url('https://via.placeholder.com/800x600/16213e/ffffff?text=Classroom')",
+        speaker: "Герой",
+        sprite: null,
+        text: "Похоже на заброшенный класс. Парты перевернуты.",
+        next: "ending_bad"
     },
-
-    restartArcade: function() {
-        document.getElementById('modal-gameover').classList.remove('active');
-        this.startArcade();
+    stand_up: {
+        bg: "url('https://via.placeholder.com/800x600/1a1a2e/ffffff?text=School')",
+        speaker: "Герой",
+        sprite: "https://via.placeholder.com/300x600/e94560/ffffff?text=Hero",
+        text: "Я встал, но ноги подкашиваются. Зато я нашел ключ!",
+        next: "ending_good"
     },
-
-    updateResources: function() {
-        // Просто обновляем текст
-        document.getElementById('res-hp').innerText = Math.floor(this.state.hp);
-        document.getElementById('res-money').innerText = Math.floor(this.state.money);
-        document.getElementById('res-study').innerText = Math.floor(this.state.study);
-        document.getElementById('res-sanity').innerText = Math.floor(this.state.sanity);
-        document.getElementById('day-count').innerText = this.state.day;
+    // Концовки
+    ending_bad: {
+        isEnding: true,
+        title: "Плохая концовка",
+        desc: "Вы остались лежать и вас нашли монстры."
     },
-
-    nextCard: function() {
-        const scenarios = [
-            { text: "Пара в 8 утра. Идти?", yes: { study: 10, sanity: -10 }, no: { study: -10, sanity: 5 } },
-            { text: "Друзья зовут в бар.", yes: { money: -20, sanity: 20 }, no: { money: 0, sanity: -5 } },
-            { text: "Купить доширак?", yes: { money: -5, hp: 5 }, no: { hp: -5 } },
-            { text: "Сессия близко. Ботать всю ночь?", yes: { study: 15, sanity: -15, hp: -5 }, no: { study: -10, hp: 5 } },
-            { text: "Нашел 1000 рублей!", yes: { money: 20 }, no: { sanity: -5 } }
-        ];
-        
-        this.currentCard = scenarios[Math.floor(Math.random() * scenarios.length)];
-        
-        const card = document.querySelector('.card');
-        // Сброс анимации перед показом новой карты
-        card.style.transition = 'none';
-        card.classList.remove('swipe-left', 'swipe-right');
-        card.style.transform = 'translateY(50px)';
-        card.style.opacity = '0';
-
-        // Небольшая задержка для плавного появления
-        setTimeout(() => {
-            card.style.transition = 'transform 0.4s ease-out, opacity 0.4s';
-            card.style.transform = 'translateY(0)';
-            card.style.opacity = '1';
-            document.querySelector('.card-text').innerText = this.currentCard.text;
-        }, 50);
-        
-        this.isAnimating = false;
-    },
-
-    applyChoice: function(isYes) {
-        if (this.isAnimating) return; // Защита от двойного клика
-        this.isAnimating = true;
-
-        const card = document.querySelector('.card');
-        
-        // 1. Анимация улетания
-        if (isYes) {
-            card.classList.add('swipe-right');
-        } else {
-            card.classList.add('swipe-left');
-        }
-
-        // 2. Ждем пока улетит, потом считаем математику
-        setTimeout(() => {
-            this.processTurn(isYes);
-        }, 300);
-    },
-
-    processTurn: function(isYes) {
-        const effects = isYes ? this.currentCard.yes : this.currentCard.no;
-        
-        // Применяем эффекты
-        for (let key in effects) {
-            if (this.state.hasOwnProperty(key)) {
-                const change = effects[key];
-                this.state[key] += change;
-                
-                // Визуализация (+5 / -10)
-                this.showFloatingText(key, change);
-
-                // Ограничения
-                if (this.state[key] > 100) this.state[key] = 100;
-                if (this.state[key] < 0) this.state[key] = 0;
-            }
-        }
-
-        this.state.day += 1;
-        this.updateResources(); // Сначала обновляем цифры (чтобы увидеть 0)
-
-        // Проверка на смерть с небольшой задержкой, чтобы игрок осознал, что случилось
-        if (this.checkGameOver()) {
-            return;
-        }
-
-        this.nextCard();
-    },
-
-    showFloatingText: function(resourceKey, value) {
-        if (value === 0) return;
-
-        // Находим иконку ресурса на экране
-        const iconId = 'res-' + resourceKey;
-        const iconElement = document.getElementById(iconId);
-        
-        if (!iconElement) return;
-
-        const rect = iconElement.getBoundingClientRect();
-        
-        // Создаем летающий текст
-        const el = document.createElement('div');
-        el.className = `floating-text ${value > 0 ? 'positive' : 'negative'}`;
-        el.innerText = (value > 0 ? '+' : '') + value;
-        
-        // Позиционируем прямо над иконкой
-        el.style.left = (rect.left + 10) + 'px';
-        el.style.top = (rect.top - 20) + 'px';
-        
-        document.body.appendChild(el);
-
-        // Удаляем элемент после анимации
-        setTimeout(() => {
-            el.remove();
-        }, 1500);
-    },
-
-    checkGameOver: function() {
-        let reason = "";
-        
-        // Важно: проверяем текущее состояние
-        if (this.state.hp <= 0) reason = "Здоровье кончилось. Ты в реанимации.";
-        else if (this.state.money <= 0) reason = "Деньги кончились. Ты умер от голода под мостом.";
-        else if (this.state.sanity <= 0) reason = "Рассудок потерян. Привет, дурка.";
-        else if (this.state.study <= 0) reason = "Отчислен. Сапоги уже ждут тебя.";
-
-        if (reason) {
-            // Задержка перед показом окна смерти, чтобы увидеть нули
-            setTimeout(() => {
-                this.showGameOver(reason);
-            }, 500);
-            return true;
-        }
-        return false;
-    },
-
-    showGameOver: function(reason) {
-        document.getElementById('gameover-reason').innerText = reason;
-        document.getElementById('final-days').innerText = this.state.day;
-        document.getElementById('modal-gameover').classList.add('active');
-    },
-
-    initSwipe: function() {
-        const btnLeft = document.querySelector('.btn-swipe.left');
-        const btnRight = document.querySelector('.btn-swipe.right');
-
-        btnLeft.onclick = () => this.applyChoice(false);
-        btnRight.onclick = () => this.applyChoice(true);
-    },
-
-    // --- ИСТОРИЯ ---
-        // --- ИСТОРИЯ ---
-    startStory: function() {
-        // Сначала показываем экран
-        this.showScreen('story');
-        // Потом запускаем движок
-        
-           // Потом запускаем движок
-        if (typeof StoryEngine !== 'undefined') {
-            StoryEngine.start();
-        }
-        
+    ending_good: {
+        isEnding: true,
+        title: "Хорошая концовка",
+        desc: "Вы нашли выход и спаслись!"
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    Game.init();
+// --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
+let currentSceneId = 'start';
+let isTyping = false;
+let typeInterval;
+let gameState = {
+    karma: 0 // Пример переменной, на которую влияют выборы
+};
+
+// --- ЭЛЕМЕНТЫ DOM ---
+const screens = document.querySelectorAll('.screen');
+const bgEl = document.getElementById('background');
+const spriteEl = document.getElementById('character-sprite');
+const nameEl = document.getElementById('speaker-name');
+const textEl = document.getElementById('dialogue-text');
+const choicesEl = document.getElementById('choices-container');
+const dialogueBox = document.getElementById('dialogue-box');
+
+// --- ФУНКЦИИ ---
+
+function showScreen(id) {
+    screens.forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+    currentSceneId = 'start';
+    gameState.karma = 0;
+    showScreen('game-screen');
+    renderScene(currentSceneId);
+}
+
+// Эффект печатной машинки
+function typeText(text, callback) {
+    textEl.innerHTML = "";
+    isTyping = true;
+    let i = 0;
+    
+    // Очищаем предыдущие выборы пока печатаем
+    choicesEl.innerHTML = "";
+
+    clearInterval(typeInterval);
+    typeInterval = setInterval(() => {
+        textEl.innerHTML += text.charAt(i);
+        i++;
+        if (i >= text.length) {
+            clearInterval(typeInterval);
+            isTyping = false;
+            if (callback) callback();
+        }
+    }, 30); // Скорость печати (мс)
+}
+
+// Обработка клика по диалоговому окну (пропуск анимации или след. сцена)
+dialogueBox.addEventListener('click', () => {
+    const scene = script[currentSceneId];
+    
+    // Если текст еще печатается — завершить мгновенно
+    if (isTyping) {
+        clearInterval(typeInterval);
+        textEl.innerHTML = scene.text;
+        isTyping = false;
+        showChoicesOrNext(scene);
+        return;
+    }
+
+    // Если есть выборы, клик не должен переключать сцену (игрок должен нажать кнопку)
+    if (scene.choices) return;
+
+    // Переход к следующей сцене
+    if (scene.next) {
+        currentSceneId = scene.next;
+        renderScene(currentSceneId);
+    }
 });
+
+function showChoicesOrNext(scene) {
+    if (scene.choices) {
+        renderChoices(scene.choices);
+    }
+}
+
+function renderChoices(choices) {
+    choicesEl.innerHTML = "";
+    choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerText = choice.text;
+        btn.onclick = (e) => {
+            e.stopPropagation(); // Чтобы не сработал клик по dialogueBox
+            if (choice.karma) gameState.karma += choice.karma;
+            currentSceneId = choice.next;
+            renderScene(currentSceneId);
+        };
+        choicesEl.appendChild(btn);
+    });
+}
+
+function renderScene(sceneId) {
+    const scene = script[sceneId];
+
+    // Проверка на концовку
+    if (scene.isEnding) {
+        showScreen('ending-screen');
+        document.getElementById('ending-title').innerText = scene.title;
+        document.getElementById('ending-desc').innerText = scene.desc;
+        return;
+    }
+
+    // Обновление фона
+    if (scene.bg) {
+        bgEl.style.backgroundImage = scene.bg;
+    }
+
+    // Обновление спрайта
+    if (scene.sprite) {
+        spriteEl.src = scene.sprite;
+        spriteEl.classList.remove('hidden');
+    } else {
+        spriteEl.classList.add('hidden');
+    }
+
+    // Имя говорящего
+    nameEl.innerText = scene.speaker;
+
+    // Запуск текста
+    typeText(scene.text, () => showChoicesOrNext(scene));
+}
