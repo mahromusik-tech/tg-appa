@@ -29,20 +29,41 @@
     </div>
 
     <!-- ЭКРАН 2: ИСТОРИЯ (НОВЕЛЛА) -->
-     <div id="screen-menu" class="screen active">
-        <h1>Student Life</h1>
-        
-        <div class="menu-buttons">
-            <!-- Кнопка Аркады -->
-            <button class="btn-menu" onclick="Game.startArcade()">Аркада (Reigns)</button>
-            
-            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
-            
-            <!-- Кнопки Истории -->
-            <button id="btn-continue" class="btn-menu" onclick="Game.continueStory()" style="display: none; background: #4a90e2;">Продолжить историю</button>
-            <button class="btn-menu" onclick="Game.startStory()">Новая история</button>
+      <div id="screen-menu" class="screen active">
+        <div class="menu-content">
+            <h1 class="game-title">DAY ZERO</h1>
+            <p class="game-subtitle">Петля времени</p>
+
+            <div class="menu-buttons-list">
+                <!-- Кнопка ПРОДОЛЖИТЬ (Скрыта по умолчанию) -->
+                <div id="btn-continue-block" class="menu-card continue" onclick="Game.continueStory()" style="display: none;">
+                    <div class="icon">⏯️</div>
+                    <div class="text-group">
+                        <h3>ПРОДОЛЖИТЬ</h3>
+                        <p>Вернуться в петлю</p>
+                    </div>
+                </div>
+
+                <!-- Кнопка ИСТОРИЯ -->
+                <div class="menu-card" onclick="Game.startStory()">
+                    <div class="icon">📖</div>
+                    <div class="text-group">
+                        <h3>НОВАЯ ИСТОРИЯ</h3>
+                        <p>Сюжетный режим</p>
+                    </div>
+                </div>
+
+                <!-- Кнопка ВЫЖИВАНИЕ -->
+                <div class="menu-card" onclick="Game.startArcade()">
+                    <div class="icon">🔥</div>
+                    <div class="text-group">
+                        <h3>ВЫЖИВАНИЕ</h3>
+                        <p>Аркадный режим</p>
+                    </div>
+                </div>
+            </div>
         </div>
-     </div>
+      </div>
         
 
     <!-- ЭКРАН 3: АРКАДА (REIGNS) -->
