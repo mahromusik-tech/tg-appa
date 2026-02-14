@@ -202,7 +202,10 @@ const Game = {
         this.showScreen('story');
         // Потом запускаем движок
         
+           // Потом запускаем движок
+        if (typeof StoryEngine !== 'undefined') {
             StoryEngine.start();
+        }
         
     }
 };
