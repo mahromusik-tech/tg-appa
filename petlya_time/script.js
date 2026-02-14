@@ -61,7 +61,11 @@ const Game = {
     currentCard: null, // Какая карточка сейчас на экране
 
     // ... (твои старые функции init и showScreen оставляем как есть) ...
-
+startStory: function() {
+        console.log("Запуск Истории...");
+        // Делегируем управление движку истории
+        StoryEngine.start();
+    },
     init: function() {
         // Настройка кнопки "Назад"
         tg.BackButton.onClick(() => {
@@ -222,11 +226,7 @@ makeChoice: function(side) {
         document.getElementById('res-sanity').innerText = RESOURCES.sanity;
     },
 
-    startStory: function() {
-        console.log("Запуск Истории...");
-        // Делегируем управление движку истории
-        StoryEngine.start();
-    },
+    
 
     checkGameOver: function() {
         let reason = "";
