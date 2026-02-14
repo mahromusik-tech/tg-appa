@@ -1,0 +1,148 @@
+:root {
+    /* Используем переменные Telegram для цветов */
+    --bg-color: var(--tg-theme-bg-color, #212121);
+    --text-color: var(--tg-theme-text-color, #ffffff);
+    --button-color: var(--tg-theme-button-color, #3390ec);
+    --button-text: var(--tg-theme-button-text-color, #ffffff);
+    --secondary-bg: var(--tg-theme-secondary-bg-color, #2f2f2f);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow: hidden; /* Чтобы не скроллилось */
+    height: 100vh;
+}
+
+/* Управление экранами */
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    flex-direction: column;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* МЕНЮ */
+.menu-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    gap: 20px;
+}
+
+h1 { font-size: 32px; margin-bottom: 0; }
+.subtitle { opacity: 0.7; margin-top: 5px; margin-bottom: 40px; }
+
+.btn-main {
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--button-color);
+    padding: 15px 30px;
+    border-radius: 12px;
+    width: 80%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.btn-main span { font-size: 12px; opacity: 0.6; margin-top: 5px; }
+
+/* ИСТОРИЯ */
+.story-ui {
+    margin-top: auto; /* Прижать вниз */
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+}
+
+.dialog-box {
+    background: var(--secondary-bg);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid var(--button-color);
+}
+
+.story-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-choice {
+    background: var(--button-color);
+    color: var(--button-text);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* АРКАДА */
+.resources {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+    background: var(--secondary-bg);
+}
+
+.card-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.card {
+    width: 80%;
+    height: 60%;
+    background: #fff; /* Карточка всегда светлая или по дизайну */
+    color: #000;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.card-image {
+    width: 100%;
+    height: 60%;
+    background: #ccc; /* Заглушка для картинки */
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.card-controls {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-swipe {
+    padding: 15px 30px;
+    border-radius: 50px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-swipe.left { background: #ff4d4d; color: white; }
+.btn-swipe.right { background: #4dff88; color: black;}
