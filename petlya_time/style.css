@@ -117,3 +117,30 @@ button {
     width: 100%;
     text-align: left;
 }
+
+/* ... (Оставьте стили из предыдущего ответа для body, screen, button и т.д.) ... */
+
+/* Добавляем стиль для мыслей */
+.thought-text {
+    font-style: italic;
+    color: #a0a0a0; /* Серый цвет для мыслей */
+}
+
+/* Стиль для имени героя, когда он думает */
+.thought-name {
+    color: #888 !important;
+}
+
+/* Статистика (для отладки или отображения игроку) */
+#stats-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    pointer-events: none;
+    color: #0f0;
+    font-family: monospace;
+}
