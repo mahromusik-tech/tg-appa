@@ -131,8 +131,168 @@ const script = {
         next: "scene3_start"
     },
 
-    // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+    // --- СЦЕНА 3: СБОРЫ (07:45) ---
     scene3_start: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Packing')",
+        speaker: "",
+        text: "Ты возвращаешься в комнату. Нужно собрать рюкзак. Тетради, ручка, та самая лаба по термеху, которую ты так и не доделал.",
+        next: "s3_dimon_date"
+    },
+    s3_dimon_date: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Packing')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Sitting",
+        text: "Слушай, Макс... А какой сегодня день? В смысле, число?",
+        next: "s3_hero_reply"
+    },
+    s3_hero_reply: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Packing')",
+        speaker: "Герой",
+        text: "Пятнадцатое. Октябрь.",
+        next: "s3_dimon_glitch"
+    },
+    s3_dimon_glitch: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Packing')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Confused",
+        text: "Странно. Мне казалось, вчера тоже было пятнадцатое. Я еще подумал: о, середина месяца, скоро стипуха... Ладно, забей. Глюки.",
+        choices: [
+            { 
+                text: "«Мне тоже так кажется, Димон. Очень странно»", 
+                next: "scene4_tram_stop", 
+                stats: { rel_dimon: 1, knowledge: 1 } 
+            },
+            { 
+                text: "«Это просто день сурка, привыкай»", 
+                next: "scene4_tram_stop", 
+                stats: {} 
+            },
+            { 
+                text: "Поторопить его: «Собирайся быстрее»", 
+                next: "scene4_tram_stop", 
+                stats: {} 
+            }
+        ]
+    },
+
+    // --- СЦЕНА 4: ОСТАНОВКА И ТРАМВАЙ (08:15) ---
+    scene4_tram_stop: {
+        bg: "url('https://via.placeholder.com/800x600/555/777?text=Bus+Stop')",
+        speaker: "",
+        text: "Вы стоите на остановке. Народу тьма. Рядом стоит женщина с маленьким ребенком, который капризничает и просит чупа-чупс.",
+        next: "s4_candy_thought"
+    },
+    s4_candy_thought: {
+        bg: "url('https://via.placeholder.com/800x600/555/777?text=Bus+Stop')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Сейчас она достанет из сумки мятную конфету, и он замолчит. Три... два... один.",
+        next: "s4_tram_arrives"
+    },
+    s4_tram_arrives: {
+        bg: "url('https://via.placeholder.com/800x600/555/777?text=Bus+Stop')",
+        speaker: "",
+        text: "Женщина достает конфету. Ребенок затихает. Трамвай №7 со скрипом подкатывает к остановке. Двери открываются с характерным шипением.",
+        choices: [
+            { 
+                text: "Пропустить всех вперед и зайти последним", 
+                next: "s4_tram_inside_observe", 
+                stats: { knowledge: 1 } 
+            },
+            { 
+                text: "Протиснуться к окну и смотреть на город", 
+                next: "s4_tram_inside_window", 
+                stats: {} 
+            }
+        ]
+    },
+    s4_tram_inside_observe: {
+        bg: "url('https://via.placeholder.com/800x600/444/666?text=Tram+Inside')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Люди двигаются как по команде. Шаг влево, шаг вправо — все синхронно, будто отрепетировано.",
+        next: "scene5_hall"
+    },
+    s4_tram_inside_window: {
+        bg: "url('https://via.placeholder.com/800x600/444/666?text=Tram+Window')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Город кажется декорацией. Машины проезжают те же самые, те же цвета... Нет, это бред. Номера я не запоминал.",
+        next: "scene5_hall"
+    },
+
+    // --- СЦЕНА 5: ХОЛЛ УНИВЕРСИТЕТА (08:45) ---
+    scene5_hall: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "",
+        text: "Ты проходишь через турникет. Охранник дядя Юра даже не смотрит на твой пропуск, он увлечен кроссвордом.",
+        next: "s5_guard_thought"
+    },
+    s5_guard_thought: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Слово из шести букв, 'единица времени'... Он сейчас спросит меня.",
+        next: "s5_guard_dialogue"
+    },
+    s5_guard_dialogue: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "Дядя Юра",
+        sprite: "https://via.placeholder.com/300x600/333/fff?text=Guard+Yura",
+        text: "Слышь, студент... Единица времени, шесть букв. Вторая 'е'.",
+        next: "s5_hero_answer"
+    },
+    s5_hero_answer: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "Герой",
+        text: "Секунда.",
+        next: "s5_guard_reply"
+    },
+    s5_guard_reply: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "Дядя Юра",
+        sprite: "https://via.placeholder.com/300x600/333/fff?text=Guard+Yura",
+        text: "Точно. Башка у тебя варит.",
+        next: "s5_meet_lena"
+    },
+    s5_meet_lena: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "",
+        text: "Ты идешь к лестнице и сталкиваешься с Леной. Она выглядит так, будто не спала вечность. Папка в её руках едва не рассыпается.",
+        next: "s5_lena_dialogue"
+    },
+    s5_lena_dialogue: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Tired",
+        text: "Макс! Стой. Ты лабу сделал? Я в своей запуталась, там в третьем пункте какая-то дичь получается. Если Аркадий увидит — он меня уничтожит.",
+        choices: [
+            { 
+                text: "«Давай сюда, у нас есть 10 минут. Исправим»", 
+                next: "scene6_lecture", 
+                stats: { rel_lena: 1, knowledge: 1 } 
+            },
+            { 
+                text: "«Лен, я сам в пролете. Давай надеяться на чудо»", 
+                next: "scene6_lecture", 
+                stats: {} 
+            },
+            { 
+                text: "«Слушай, а ты не чувствуешь, что мы это уже обсуждали?»", 
+                next: "s5_lena_suspicion", 
+                stats: { knowledge: 1 } 
+            }
+        ]
+    },
+    s5_lena_suspicion: {
+        bg: "url('https://via.placeholder.com/800x600/666/888?text=University+Hall')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Worried",
+        text: "Макс, ты бледный какой-то. Переучил? Пошли лучше на пару, пока не опоздали.",
+        next: "scene6_lecture"
+    }, 
+    // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+    scene6_lecture: {
         bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
         speaker: "Система",
         text: "Конец текущей части сценария. Жду продолжения...",
