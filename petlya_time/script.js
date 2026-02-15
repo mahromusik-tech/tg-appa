@@ -395,18 +395,177 @@ const script = {
     },
 
     // --- ЗАГЛУШКИ ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+        // --- СЦЕНА 8: РАЗВЕТВЛЕНИЕ (12:00) ---
+    
+    // Ветка А: Скучная лекция (короткий бридж)
     scene8_boring_lecture: {
-        bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
-        speaker: "Система",
-        text: "Ветка: Скучная лекция. Жду продолжения...",
-        isEnding: true,
-        title: "Пауза",
-        desc: "Пришли следующую часть сценария."
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Boring+Lecture')",
+        speaker: "",
+        text: "Пара тянулась бесконечно. Ты просто сидел и смотрел на часы, стрелки которых, казалось, застыли. В итоге ты решил сбежать в библиотеку, чтобы побыть в тишине.",
+        next: "scene9_library"
     },
+
+    // Ветка Б: Столовая (основной сюжет)
     scene8_canteen: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen+Queue')",
+        speaker: "",
+        text: "Ты стоишь в очереди. Гул голосов, звон вилок. Перед тобой — тот же парень в синей толстовке, что и в трамвае. У него на рюкзаке оторван один значок.",
+        next: "s8_guy_prediction"
+    },
+    s8_guy_prediction: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen+Queue')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Он сейчас закажет двойную порцию пюре и чай без сахара. И у него не хватит мелочи.",
+        next: "s8_guy_action"
+    },
+    s8_guy_action: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen+Queue')",
+        speaker: "Парень",
+        sprite: "https://via.placeholder.com/300x600/333/88f?text=Guy+Blue+Hoodie",
+        text: "Мне пюре... двойное. И чай. Без сахара. *Копается в кармане* Ой, подождите, кажется, я рубль потерял...",
+        next: "s8_realization"
+    },
+    s8_realization: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen+Queue')",
+        speaker: "",
+        text: "Тебя прошибает холодный пот. Это уже не дежавю. Это сценарий.",
+        choices: [
+            { 
+                text: "Протянуть ему рубль молча", 
+                next: "scene9_library", 
+                stats: { sanity: -1 } // Чувство призрака
+            },
+            { 
+                text: "Развернуться и выйти без еды", 
+                next: "scene9_library", 
+                stats: { sanity: -1 } // Голод и тревога
+            },
+            { 
+                text: "Схватить Димона: «Смотри! Он сейчас скажет!»", 
+                next: "s8_dimon_reaction", 
+                stats: { rel_dimon: -1 } 
+            }
+        ]
+    },
+    s8_dimon_reaction: {
+        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen+Queue')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Shocked",
+        text: "Макс, ты чего? Все теряют мелочь. Отпусти плечо, больно же.",
+        next: "scene9_library"
+    },
+
+    // --- СЦЕНА 9: БИБЛИОТЕКА (13:00) ---
+    scene9_library: {
+        bg: "url('https://via.placeholder.com/800x600/332/221?text=Library')",
+        speaker: "",
+        text: "Ты решаешь спрятаться здесь. Огромный зал, высокие окна, тишина. Здесь время кажется более стабильным.",
+        next: "s9_newspapers"
+    },
+    s9_newspapers: {
+        bg: "url('https://via.placeholder.com/800x600/332/221?text=Library')",
+        speaker: "",
+        text: "Ты листаешь подшивки газет. 15 октября прошлого года. 15 октября позапрошлого... Везде обычные новости. Но вдруг ты замечаешь на полях книги пометку карандашом.",
+        next: "s9_note"
+    },
+    s9_note: {
+        bg: "url('https://via.placeholder.com/800x600/332/221?text=Library+Book')",
+        speaker: "Надпись",
+        text: "«Оно не остановится, пока ты не перестанешь ждать завтра».",
+        choices: [
+            { 
+                text: "Стереть пометку ластиком", 
+                next: "scene10_park", 
+                stats: {} 
+            },
+            { 
+                text: "Дописать ниже: «Кто это написал?»", 
+                next: "scene10_park", 
+                stats: { knowledge: 1 } 
+            },
+            { 
+                text: "Оглядеться вокруг", 
+                next: "s9_see_teacher", 
+                stats: { knowledge: 1 } 
+            }
+        ]
+    },
+    s9_see_teacher: {
+        bg: "url('https://via.placeholder.com/800x600/332/221?text=Library')",
+        speaker: "",
+        text: "Ты замечаешь Аркадия Петровича в другом конце зала. Он не читает, он просто смотрит в окно на падающие листья.",
+        next: "scene10_park"
+    },
+
+    // --- СЦЕНА 10: ПАРК (16:00) ---
+    scene10_park: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "",
+        text: "Ты идешь через парк. Ты специально выбрал другую тропинку, не ту, по которой шел утром.",
+        next: "s10_thought"
+    },
+    s10_thought: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Если я изменю путь, мир должен измениться. Я не встречу ту собаку.",
+        next: "s10_dog_bark"
+    },
+    s10_dog_bark: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "",
+        text: "*Гав! Гав!* Из-за кустов выбегает та самая рыжая собака с обрывком поводка. Она пробегает мимо, гавкает дважды и несется к забору.",
+        next: "s10_panic"
+    },
+    s10_panic: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Нет... Я же пошел другой дорогой! Как она здесь оказалась?",
+        next: "s10_alice"
+    },
+    s10_alice: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "",
+        text: "Ты останавливаешься. На скамейке неподалеку сидит девушка. Она рисует в блокноте. Ты видишь её профиль — она кажется очень спокойной.",
+        choices: [
+            { 
+                text: "Спросить про собаку", 
+                next: "s10_alice_talk", 
+                stats: { rel_alice: 1 } // Новый стат (нужно добавить в gameState, если хочешь отслеживать)
+            },
+            { 
+                text: "Сесть рядом и наблюдать", 
+                next: "s10_alice_watch", 
+                stats: { knowledge: 1 } 
+            },
+            { 
+                text: "Пройти мимо", 
+                next: "scene11_dorm_evening", 
+                stats: {} 
+            }
+        ]
+    },
+    s10_alice_talk: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "Алиса",
+        sprite: "https://via.placeholder.com/300x600/f8f/000?text=Alice",
+        text: "Она только что пробежала. А что?",
+        next: "scene11_dorm_evening"
+    },
+    s10_alice_watch: {
+        bg: "url('https://via.placeholder.com/800x600/242/131?text=Autumn+Park')",
+        speaker: "",
+        text: "Ты замечаешь, что она рисует не деревья, а странные геометрические фигуры, похожие на часовой механизм.",
+        next: "scene11_dorm_evening"
+    },
+
+    // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+    scene11_dorm_evening: {
         bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
         speaker: "Система",
-        text: "Ветка: Столовая. Жду продолжения...",
+        text: "Конец текущей части. Вечер в общаге...",
         isEnding: true,
         title: "Пауза",
         desc: "Пришли следующую часть сценария."
