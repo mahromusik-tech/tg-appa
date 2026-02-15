@@ -292,10 +292,121 @@ const script = {
         next: "scene6_lecture"
     }, 
     // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+      // --- СЦЕНА 6: ЛЕКЦИЯ (09:00) ---
     scene6_lecture: {
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Lecture+Hall')",
+        speaker: "",
+        text: "Ты сидишь на третьем ряду. Димон рядом рисует в тетради каких-то монстров. Лена впереди судорожно перелистывает конспекты.",
+        next: "s6_teacher_enter"
+    },
+    s6_teacher_enter: {
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Lecture+Hall')",
+        speaker: "",
+        text: "*Скрип двери* Входит Аркадий Петрович. Он не смотрит на студентов, кладет старый кожаный портфель на стол и медленно достает очки.",
+        next: "s6_teacher_speech"
+    },
+    s6_teacher_speech: {
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Lecture+Hall')",
+        speaker: "Аркадий Петрович",
+        sprite: "https://via.placeholder.com/300x600/888/fff?text=Teacher",
+        text: "Тишина. Сегодня мы разберем динамику систем. Тема сложная, так что советую включить остатки мозга.",
+        next: "s6_chalk_thought"
+    },
+    s6_chalk_thought: {
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Lecture+Hall')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Он сейчас уронит мел. Прямо сейчас.",
+        next: "s6_chalk_fall"
+    },
+    s6_chalk_fall: {
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Lecture+Hall')",
+        speaker: "",
+        text: "*Хруст* Кусочек мела отлетает и катится по полу. Профессор даже не вздрагивает.",
+        next: "s6_question"
+    },
+    s6_question: {
+        bg: "url('https://via.placeholder.com/800x600/444/555?text=Lecture+Hall')",
+        speaker: "Аркадий Петрович",
+        sprite: "https://via.placeholder.com/300x600/888/fff?text=Teacher",
+        text: "Кто-нибудь может сказать мне... что такое инерция? Не из учебника, а своими словами.",
+        choices: [
+            { 
+                text: "Выкрикнуть: «Это когда ты не можешь остановиться, даже если хочешь»", 
+                next: "s7_corridor", 
+                stats: { sanity: -1, knowledge: 1 } 
+            },
+            { 
+                text: "Поднять руку и дать сухое определение", 
+                next: "s7_corridor", 
+                stats: {} 
+            },
+            { 
+                text: "Промолчать и записать всё, что произошло с утра", 
+                next: "s7_corridor", 
+                stats: { knowledge: 1 } 
+            }
+        ]
+    },
+
+    // --- СЦЕНА 7: КОРИДОР ПОСЛЕ ПАРЫ (10:30) ---
+    s7_corridor: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor+Crowd')",
+        speaker: "",
+        text: "Ты выходишь из аудитории. Лена догоняет тебя, она выглядит чуть более расслабленной, но всё еще дерганой.",
+        next: "s7_lena_talk"
+    },
+    s7_lena_talk: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor+Crowd')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena",
+        text: "Слушай, Макс... Ты видел, как он на тебя посмотрел? Странный он сегодня. Кстати, ты идешь на вторую пару? Говорят, там будет проверка из деканата.",
+        next: "s7_hero_thought"
+    },
+    s7_hero_thought: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor+Crowd')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Вторая пара... Я не помню её. В моем 'предчувствии' её просто нет. Как будто этот кусок дня вырезан.",
+        choices: [
+            { 
+                text: "«Пойду, надо отметиться»", 
+                next: "scene8_boring_lecture", 
+                stats: {} 
+            },
+            { 
+                text: "«Нет, пойду в столовую, есть охота»", 
+                next: "scene8_canteen", 
+                stats: {} 
+            },
+            { 
+                text: "«Лен, ты не замечала, что люди вокруг повторяются?»", 
+                next: "s7_lena_worried", 
+                stats: { rel_lena: 1 } 
+            }
+        ]
+    },
+    s7_lena_worried: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor+Crowd')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Worried",
+        text: "Макс... Ты меня пугаешь. Может, тебе к врачу? Или просто выспаться?",
+        next: "scene8_canteen" // После разговора логично пойти поесть или разойтись
+    },
+
+    // --- ЗАГЛУШКИ ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+    scene8_boring_lecture: {
         bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
         speaker: "Система",
-        text: "Конец текущей части сценария. Жду продолжения...",
+        text: "Ветка: Скучная лекция. Жду продолжения...",
+        isEnding: true,
+        title: "Пауза",
+        desc: "Пришли следующую часть сценария."
+    },
+    scene8_canteen: {
+        bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
+        speaker: "Система",
+        text: "Ветка: Столовая. Жду продолжения...",
         isEnding: true,
         title: "Пауза",
         desc: "Пришли следующую часть сценария."
