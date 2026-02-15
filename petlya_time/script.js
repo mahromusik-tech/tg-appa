@@ -9,160 +9,136 @@ let gameState = {
     rel_lena: 0     // Отношения с Леной
 };
 
-// --- СЦЕНАРИЙ ---
 const script = {
-    // --- СЦЕНА 1: ПРОБУЖДЕНИЕ ---
+    // --- СЦЕНА 1: ПРОБУЖДЕНИЕ (07:00) ---
     start: {
-        bg: "url('https://via.placeholder.com/800x600/333/fff?text=Dorm+Room')", // Общага
-        speaker: "Герой (мысли)",
-        isThought: true, // Флаг: это мысли
-        text: "7:00. Голова как свинцом налита. Кажется, я видел этот сон... или это было вчера? 15 октября. Среда.",
-        next: "scene1_dimon"
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')", // Замени на img/dorm.jpg
+        speaker: "",
+        text: "Ты открываешь глаза. Потолок в желтых пятнах от старой протечки. Справа — стена с плакатом какой-то группы. Ты чувствуешь странную тяжесть в затылке, как будто вчера была бурная вечеринка.",
+        next: "s1_thoughts"
     },
-    scene1_dimon: {
-        bg: "url('https://via.placeholder.com/800x600/333/fff?text=Dorm+Room')",
+    s1_thoughts: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "7:00. Среда. 15 октября. Почему у меня такое чувство, что я уже видел эту трещину на потолке именно при таком освещении? Солнце падает на подоконник ровно под тем же углом...",
+        next: "s1_dimon_wake"
+    },
+    s1_dimon_wake: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
         speaker: "Димон",
-        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon",
-        text: "Макс, выруби его... Кстати, ты не видел мой зарядник? Вчера на столе лежал.",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Sleepy",
+        text: "*Скрип панцирной сетки* М-м-макс... выруби эту шарманку. Мозг сейчас взорвется.",
+        next: "s1_dimon_action"
+    },
+    s1_dimon_action: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "",
+        text: "Димон свешивает руку с верхней полки, пытаясь нащупать свой телефон на полу.",
+        next: "s1_dimon_charger"
+    },
+    s1_dimon_charger: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Sleepy",
+        text: "Черт... Опять. Макс, глянь, я зарядку не вижу. Вчера же втыкал в розетку, точно помню.",
         choices: [
             { 
-                text: "Он под тумбочкой, Димон", 
-                next: "scene2_start", 
-                stats: { knowledge: 1, rel_dimon: 1 } // Влияние на статы
+                text: "Встать и молча найти зарядку под тумбочкой", 
+                next: "s2_corridor", 
+                stats: { knowledge: 1, rel_dimon: 1 } // Ты знаешь, где она (Знание+1)
             },
             { 
-                text: "Ищи сам, я не нанимался", 
-                next: "scene2_start", 
+                text: "«Сам ищи, я в душ»", 
+                next: "s2_corridor", 
                 stats: { rel_dimon: -1 } 
             },
             { 
-                text: "Молча встать и пойти в душ", 
-                next: "scene2_start", 
-                stats: {} 
-            }
-        ]
-    },
-
-    // --- СЦЕНА 2: КОРИДОР ---
-    scene2_start: {
-        bg: "url('https://via.placeholder.com/800x600/222/fff?text=Corridor')", // Коридор
-        speaker: "",
-        text: "*В умывальнике парень из соседней комнаты задевает тебя плечом.*",
-        next: "scene2_thought"
-    },
-    scene2_thought: {
-        bg: "url('https://via.placeholder.com/800x600/222/fff?text=Corridor')",
-        speaker: "Герой (мысли)",
-        isThought: true,
-        text: "Сейчас он уронит мыльницу. Раз, два... (Стук пластика). Точно. Это просто дежавю. Нужно умыться ледяной водой.",
-        choices: [
-            { 
-                text: "Ущипнуть себя за руку до синяка", 
-                next: "scene3_start", 
+                text: "Лежать и смотреть в потолок", 
+                next: "s1_ignore_alarm", 
                 stats: { sanity: -1 } 
-            },
-            { 
-                text: "Смотреть в зеркало и считать до десяти", 
-                next: "scene3_start", 
-                stats: { sanity: 1 } 
             }
         ]
     },
-
-    // --- СЦЕНА 3: КРЫЛЬЦО ---
-    scene3_start: {
-        bg: "url('https://via.placeholder.com/800x600/555/fff?text=University+Porch')", // Универ
-        speaker: "Лена",
-        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena",
-        text: "Макс! Ты лабу сделал? Аркадий сегодня в ярости, он уже троих отправил на пересдачу.",
-        choices: [
-            { 
-                text: "Дай посмотрю твою, я помогу исправить ошибку", 
-                next: "scene4_start", 
-                stats: { rel_lena: 1, knowledge: 1 } 
-            },
-            { 
-                text: "Прости, я сам по нулям. Пойду кофе возьму", 
-                next: "scene4_start", 
-                stats: { rel_lena: -1 } 
-            }
-        ]
+    s1_ignore_alarm: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "",
+        text: "Будильник орет еще минуту, пока Димон не запускает в него подушкой. Звон в ушах остается.",
+        next: "s2_corridor"
     },
 
-    // --- СЦЕНА 4: ЛЕКЦИЯ ---
-    scene4_start: {
-        bg: "url('https://via.placeholder.com/800x600/444/fff?text=Lecture+Hall')", // Лекция
-        speaker: "Аркадий Петрович",
-        sprite: "https://via.placeholder.com/300x600/888/fff?text=Teacher",
-        text: "Кто желает к доске? Или мне самому выбрать жертву?",
-        next: "scene4_thought"
+    // --- СЦЕНА 2: КОРИДОР И УМЫВАЛЬНИК (07:15) ---
+    s2_corridor: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor')", // Замени на img/corridor.jpg
+        speaker: "",
+        text: "Ты выходишь в коридор. Из-под двери 305-й доносится запах жареной картошки. Навстречу идет староста этажа, тетя Валя, с ведром и шваброй.",
+        next: "s2_valya"
     },
-    scene4_thought: {
-        bg: "url('https://via.placeholder.com/800x600/444/fff?text=Lecture+Hall')",
+    s2_valya: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor')",
+        speaker: "Тетя Валя",
+        sprite: "https://via.placeholder.com/300x600/555/fff?text=Aunt+Valya",
+        text: "Опять в тапочках на босу ногу? Заболеешь, Максимка, а мне потом отвечай.",
+        next: "s2_thoughts"
+    },
+    s2_thoughts: {
+        bg: "url('https://via.placeholder.com/800x600/111/444?text=Corridor')",
         speaker: "Герой (мысли)",
         isThought: true,
-        text: "Он сейчас вызовет Кузнецова. Я помню, как тот позорился.",
+        text: "Она говорит это каждое утро. Или только сегодня? Я могу предсказать её следующий вздох.",
+        next: "s2_washroom"
+    },
+    s2_washroom: {
+        bg: "url('https://via.placeholder.com/800x600/000/555?text=Washroom')", // Замени на img/washroom.jpg
+        speaker: "",
+        text: "Ты заходишь в умывальник. Ряд раковин, над ними — мутные зеркала. Вода в кране фыркает и выплевывает струю ржавчины, прежде чем пойти чистой.",
         choices: [
             { 
-                text: "Вызваться самому и решить задачу", 
-                next: "scene5_start", 
+                text: "Долго умываться ледяной водой", 
+                next: "s2_ice_water", 
+                stats: {} 
+            },
+            { 
+                text: "Рассматривать свое отражение", 
+                next: "s2_mirror", 
                 stats: { knowledge: 1 } 
             },
             { 
-                text: "Сидеть тихо", 
-                next: "scene5_start", 
-                stats: {} // Кузнецова унижают
+                text: "Заговорить с парнем у соседней раковины", 
+                next: "s2_soap_catch", 
+                stats: { sanity: 1 } // Успешное действие повышает рассудок
             }
         ]
     },
 
-    // --- СЦЕНА 5: ОБЕД ---
-    scene5_start: {
-        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen')", // Столовая
-        speaker: "Герой (мысли)",
-        isThought: true,
-        text: "Я знаю каждое его слово. Сейчас он скажет про баланс классов...",
-        next: "scene5_dimon"
+    // --- РАЗВЕТВЛЕНИЯ СЦЕНЫ 2 ---
+    s2_ice_water: {
+        bg: "url('https://via.placeholder.com/800x600/000/555?text=Washroom')",
+        speaker: "",
+        text: "Кожа немеет, но странное чувство дежавю не уходит. Оно под кожей.",
+        next: "scene3_start" // Сюда привяжем следующую часть
     },
-    scene5_dimon: {
-        bg: "url('https://via.placeholder.com/800x600/664/fff?text=Canteen')",
-        speaker: "Димон",
-        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon",
-        text: "...и вот баланс классов они вообще убили, прикинь?",
-        choices: [
-            { 
-                text: "Перебить его и закончить фразу за него", 
-                next: "scene6_ending_demo", // Временная концовка
-                stats: { sanity: -1 } 
-            },
-            { 
-                text: "Сказать, что тебе плохо, и уйти в библиотеку", 
-                next: "scene6A_library", 
-                stats: {} 
-            },
-            { 
-                text: "Предложить прогулять пары в парке", 
-                next: "scene6B_park", 
-                stats: {} 
-            }
-        ]
+    s2_mirror: {
+        bg: "url('https://via.placeholder.com/800x600/000/555?text=Washroom')",
+        speaker: "",
+        text: "Ты всматриваешься в свои зрачки. Кажется, что в них застыло какое-то знание, которое ты еще не можешь сформулировать.",
+        next: "scene3_start"
+    },
+    s2_soap_catch: {
+        bg: "url('https://via.placeholder.com/800x600/000/555?text=Washroom')",
+        speaker: "",
+        text: "Ты молча протягиваешь руку и ловишь мыльницу за секунду до того, как она упадет. Парень смотрит на тебя с открытым ртом.",
+        next: "scene3_start"
     },
 
-    // --- ЗАГЛУШКИ ДЛЯ СЛЕДУЮЩИХ СЦЕН ---
-    scene6_ending_demo: {
+    // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+    scene3_start: {
+        bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
+        speaker: "Система",
+        text: "Конец текущей части сценария. Жду продолжения...",
         isEnding: true,
-        title: "Конец демо",
-        desc: "Вы напугали Димона. День продолжается..."
-    },
-    scene6A_library: {
-        isEnding: true,
-        title: "Ветка Библиотеки",
-        desc: "Вы ушли в тишину книг. (Продолжение следует)"
-    },
-    scene6B_park: {
-        isEnding: true,
-        title: "Ветка Парка",
-        desc: "Вы решили подышать воздухом. (Продолжение следует)"
+        title: "Пауза",
+        desc: "Пришли следующую часть сценария."
     }
 };
 
