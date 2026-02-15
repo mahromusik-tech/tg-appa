@@ -562,13 +562,315 @@ const script = {
     },
 
     // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
-    scene11_dorm_evening: {
+       // --- СЦЕНА 11: МАГАЗИН (18:00) ---
+    scene11_dorm_evening: { // Переименовал ключ для совместимости, но логически это магазин
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "",
+        text: "Ты заходишь в магазин. Яркий люминесцентный свет, гудение холодильников. На кассе — та же женщина в красном пальто, которую ты мельком видел утром.",
+        next: "s11_argument"
+    },
+    s11_argument: {
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "Женщина",
+        sprite: "https://via.placeholder.com/300x600/a33/fff?text=Woman+Red+Coat",
+        text: "Вчера оно стоило на пять рублей дешевле! Это грабеж!",
+        next: "s11_cashier_reply"
+    },
+    s11_cashier_reply: {
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "Кассирша",
+        sprite: "https://via.placeholder.com/300x600/555/fff?text=Cashier",
+        text: "Женщина, ценники поменяли ночью. Берите или уходите.",
+        next: "s11_prediction"
+    },
+    s11_prediction: {
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Она сейчас всплеснет руками, заденет стойку с жвачкой, и та рассыплется. Я не хочу на это смотреть.",
+        choices: [
+            { 
+                text: "Опередить её и поправить стойку", 
+                next: "s11_fix_stand", 
+                stats: { sanity: 1 } // Ты смог изменить реальность
+            },
+            { 
+                text: "Быстро купить и уйти", 
+                next: "s11_leave_fast", 
+                stats: { sanity: -1 } // Чувство безысходности
+            },
+            { 
+                text: "Спросить кассиршу про дату", 
+                next: "s11_ask_date", 
+                stats: { knowledge: 1 } 
+            }
+        ]
+    },
+    s11_fix_stand: {
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "",
+        text: "Женщина замирает, её рука проходит в сантиметре от стоек. Она смотрит на тебя как на сумасшедшего. Ты изменил мелочь, но сердце колотится так, будто ты спас мир.",
+        next: "scene12_kitchen"
+    },
+    s11_leave_fast: {
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "",
+        text: "Ты вылетаешь из магазина, преследуемый звуком рассыпающихся коробочек. Всё равно случилось.",
+        next: "scene12_kitchen"
+    },
+    s11_ask_date: {
+        bg: "url('https://via.placeholder.com/800x600/888/aaa?text=Grocery+Store')",
+        speaker: "Кассирша",
+        sprite: "https://via.placeholder.com/300x600/555/fff?text=Cashier",
+        text: "Пятнадцатое, парень. И завтра будет шестнадцатое, если доживем.",
+        next: "scene12_kitchen"
+    },
+
+    // --- СЦЕНА 12: УЖИН В ОБЩАГЕ (19:30) ---
+    scene12_kitchen: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "",
+        text: "Ты стоишь у плиты, пытаясь сварить пельмени. Рядом Димон увлеченно рассказывает кому-то по телефону, как он «почти выбил редкий шмот».",
+        next: "s12_dimon_phone"
+    },
+    s12_dimon_phone: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Phone",
+        text: "Да я тебе говорю, шанс был один на миллион! И тут — бац, сервак лаганул...",
+        next: "s12_hero_thought"
+    },
+    s12_hero_thought: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Один на миллион. Если бы ты знал, Димон, что наш шанс проснуться завтра — ноль.",
+        next: "s12_lena_enter"
+    },
+    s12_lena_enter: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Cozy",
+        text: "Макс, ты весь день какой-то дерганый. На тебе лица нет. Держи, я заварила с мятой, тебе надо расслабиться. Завтра ведь важный день, помнишь?",
+        choices: [
+            { 
+                text: "«Лен, а что если завтра не наступит?»", 
+                next: "s12_lena_scared", 
+                stats: { rel_lena: 1 } // Искренность сближает
+            },
+            { 
+                text: "«Спасибо, Лен. Я просто переутомился»", 
+                next: "s12_tea_calm", 
+                stats: { rel_lena: 1, sanity: 1 } 
+            },
+            { 
+                text: "Спросить про Алису с дизайна", 
+                next: "s12_ask_alice", 
+                stats: { knowledge: 1 } 
+            }
+        ]
+    },
+    s12_lena_scared: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Worried",
+        text: "Тогда мне не придется сдавать зачет Аркадию. Звучит как план, но ты меня пугаешь.",
+        next: "scene13_night"
+    },
+    s12_tea_calm: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "",
+        text: "Ты берешь кружку. Тепло чая кажется единственной реальной вещью в этом мире.",
+        next: "scene13_night"
+    },
+    s12_ask_alice: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Cozy",
+        text: "С дизайна? Их там сотни. А что, понравилась?",
+        next: "scene13_night"
+    },
+
+    // --- ЗАГЛУШКА ДЛЯ СЛЕДУЮЩЕЙ ЧАСТИ ---
+    scene13_night: {
         bg: "url('https://via.placeholder.com/800x600/000/000?text=To+Be+Continued')",
         speaker: "Система",
-        text: "Конец текущей части. Вечер в общаге...",
+        text: "Конец текущей части. Ночь и финал Дня 1...",
         isEnding: true,
         title: "Пауза",
         desc: "Пришли следующую часть сценария."
+    }, 
+    // --- СЦЕНА 12: УЖИН В ОБЩАГЕ (19:30) ---
+    scene12_kitchen: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "",
+        text: "Ты стоишь у плиты, пытаясь сварить пельмени. Рядом Димон увлеченно рассказывает кому-то по телефону, как он «почти выбил редкий шмот».",
+        next: "s12_dimon_phone"
+    },
+    s12_dimon_phone: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Phone",
+        text: "Да я тебе говорю, шанс был один на миллион! И тут — бац, сервак лаганул...",
+        next: "s12_hero_thought"
+    },
+    s12_hero_thought: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Один на миллион. Если бы ты знал, Димон, что наш шанс проснуться завтра — ноль.",
+        next: "s12_lena_enter"
+    },
+    s12_lena_enter: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Cozy",
+        text: "Макс, ты весь день какой-то дерганый. На тебе лица нет. Держи, я заварила с мятой, тебе надо расслабиться. Завтра ведь важный день, помнишь?",
+        choices: [
+            { 
+                text: "«Лен, а что если завтра не наступит?»", 
+                next: "s12_lena_scared", 
+                stats: { rel_lena: 1 } 
+            },
+            { 
+                text: "«Спасибо, Лен. Я просто переутомился»", 
+                next: "s12_tea_calm", 
+                stats: { rel_lena: 1, sanity: 1 } 
+            },
+            { 
+                text: "Спросить про Алису с дизайна", 
+                next: "s12_ask_alice", 
+                stats: { knowledge: 1 } 
+            }
+        ]
+    },
+    s12_lena_scared: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Worried",
+        text: "Тогда мне не придется сдавать зачет Аркадию. Звучит как план, но ты меня пугаешь.",
+        next: "scene13_night"
+    },
+    s12_tea_calm: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "",
+        text: "Ты берешь кружку. Тепло чая кажется единственной реальной вещью в этом мире.",
+        next: "scene13_night"
+    },
+    s12_ask_alice: {
+        bg: "url('https://via.placeholder.com/800x600/443/221?text=Dorm+Kitchen')",
+        speaker: "Лена",
+        sprite: "https://via.placeholder.com/300x600/f44/fff?text=Lena+Cozy",
+        text: "С дизайна? Их там сотни. А что, понравилась?",
+        next: "scene13_night"
+    },
+
+    // --- СЦЕНА 13: ПРЕДЧУВСТВИЕ ФИНАЛА (22:00) ---
+    scene13_night: {
+        bg: "url('https://via.placeholder.com/800x600/000/112?text=Night+Room')",
+        speaker: "",
+        text: "Димон уже сопит на своей полке. Ты лежишь, уставившись в окно. Фонарь на улице мигает с равными интервалами: три коротких, один длинный.",
+        next: "s13_code_thought"
+    },
+    s13_code_thought: {
+        bg: "url('https://via.placeholder.com/800x600/000/112?text=Night+Room')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Я никогда не замечал этого ритма. Это похоже на код. Или на сбой. Если я сейчас не усну, я увижу, как сменяется дата. Я увижу, как мир... перезагружается?",
+        next: "s13_sleep_struggle"
+    },
+    s13_sleep_struggle: {
+        bg: "url('https://via.placeholder.com/800x600/000/112?text=Night+Room')",
+        speaker: "",
+        text: "Ты чувствуешь, как веки становятся тяжелыми. Организм предательски требует сна, несмотря на весь твой ужас.",
+        choices: [
+            { 
+                text: "Пытаться не спать любой ценой", 
+                next: "s13_reality_melt", 
+                stats: { sanity: -1 } 
+            },
+            { 
+                text: "Записать последнюю фразу в блокнот", 
+                next: "s13_write_note", 
+                stats: { knowledge: 1, sanity: 1 } 
+            },
+            { 
+                text: "Просто закрыть глаза и сдаться", 
+                next: "s13_give_up", 
+                stats: {} 
+            }
+        ]
+    },
+    s13_reality_melt: {
+        bg: "url('https://via.placeholder.com/800x600/000/112?text=Night+Room')",
+        speaker: "",
+        text: "Ты щипаешь себя, ходишь по комнате. Но в 23:59 реальность начинает плыть, как расплавленный воск.",
+        next: "scene14_truth"
+    },
+    s13_write_note: {
+        bg: "url('https://via.placeholder.com/800x600/000/112?text=Night+Room')",
+        speaker: "Блокнот",
+        text: "«Меня зовут Макс, сегодня 15 октября, и я не сумасшедший».",
+        next: "scene14_truth"
+    },
+    s13_give_up: {
+        bg: "url('https://via.placeholder.com/800x600/000/112?text=Night+Room')",
+        speaker: "",
+        text: "Ты проваливаешься в темноту с надеждой, что утром увидишь на телефоне '16 октября'.",
+        next: "scene14_truth"
+    },
+
+    // --- СЦЕНА 14: МОМЕНТ ИСТИНЫ (00:00) ---
+    scene14_truth: {
+        bg: "#000", // Черный экран
+        speaker: "",
+        text: "В какой-то момент тебе кажется, что сердце остановилось. Звуки города исчезают. Нет ветра, нет гула машин, нет дыхания Димона. Есть только ты и тиканье часов, которое внезапно обрывается.",
+        next: "s14_now"
+    },
+    s14_now: {
+        bg: "#000",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "Сейчас...",
+        next: "scene15_day2_start"
+    },
+
+    // --- СЦЕНА 15: ДЕНЬ 2. ГНЕВ (07:00) ---
+    scene15_day2_start: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "",
+        text: "*Резкая, дребезжащая мелодия будильника* Ты подрываешься на кровати. Сердце колотится в горле. Ты хватаешь телефон.",
+        next: "s15_phone_screen"
+    },
+    s15_phone_screen: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Phone+Screen+15+Oct')",
+        speaker: "Экран телефона",
+        text: "15 октября. 07:00.",
+        next: "s15_dimon_loop"
+    },
+    s15_dimon_loop: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "Димон",
+        sprite: "https://via.placeholder.com/300x600/44f/fff?text=Dimon+Sleepy",
+        text: "*Скрип кровати* М-м-макс... выруби эту шарманку. Кстати... ты не видел мой зарядник?",
+        next: "s15_hero_rage"
+    },
+    s15_hero_rage: {
+        bg: "url('https://via.placeholder.com/800x600/222/333?text=Dorm+Room+Morning')",
+        speaker: "Герой (мысли)",
+        isThought: true,
+        text: "НЕТ!!!",
+        next: "day2_intro" // Заглушка для следующего дня
+    },
+
+    // --- ЗАГЛУШКА ДЛЯ ДНЯ 2 ---
+    day2_intro: {
+        bg: "url('https://via.placeholder.com/800x600/000/000?text=Day+2+Start')",
+        speaker: "Система",
+        text: "День 1 завершен. Добро пожаловать в День 2: Гнев.",
+        isEnding: true,
+        title: "Конец Дня 1",
+        desc: "Петля замкнулась. Жду сценарий второго дня."
     }
 };
 
