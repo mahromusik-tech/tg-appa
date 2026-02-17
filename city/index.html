@@ -1,57 +1,505 @@
-<!DOCTYPE html>
-<html lang="en">
+<<!DOCTYPE html>
+<html lang="ru">
 <head>
-      <meta charset="UTF-8">
-      <title>TG City Builder Strategy</title>
-      <link rel="stylesheet" href="styles.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Farm Arcade</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --bg: #1a1a2e;
+            --panel: #16213e;
+            --accent: #e94560;
+            --gold: #ffd700;
+            --text: #fff;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Fredoka One', cursive, sans-serif; /* Мультяшный шрифт */
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Эффект тряски экрана при комбо */
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        /* Верхняя панель */
+        .header {
+            padding: 15px;
+            background: var(--panel);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 24px; color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+        /* Погодный индикатор */
+        .weather-bar {
+            height: 30px;
+            background: #0f3460;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #4cc9f0;
+            transition: background 0.5s;
+        }
+        .weather-active { background: #e94560; color: white; animation: pulse 1s infinite; }
+
+        /* Игровое поле */
+        .game-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 90%;
+            max-width: 350px;
+        }
+
+        .tile {
+            aspect-ratio: 1;
+            background: #2a2a40;
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            border-bottom: 4px solid #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+        }
+        .tile:active { transform: translateY(4px); border-bottom: 0; }
+        
+        .tile.ready { background: #4cc9f0; box-shadow: 0 0 15px #4cc9f0; }
+        .tile.golden { background: linear-gradient(45deg, #ffd700, #ffaa00); animation: glow 0.5s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 10px #ffd700; } to { box-shadow: 0 0 25px #ffd700; } }
+
+        .progress-ring {
+            position: absolute; top: 5px; right: 5px; width: 20px; height: 20px;
+            border-radius: 50%; border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Комбо счетчик */
+        .combo-container {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            text-align: center;
+            z-index: 20;
+        }
+        .combo-text { font-size: 40px; color: #ff0055; text-shadow: 2px 2px 0 #fff; transform: rotate(-10deg); }
+        .combo-timer { width: 100%; height: 6px; background: #333; margin-top: 5px; border-radius: 3px; }
+        .combo-fill { height: 100%; background: #ff0055; width: 100%; }
+
+        /* Нижняя панель */
+        .controls {
+            background: var(--panel);
+            padding: 15px;
+            border-radius: 20px 20px 0 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .btn {
+            background: #2a2a40;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn.active { background: var(--accent); }
+        .btn:disabled { opacity: 0.5; }
+
+        /* Частицы */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: flyUp 1s ease-out forwards;
+            font-weight: bold;
+            font-size: 20px;
+            z-index: 100;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-100px) scale(1.5); opacity: 0; } }
+
+    </style>
 </head>
 <body>
-      <header>
-          <h1>Городская стратегия</h1>
-      </header>
-      <nav>
-          <ul>
-              <li><a href="#" onclick="openTab('build-menu')">Строительство</a></li>
-              <li><a href="#" onclick="openTab('resource-panel')">Ресурсы</a></li>
-              <li><a href="#" onclick="openTab('goals-panel')">Цели</a></li>
-          </ul>
-      </nav>
-      <main>
-          <section id="build-menu" style="display:none;">
-              <h2>Меню строительства:</h2>
-              <p>Здесь можно построить новые здания.</p>
-              <button onclick="buildBuilding('lumbermill')">Лесопилка</button>
-              <button onclick="buildBuilding('quarry')">Каменоломня</button>
-              <button onclick="buildBuilding('farm')">Ферма</button>
-              <button onclick="buildBuilding('school')">Школа</button>
-              <button onclick="buildBuilding('factory')">Завод</button>
-              <button onclick="buildBuilding('bank')">Банк</button>
-          </section>
-          <section id="resource-panel" style="display:none;">
-              <h2>Панель ресурсов:</h2>
-              <p>Отображаются ваши ресурсы.</p>
-              <table>
-                  <tr><td>Дерево:</td><td id="wood">0</td></tr>
-                  <tr><td>Камень:</td><td id="stone">0</td></tr>
-                  <tr><td>Еда:</td><td id="food">0</td></tr>
-                  <tr><td>Наука:</td><td id="science">0</td></tr>
-                  <tr><td>Металл:</td><td id="metal">0</td></tr>
-                  <tr><td>Деньги:</td><td id="money">0</td></tr>
-              </table>
-          </section>
-          <section id="goals-panel" style="display:none;">
-              <h2>Цели игры:</h2>
-              <ol>
-                  <li>Постройте первую лесопилку</li>
-                  <li>Соберите 10 единиц дерева</li>
-                  <li>Создайте ферму</li>
-                  <li>Накопите первый капитал</li>
-              </ol>
-          </section>
-      </main>
-      <footer>
-          <p>© 2023 Городская стратегия</p>
-      </footer>
-      <script src="strategy.js"></script>
+
+    <div class="header">
+        <div class="stat-box">
+            <div class="stat-label">Уровень</div>
+            <div class="stat-value" id="lvl">1</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Монеты</div>
+            <div class="stat-value" id="money">0</div>
+        </div>
+    </div>
+
+    <div class="weather-bar" id="weather">☀️ Ясно</div>
+
+    <div class="game-area" id="game-area">
+        <div class="combo-container" id="combo-ui">
+            <div class="combo-text" id="combo-text">x2 COMBO!</div>
+            <div class="combo-timer"><div class="combo-fill" id="combo-bar"></div></div>
+        </div>
+
+        <div class="grid" id="grid">
+            <!-- Генерируется JS -->
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn active" id="btn-plant" onclick="setMode('plant')">
+            <span>🌱 Сажать</span>
+            <span style="font-size:10px; color:#aaa">Бесплатно</span>
+        </button>
+        <button class="btn" id="btn-water" onclick="setMode('water')">
+            <span>💧 Полить</span>
+            <span style="font-size:10px; color:#aaa">Вода: <span id="water-val">100</span>%</span>
+        </button>
+        <button class="btn" onclick="buyUpgrade()">
+            <span>⚡ Улучшить</span>
+            <span style="font-size:10px; color:#ffd700">200 💰</span>
+        </button>
+    </div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // --- НАСТРОЙКИ ---
+    const CONFIG = {
+        baseGrowTime: 2000,
+        comboWindow: 1500, // мс на продолжение комбо
+        weatherDuration: 8000,
+        weatherInterval: 15000
+    };
+      
+    // --- СОСТОЯНИЕ ---
+    let game = {
+        money: 0,
+        level: 1,
+        xp: 0,
+        water: 100,
+        tiles: Array(9).fill().map(() => ({ state: 'empty', timer: 0, isGold: false })),
+        combo: 0,
+        comboTimer: 0,
+        mode: 'plant', // 'plant' or 'water'
+        weather: 'sun', // 'sun', 'rain', 'drought'
+        speedMult: 1
+    };
+
+    let lastTime = 0;
+
+    // --- ИНИЦИАЛИЗАЦИЯ ---
+    function init() {
+        renderGrid();
+        requestAnimationFrame(loop);
+        setInterval(weatherCycle, CONFIG.weatherInterval);
+    }
+
+    // --- ГЛАВНЫЙ ЦИКЛ ---
+    function loop(timestamp) {
+        const dt = timestamp - lastTime;
+        lastTime = timestamp;
+
+        // 1. Обновление таймеров грядок
+        game.tiles.forEach((tile, i) => {
+            if (tile.state === 'growing') {
+                let growSpeed = 1 * game.speedMult;
+                if (game.weather === 'rain') growSpeed *= 2;
+                if (game.weather === 'drought') growSpeed *= 0.5;
+
+                tile.timer += dt * growSpeed;
+
+                // Визуал прогресса (спиннер)
+                const el = document.getElementById(`tile-${i}`);
+                if (el) {
+                    const spinner = el.querySelector('.progress-ring');
+                    if (spinner) spinner.style.display = 'block';
+                }
+
+                if (tile.timer >= CONFIG.baseGrowTime) {
+                    tile.state = 'ready';
+                    tile.timer = 0;
+                    
+                    // Шанс на золото
+                    if (Math.random() < 0.05) { // 5% шанс
+                        tile.isGold = true;
+                        // Золотая гниет быстро!
+                        setTimeout(() => {
+                            if (tile.state === 'ready' && tile.isGold) {
+                                tile.state = 'empty';
+                                tile.isGold = false;
+                                renderTile(i);
+                                tg.HapticFeedback.notificationOccurred('error');
+                            }
+                        }, 3000);
+                    }
+                    renderTile(i);
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            }
+        });
+
+        // 2. Обновление комбо
+        if (game.combo > 0) {
+            game.comboTimer -= dt;
+            const comboUi = document.getElementById('combo-ui');
+            const comboBar = document.getElementById('combo-bar');
+            
+            if (game.comboTimer <= 0) {
+                game.combo = 0;
+                comboUi.style.opacity = '0';
+            } else {
+                comboUi.style.opacity = '1';
+                comboBar.style.width = (game.comboTimer / CONFIG.comboWindow * 100) + '%';
+            }
+        }
+
+        // 3. Восстановление воды
+        if (game.weather === 'rain') game.water = 100;
+        else if (game.water < 100) game.water += 0.05;
+        
+        document.getElementById('water-val').innerText = Math.floor(game.water);
+
+        requestAnimationFrame(loop);
+    }
+
+    // --- ЛОГИКА КЛИКОВ ---
+    function handleTileClick(index) {
+        const tile = game.tiles[index];
+        const el = document.getElementById(`tile-${index}`);
+
+        // СБОР УРОЖАЯ
+        if (tile.state === 'ready') {
+            // Расчет награды
+            let reward = 10;
+            if (tile.isGold) reward = 500;
+            
+            // Комбо множитель
+            game.combo++;
+            game.comboTimer = CONFIG.comboWindow;
+            
+            // Обновление UI комбо
+            const comboText = document.getElementById('combo-text');
+            comboText.innerText = `x${game.combo} COMBO!`;
+            // Тряска экрана на высоких комбо
+            if (game.combo >= 3) {
+                document.body.classList.remove('shake');
+                void document.body.offsetWidth; // trigger reflow
+                document.body.classList.add('shake');
+                tg.HapticFeedback.impactOccurred('heavy');
+            } else {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            const totalReward = reward * game.combo;
+            game.money += totalReward;
+            game.xp += 10;
+            
+            // Сброс тайла
+            tile.state = 'empty';
+            tile.isGold = false;
+            
+            // Эффекты
+            spawnParticle(el, `+${totalReward}`, tile.isGold ? '#ffd700' : '#fff');
+            checkLevelUp();
+            updateUI();
+            renderTile(index);
+            return;
+        }
+
+        // ПОСАДКА
+        if (tile.state === 'empty' && game.mode === 'plant') {
+            tile.state = 'growing';
+            tile.timer = 0;
+            renderTile(index);
+            tg.HapticFeedback.selectionChanged();
+            return;
+        }
+
+        // ПОЛИВ (Ускорение)
+        if (tile.state === 'growing' && game.mode === 'water') {
+            if (game.water >= 20) {
+                game.water -= 20;
+                tile.timer += 1000; // +1 секунда роста
+                spawnParticle(el, "⚡", "#4cc9f0");
+                tg.HapticFeedback.impactOccurred('light');
+            } else {
+                spawnParticle(el, "Нет воды!", "#ff4444");
+            }
+        }
+    }
+
+    // --- ПОГОДА ---
+    function weatherCycle() {
+        const rand = Math.random();
+        const bar = document.getElementById('weather');
+        
+        if (rand < 0.3) {
+            game.weather = 'rain';
+            bar.innerText = '⛈️ ЛИВЕНЬ! (Вода ∞, Рост x2)';
+            bar.className = 'weather-bar weather-active';
+            document.body.style.background = '#162447';
+        } else if (rand > 0.8) {
+            game.weather = 'drought';
+            bar.innerText = '🌵 ЗАСУХА! (Рост замедлен)';
+            bar.className = 'weather-bar';
+            bar.style.background = '#5d4037';
+        } else {
+            game.weather = 'sun';
+            bar.innerText = '☀️ Ясно';
+            bar.className = 'weather-bar';
+            document.body.style.background = '#1a1a2e';
+        }
+
+        setTimeout(() => {
+            game.weather = 'sun';
+            bar.innerText = '☀️ Ясно';
+            bar.className = 'weather-bar';
+            document.body.style.background = '#1a1a2e';
+        }, CONFIG.weatherDuration);
+    }
+
+    // --- РЕНДЕРИНГ ---
+    function renderGrid() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        game.tiles.forEach((_, i) => {
+            const el = document.createElement('div');
+            el.id = `tile-${i}`;
+            el.className = 'tile';
+            el.onclick = () => handleTileClick(i);
+            
+            // Спиннер загрузки
+            const spinner = document.createElement('div');
+            spinner.className = 'progress-ring';
+            el.appendChild(spinner);
+
+            grid.appendChild(el);
+            renderTile(i);
+        });
+    }
+
+    function renderTile(index) {
+        const tile = game.tiles[index];
+        const el = document.getElementById(`tile-${index}`);
+        const spinner = el.querySelector('.progress-ring');
+
+        el.className = 'tile';
+        el.innerText = '';
+        spinner.style.display = 'none';
+
+        if (tile.state === 'empty') {
+            // пусто
+        } else if (tile.state === 'growing') {
+            el.innerText = '🌱';
+            spinner.style.display = 'block';
+        } else if (tile.state === 'ready') {
+            el.classList.add('ready');
+            if (tile.isGold) {
+                el.classList.add('golden');
+                el.innerText = '🏆';
+            } else {
+                el.innerText = '🥕';
+            }
+        }
+        
+        // Возвращаем спиннер на место, так как innerText его затирает
+        if(tile.state !== 'empty') el.appendChild(spinner);
+    }
+
+    function spawnParticle(parent, text, color) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.innerText = text;
+        p.style.color = color;
+        
+        const rect = parent.getBoundingClientRect();
+        p.style.left = (rect.left + rect.width/2 - 10) + 'px';
+        p.style.top = (rect.top) + 'px';
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1000);
+    }
+
+    function updateUI() {
+        document.getElementById('money').innerText = game.money;
+        document.getElementById('lvl').innerText = game.level;
+    }
+
+    function checkLevelUp() {
+        const needed = game.level * 100;
+        if (game.xp >= needed) {
+            game.level++;
+            game.xp = 0;
+            game.speedMult += 0.1; // Игра ускоряется с каждым уровнем!
+            tg.HapticFeedback.notificationOccurred('success');
+            alert(`УРОВЕНЬ ${game.level}! Скорость роста увеличена!`);
+        }
+    }
+
+    function setMode(m) {
+        game.mode = m;
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        if(m === 'plant') document.getElementById('btn-plant').classList.add('active');
+        if(m === 'water') document.getElementById('btn-water').classList.add('active');
+    }
+
+    function buyUpgrade() {
+        if (game.money >= 200) {
+            game.money -= 200;
+            CONFIG.baseGrowTime *= 0.9; // Ускоряем рост глобально на 10%
+            updateUI();
+            tg.HapticFeedback.notificationOccurred('success');
+            spawnParticle(document.body, "УСКОРЕНИЕ!", "#ffd700");
+        } else {
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+    }
+
+    init();
+</script>
 </body>
 </html>
