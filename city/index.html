@@ -2,16 +2,56 @@
 <html lang="en">
 <head>
       <meta charset="UTF-8">
-      <title>City Builder Strategy</title>
-      <style>
-          /* Стили для удобства */
-          body { margin: 0; }
-          canvas { display: block; }
-      </style>
+      <title>TG City Builder Strategy</title>
+      <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-      <!-- Подключаем необходимые скрипты -->
-      <script src="https://cdn.jsdelivr.net/npm/pixi.js@6/dist/pixi.min.js"></script>
+      <header>
+          <h1>Городская стратегия</h1>
+      </header>
+      <nav>
+          <ul>
+              <li><a href="#" onclick="openTab('build-menu')">Строительство</a></li>
+              <li><a href="#" onclick="openTab('resource-panel')">Ресурсы</a></li>
+              <li><a href="#" onclick="openTab('goals-panel')">Цели</a></li>
+          </ul>
+      </nav>
+      <main>
+          <section id="build-menu" style="display:none;">
+              <h2>Меню строительства:</h2>
+              <p>Здесь можно построить новые здания.</p>
+              <button onclick="buildBuilding('lumbermill')">Лесопилка</button>
+              <button onclick="buildBuilding('quarry')">Каменоломня</button>
+              <button onclick="buildBuilding('farm')">Ферма</button>
+              <button onclick="buildBuilding('school')">Школа</button>
+              <button onclick="buildBuilding('factory')">Завод</button>
+              <button onclick="buildBuilding('bank')">Банк</button>
+          </section>
+          <section id="resource-panel" style="display:none;">
+              <h2>Панель ресурсов:</h2>
+              <p>Отображаются ваши ресурсы.</p>
+              <table>
+                  <tr><td>Дерево:</td><td id="wood">0</td></tr>
+                  <tr><td>Камень:</td><td id="stone">0</td></tr>
+                  <tr><td>Еда:</td><td id="food">0</td></tr>
+                  <tr><td>Наука:</td><td id="science">0</td></tr>
+                  <tr><td>Металл:</td><td id="metal">0</td></tr>
+                  <tr><td>Деньги:</td><td id="money">0</td></tr>
+              </table>
+          </section>
+          <section id="goals-panel" style="display:none;">
+              <h2>Цели игры:</h2>
+              <ol>
+                  <li>Постройте первую лесопилку</li>
+                  <li>Соберите 10 единиц дерева</li>
+                  <li>Создайте ферму</li>
+                  <li>Накопите первый капитал</li>
+              </ol>
+          </section>
+      </main>
+      <footer>
+          <p>© 2023 Городская стратегия</p>
+      </footer>
       <script src="strategy.js"></script>
 </body>
 </html>
