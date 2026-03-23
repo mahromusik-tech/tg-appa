@@ -242,6 +242,464 @@ function drawFreeCarForPlayer(){
   const repairCost = car.class==='retro' ? (car.restoration||0) : Math.round((car.repair||0) * (defect?defect.multiplier:1));
   return { name:car.name, class:car.class, buy:car.buy, sell:car.sell, repairCost, defect:defect, state: car.class==='retro' ? 'need_restoration' : 'broken' };
 }
+    function nextTurn(){
+  for(const p of players){
+    if(p.money >= FINISH_GOAL){
+      log(`Победитель: ${p.name} достиг цели ${formatMoney(p.money)}!`);
+      alert(`Победитель: ${p.name}!`);
+      gameStarted = false;
+      moveControls.style.display = 'none';
+      actionArea.style.display = 'none';
+      return;
+    }
+  }
+  if(!gameStarted) return;
+  const pid = order[curOrderIndex % order.length];
+  const player = players.find(p=>p.id===pid);
+  renderPlayers();
+  if(player.bot){
+    moveControls.style.display = 'none';
+    actionArea.style.display = 'none';
+    log(`${player.name} (бот) готовится к ходу...`);
+    setTimeout(()=>botTakeTurn(player), 800);
+  } else {
+    showMoveControls(player);
+  }
+}
+
+function getCurrentPlayer(){ const pid = order[curOrderIndex % order.length]; return players.find(p=>p.id===pid); }
+
+function showMoveControls(player){
+  moveControls.style.display = 'block';
+  actionArea.style.display = 'none';
+  stepButtons.innerHTML = '';
+  for(let s=1;s<=6;s++){
+    const cost = Math.max(0, s-2) * 10000;
+    const btn = document.createElement('button');
+    btn.textContent = `${s} (стоимость ${formatMoney(cost)})`;
+    btn.onclick = ()=>doMove(player, s, cost);
+    stepButtons.appendChild(btn);
+  }
+  endTurnBtn.onclick = ()=>{ log(`${player.name} пропускает ход`); curOrderIndex++; nextTurn(); };
+}
+
+function doMove(player, steps, cost){
+  if(player.money < cost){ alert('Нет денег на оплату хода'); return; }
+  player.money -= cost;
+  player.pos = (player.pos + steps) % boardTemplate.length;
+  log(`${player.name} переместился на ${steps} и теперь на клетке ${boardTemplate[player.pos].name}`);
+  moveControls.style.display='none';
+  renderPlayers();
+  handleCell(player, boardTemplate[player.pos]);
+}
+
+function handleCell(player, cell){
+  actionArea.style.display = 'block';
+  actionButtons.innerHTML = '';
+  cellActionText.textContent = `Вы на ${cell.name}. Выберите действие:`;
+  const skip = document.createElement('button'); skip.textContent = 'Не использовать клетку';
+  skip.onclick = ()=>{ log(`${player.name} отказался от действия на ${cell.name}`); curOrderIndex++; nextTurn(); };
+  actionButtons.appendChild(skip);
+
+  if(cell.type === 'skupka'){
+    const sell = document.createElement('button'); sell.textContent = 'Продать починённые машины';
+    sell.onclick = ()=>sellAtSkupka(player);
+    actionButtons.appendChild(sell);
+  }
+  if(cell.type === 'vedra'){
+    const draw = document.createElement('button'); draw.textContent = 'Вытянуть машину (ВЁДРА) — недорогая';
+    draw.onclick = ()=>drawVedra(player);
+    actionButtons.appendChild(draw);
+  }
+  if(cell.type === 'car' && cell.carClass === 'retro'){
+    const auctionBtn = document.createElement('button'); auctionBtn.textContent = 'Аукцион РЕТРО';
+    auctionBtn.onclick = ()=>startRetroAuction(player);
+    actionButtons.appendChild(auctionBtn);
+  }
+  if(cell.type === 'car' && cell.carClass && cell.carClass !== 'retro'){
+    const buyBtn = document.createElement('button');
+    buyBtn.textContent = `Купить машину класса ${cell.carClass}`;
+    buyBtn.onclick = ()=>offerCarByClass(player, cell.carClass);
+    actionButtons.appendChild(buyBtn);
+  }
+  if(cell.type === 'service'){
+    const repairBtn = document.createElement('button'); repairBtn.textContent = 'Чинить/реставрировать машину';
+    repairBtn.onclick = ()=>openService(player);
+    const taxiBtn = document.createElement('button'); taxiBtn.textContent = 'Таксовать (бросок кубика *10k)';
+    taxiBtn.onclick = ()=>taxiAction(player);
+    actionButtons.appendChild(repairBtn); actionButtons.appendChild(taxiBtn);
+  }
+  if(cell.type === 'autopodbor'){
+    const pickBtn = document.createElement('button'); pickBtn.textContent = 'Автоподбор (случайная машина, не ретро)';
+    pickBtn.onclick = ()=>autopodbor(player);
+    actionButtons.appendChild(pickBtn);
+  }
+  if(cell.type === 'prokat'){
+    const rentBtn = document.createElement('button'); rentBtn.textContent = 'Сдать машину в прокат';
+    rentBtn.onclick = ()=>rentCar(player);
+    actionButtons.appendChild(rentBtn);
+  }
+  if(cell.type === 'race'){
+    const raceBtn = document.createElement('button'); raceBtn.textContent = 'Начать гонку';
+    raceBtn.onclick = ()=>startRace(player, cell.raceBonus);
+    actionButtons.appendChild(raceBtn);
+  }
+  if(cell.type === 'finish'){
+    const finishBtn = document.createElement('button'); finishBtn.textContent = 'Проверить финал (заявить победу)';
+    finishBtn.onclick = ()=>tryFinish(player);
+    actionButtons.appendChild(finishBtn);
+  }
+
+  renderPlayers();
+
+  if(player.bot){
+    actionArea.style.display = 'none';
+    setTimeout(()=>botHandleCell(player, cell), 700);
+  }
+}
+
+function sellAtSkupka(player){
+  const sellable = player.cars.filter(c=>c.state==='repaired');
+  if(sellable.length===0){ if(!player.bot) alert('Нет починённых машин для продажи'); curOrderIndex++; nextTurn(); return; }
+  if(player.bot){
+    const toSell = sellable.filter(c => (c.sell - c.buy) > 0);
+    if(toSell.length===0){ log(`${player.name} (бот) решил не продавать`); curOrderIndex++; nextTurn(); return; }
+    const car = toSell[0];
+    player.money += car.sell;
+    player.cars = player.cars.filter(x=>x!==car);
+    log(`${player.name} (бот) продал ${car.name} за ${formatMoney(car.sell)}`);
+    curOrderIndex++; nextTurn();
+    return;
+  }
+
+  const options = sellable.map((c,i)=>`${i+1}. ${c.name} — продажа ${formatMoney(c.sell)}`).join('\n');
+  const choice = prompt(`Выберите номер машины для продажи:\n${options}`);
+  const idx = parseInt(choice)-1;
+  if(isNaN(idx) || !sellable[idx]) return;
+  const car = sellable[idx];
+  player.money += car.sell;
+  player.cars = player.cars.filter(x=>x!==car);
+  log(`${player.name} продал ${car.name} за ${formatMoney(car.sell)}`);
+  curOrderIndex++; nextTurn();
+}
+
+function drawVedra(player){
+  let idx = deck.findIndex(d=>d.class==='vedra' || d.class==='bitye');
+  if(idx === -1){
+    deck = sampleVehicles.slice(); shuffle(deck);
+    idx = deck.findIndex(d=>d.class==='vedra' || d.class==='bitye');
+    if(idx === -1) idx=0;
+}
+  const card = deck.splice(idx,1)[0];
+  const defect = card.class==='retro' ? null : defects[Math.floor(Math.random()*defects.length)];
+  const repairCost = card.class==='retro' ? (card.restoration||0) : Math.round((card.repair||0) * (defect?defect.multiplier:1));
+  if(player.bot){
+    const buy = botDecideBuy(player, card, repairCost);
+    if(buy){
+      if(player.money >= card.buy){
+        player.money -= card.buy;
+        player.cars.push({ name:card.name, buy:card.buy, sell:card.sell, class:card.class, repairCost, defect, state: card.class==='retro' ? 'need_restoration' : 'broken' });
+        log(`${player.name} (бот) купил ${card.name} за ${formatMoney(card.buy)}${defect?(' (дефект: '+defect.name+')'):''}`);
+      } else {
+        log(`${player.name} (бот) хотел купить ${card.name}, но не хватило денег`);
+        deck.unshift(card);
+      }
+    } else {
+      deck.unshift(card);
+      log(`${player.name} (бот) отказался от ${card.name}`);
+    }
+    curOrderIndex++; nextTurn();
+    return;
+  }
+  const want = confirm(`${player.name} вытянул ${card.name} (покупка ${formatMoney(card.buy)}). Хотите купить?`);
+  if(want){
+    if(player.money < card.buy){ alert('Нет денег'); curOrderIndex++; nextTurn(); return; }
+    player.money -= card.buy;
+    player.cars.push({ name:card.name, buy:card.buy, sell:card.sell, class:card.class, repairCost, defect: defect, state: card.class==='retro' ? 'need_restoration' : 'broken' });
+    log(`${player.name} купил ${card.name} за ${formatMoney(card.buy)}${defect?(' (дефект: '+defect.name+')'):''}`);
+  } else {
+    log(`${player.name} отказался от ${card.name}`);
+    deck.unshift(card);
+  }
+  curOrderIndex++; nextTurn();
+}
+
+function offerCarByClass(player, cls){
+  const pool = deck.concat(sampleVehicles).filter(v=>v.class===cls);
+  if(pool.length===0){ if(!player.bot) alert('Нет машин этого класса'); curOrderIndex++; nextTurn(); return; }
+  const car = pool[Math.floor(Math.random()*pool.length)];
+  const defect = car.class==='retro' ? null : defects[Math.floor(Math.random()*defects.length)];
+  const repairCost = car.class==='retro' ? (car.restoration||0) : Math.round((car.repair||0) * (defect?defect.multiplier:1));
+  if(player.bot){
+    const buy = botDecideBuy(player, car, repairCost);
+    if(buy){
+      if(player.money >= car.buy){
+        player.money -= car.buy;
+        player.cars.push({ name:car.name, buy:car.buy, sell:car.sell, class:car.class, repairCost, defect, state: car.class==='retro' ? 'need_restoration' : 'broken' });
+        log(`${player.name} (бот) купил ${car.name} за ${formatMoney(car.buy)}`);
+      } else {
+        log(`${player.name} (бот) хотел купить ${car.name}, но не хватило денег`);
+      }
+    } else {
+      log(`${player.name} (бот) отказался от покупки ${car.name}`);
+    }
+    curOrderIndex++; nextTurn();
+    return;
+  }
+  const want = confirm(`${player.name} видит ${car.name} (покупка ${formatMoney(car.buy)}). Хотите купить?`);
+  if(want){
+    if(player.money < car.buy){ alert('Нет денег'); curOrderIndex++; nextTurn(); return; }
+    player.money -= car.buy;
+    player.cars.push({ name:car.name, buy:car.buy, sell:car.sell, class:car.class, repairCost, defect: defect, state: car.class==='retro' ? 'need_restoration' : 'broken' });
+    log(`${player.name} купил ${car.name} за ${formatMoney(car.buy)}${defect?(' (дефект: '+defect.name+')'):''}`);
+  } else {
+    log(`${player.name} отказался от покупки ${car.name}`);
+  }
+  curOrderIndex++; nextTurn();
+}
+
+function openService(player){
+  const candidates = player.cars.filter(c=>c.state==='broken' || c.state==='need_restoration');
+  if(candidates.length===0){ if(!player.bot) alert('Нет машин для ремонта/реставрации'); curOrderIndex++; nextTurn(); return; }
+  if(player.bot){
+    const choice = candidates.find(c => botDecideRepair(player, c));
+    if(!choice){ log(`${player.name} (бот) решил не чинить`); curOrderIndex++; nextTurn(); return; }
+    const car = choice;
+    if(player.money < car.repairCost){ log(`${player.name} (бот) хотел чинить, но нет денег`); curOrderIndex++; nextTurn(); return; }
+    player.money -= car.repairCost;
+    car.state = 'repaired';
+    log(`${player.name} (бот) отремонтировал ${car.name} за ${formatMoney(car.repairCost)}`);
+    curOrderIndex++; nextTurn();
+    return;
+  }
+  const list = candidates.map((c,i)=>`${i+1}. ${c.name} (${c.state}) — стоимость ${formatMoney(c.repairCost)}`).join('\n');
+  const ans = prompt(`Выберите машину для ремонта (номер):\n${list}`);
+  const idx = parseInt(ans)-1;
+  if(isNaN(idx) || !candidates[idx]) return;
+  const car = candidates[idx];
+  if(player.money < car.repairCost){ alert('Не хватает денег'); return; }
+  if(!confirm(`Потратить ${formatMoney(car.repairCost)} на ремонт ${car.name}?`)) return;
+  player.money -= car.repairCost;
+  car.state = 'repaired';
+  log(`${player.name} отремонтировал ${car.name} за ${formatMoney(car.repairCost)}`);
+  curOrderIndex++; nextTurn();
+}
+
+function taxiAction(player){
+  const roll = rollDie();
+  const gain = roll * 10000;
+  player.money += gain;
+  log(`${player.name} таксовал: бросил ${roll}, получил ${formatMoney(gain)}`);
+  curOrderIndex++; nextTurn();
+}
+
+function autopodbor(player){
+  const pool = deck.concat(sampleVehicles).filter(v=>v.class!=='retro');
+  if(pool.length===0){ deck = sampleVehicles.slice(); shuffle(deck); }
+  const car = pool[Math.floor(Math.random()*pool.length)];
+  const defect = defects[Math.floor(Math.random()*defects.length)];
+  const repairCost = Math.round((car.repair||0) * defect.multiplier);
+  if(player.bot){
+    const buy = botDecideBuy(player, car, repairCost);
+    if(buy){
+      if(player.money >= car.buy){
+        player.money -= car.buy;
+        player.cars.push({ name:car.name, buy:car.buy, sell:car.sell, class:car.class, repairCost, defect, state:'broken' });
+        log(`${player.name} (бот) купил ${car.name} на автоподборе за ${formatMoney(car.buy)} (дефект ${defect.name})`);
+      } else {
+        log(`${player.name} (бот) хотел автоподбор, но не хватило денег`);
+      }
+    } else {
+      log(`${player.name} (бот) отказался от автоподбора`);
+    }
+    curOrderIndex++; nextTurn();
+    return;
+  }
+  const want = confirm(`${player.name} получил ${car.name} (покупка ${formatMoney(car.buy)}). Хотите купить?`);
+  if(want){
+    if(player.money < car.buy){ alert('Нет денег'); curOrderIndex++; nextTurn(); return; }
+    player.money -= car.buy;
+    player.cars.push({ name:car.name, buy:car.buy, sell:car.sell, class:car.class, repairCost, defect, state:'broken' });
+    log(`${player.name} купил ${car.name} на автоподборе за ${formatMoney(car.buy)} (дефект ${defect.name})`);
+  } else {
+    log(`${player.name} отказался от автоподбора`);
+  }
+  curOrderIndex++; nextTurn();
+}
+
+function rentCar(player){
+  const rentable = player.cars.filter(c=>c.state==='repaired');
+  if(rentable.length===0){ if(!player.bot) alert('Нет машин для проката'); curOrderIndex++; nextTurn(); return; }
+  if(player.bot){
+    const car = rentable[0];
+    const reward = Math.round(car.sell*0.1);
+    player.money += reward;
+    log(`${player.name} (бот) сдал ${car.name} в прокат и получил ${formatMoney(reward)}`);
+    curOrderIndex++; nextTurn();
+    return;
+  }
+  const list = rentable.map((c,i)=>`${i+1}. ${c.name} — вознаграждение ${formatMoney(Math.round(c.sell*0.1))}`).join('\n');
+  const choice = prompt(`Выберите машину для проката:\n${list}`);
+  const idx = parseInt(choice)-1;
+  if(isNaN(idx) || !rentable[idx]) return;
+  const car = rentable[idx];
+  const reward = Math.round(car.sell*0.1);
+  player.money += reward;
+  log(`${player.name} сдал ${car.name} в прокат и получил ${formatMoney(reward)}`);
+  curOrderIndex++; nextTurn();
+}
+
+function startRace(player, bonusType){
+  const others = players.filter(p=>p.id!==player.id);
+  if(others.length===0){ if(!player.bot) alert('Нет соперников'); curOrderIndex++; nextTurn(); return; }
+  let opponent = null;
+  if(player.bot){
+    opponent = others[Math.floor(Math.random()*others.length)];
+  } else {
+    const list = others.map((o,i)=>`${i+1}. ${o.name} (${formatMoney(o.money)})`).join('\n');
+    const ans = prompt(`Выберите соперника для гонки:\n${list}`);
+    const idx = parseInt(ans)-1;
+    if(isNaN(idx) || !others[idx]) return;
+    opponent = others[idx];
+  }
+
+  const stake = Math.min(Math.round(opponent.money * 0.5), Math.round(Math.min(player.money, opponent.money)));
+  if(stake <= 0){ log('Ставка 0 — гонка не проводится'); curOrderIndex++; nextTurn(); return; }
+
+  let r1 = rollDie();
+  let r2 = rollDie();
+  if(bonusType === 'plus1') r1 += 1;
+  if(bonusType === 'reroll' && r1 === r2){
+    r1 = rollDie(); r2 = rollDie();
+  }
+  log(`${player.name} бросил ${r1}, ${opponent.name} бросил ${r2}. Ставка ${formatMoney(stake)} (+100k от банка)`);
+
+  let winner, loser;
+  if(r1 > r2){ winner = player; loser = opponent; }
+  else if(r2 > r1){ winner = opponent; loser = player; }
+  else { log('Ничья — никто не получает ставку'); curOrderIndex++; nextTurn(); return; }
+
+  const actualTransfer = Math.min(stake, loser.money);
+  loser.money -= actualTransfer;
+  winner.money += actualTransfer + 100000;
+  log(`${winner.name} выиграл гонку и получает ${formatMoney(actualTransfer)} от ${loser.name} +100k из банка`);
+  curOrderIndex++; nextTurn();
+}
+
+function startRetroAuction(initiator){
+  let idx = deck.findIndex(d=>d.class==='retro');
+  let car;
+  if(idx === -1){
+    idx = sampleVehicles.findIndex(v=>v.class==='retro');
+    if(idx === -1){ if(!initiator.bot) alert('Нет ретро машин'); curOrderIndex++; nextTurn(); return; }
+    car = sampleVehicles[idx];
+  } else {
+    car = deck.splice(idx,1)[0];
+  }
+
+  let currentBid = Math.max(car.buy || 0, 1000000);
+  let currentWinner = null;
+  const activePlayers = players.slice();
+  let passes = 0;
+  let i = 0;
+
+  while(passes < activePlayers.length){
+    const p = activePlayers[i % activePlayers.length];
+    if(p.money < currentBid){ passes++; i++; continue; }
+    if(p.bot){
+      const maxPay = Math.max(0, Math.round((car.sell || 0) * 0.7) - (car.restoration||0));
+      const willing = Math.min(p.money, maxPay);
+      if(willing > currentBid && Math.random() > 0.4){
+        currentBid = Math.min(p.money, currentBid + 100000);
+        currentWinner = p;
+        passes = 0;
+        log(`${p.name} (бот) повысил ставку до ${formatMoney(currentBid)}`);
+      } else {
+        passes++;
+      }
+    } else {
+      const ans = prompt(`${p.name}, текущая ставка ${formatMoney(currentBid)}. Введите новую ставку (кратность 100k) или ОК чтобы пасовать:`);
+      const val = parseInt(ans);
+      if(!isNaN(val) && val > currentBid && val <= p.money){
+        currentBid = val;
+        currentWinner = p;
+        passes = 0;
+      } else {
+        passes++;
+      }
+    }
+    i++;
+  }
+
+  if(!currentWinner){ log('Аукцион завершился без ставок'); deck.unshift(car); curOrderIndex++; nextTurn(); return; }
+
+  // перевод денег и выдача машины
+  const pay = Math.min(currentWinner.money, currentBid);
+  currentWinner.money -= pay;
+  currentWinner.cars.push({ name:car.name, buy:pay, sell:car.sell, class:car.class, repairCost:car.restoration||0, defect:null, state:'need_restoration' });
+  log(`${currentWinner.name} выиграл аукцион за ${formatMoney(pay)} и получил ${car.name}`);
+  curOrderIndex++; nextTurn();
+}
+
+function botDecideBuy(bot, car, repairCost){
+  // простой эвристический критерий
+  const potentialProfit = (car.sell || 0) - (car.buy || 0) - (repairCost || 0);
+  if(potentialProfit > 200000 && bot.money > car.buy + repairCost) return true;
+  if(car.class === 'vedra' && bot.money > car.buy + repairCost) return Math.random() > 0.5;
+  return false;
+}
+
+function botDecideRepair(bot, car){
+  // ремонт если прибыль после продажи перекрывает расходы или машина дорогая ретро
+  if(car.state === 'need_restoration') return (car.sell - car.repairCost) > 100000 || bot.money > FINISH_GOAL*0.2;
+  return (car.sell - car.repairCost) > 50000;
+}
+
+function botTakeTurn(bot){
+  // бот бросает случайно 1-6, с учётом простого решения платить ли за дальние шаги
+  const s = Math.floor(Math.random()*6)+1;
+  const cost = Math.max(0, s-2) * 10000;
+  if(bot.money < cost){
+    log(`${bot.name} (бот) не может оплатить ход, пропускает`);
+    curOrderIndex++; nextTurn();
+    return;
+    }
+  doMove(bot, s, cost);
+}
+
+function botHandleCell(bot, cell){
+  // простая последовательность действий: сервис > продажа > автоподбор > не использовать
+  if(cell.type === 'service'){
+    openService(bot); return;
+  }
+  if(cell.type === 'skupka'){
+    sellAtSkupka(bot); return;
+  }
+  if(cell.type === 'autopodbor'){
+    autopodbor(bot); return;
+  }
+  if(cell.type === 'vedra'){
+    drawVedra(bot); return;
+  }
+  if(cell.type === 'car' && cell.carClass === 'retro'){
+    startRetroAuction(bot); return;
+  }
+  // иначе пропустить
+  log(`${bot.name} (бот) ничего не делает на ${cell.name}`);
+  curOrderIndex++; nextTurn();
+}
+
+function tryFinish(player){
+  if(player.money >= FINISH_GOAL){
+    log(`${player.name} объявил о победе с ${formatMoney(player.money)}!`);
+    alert(`${player.name} победил!`);
+    gameStarted = false;
+    moveControls.style.display = 'none';
+    actionArea.style.display = 'none';
+  } else {
+    alert('Недостаточно денег для победы');
+  }
+}
   </script>
 
 </body>
