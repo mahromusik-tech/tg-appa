@@ -1,96 +1,135 @@
+
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<title>Тачка Невозврата — прототип</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  body { font-family: Arial, sans-serif; margin: 12px; }
-  #board { display:flex; gap:8px; flex-wrap:wrap; width:720px; }
-  .cell { width:110px; height:90px; border:1px solid #444; border-radius:6px; padding:6px; box-sizing:border-box; background:#f6f6f6;}
-  .cell .title{font-weight:700; font-size:13px}
-  #players { margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;}
-  .player { border:1px solid #888; padding:8px; border-radius:6px; width:220px;}
-  .controls { margin-top:12px; }
-  button{ margin:4px; padding:6px 8px; }
-  #log { margin-top:12px; height:180px; overflow:auto; border:1px solid #ddd; padding:8px; background:#fff;}
-  .car { font-size:12px; margin-top:6px; padding:4px; background:#eef; border-radius:4px;}
-  .highlight { background:#ffd; }
-</style>
+  <meta charset="utf-8">
+  <title>Тачка Невозврата — прототип (с ботом)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; margin:12px; background:#f7f8fb; color:#111; }
+    .topbar { display:flex; gap:12px; align-items:center; margin-bottom:8px; flex-wrap:wrap;}
+    #boardWrap { width:760px; height:760px; margin:8px 0; position:relative; }
+    #board { position:absolute; inset:0; border-radius:50%; }
+    .cell {
+      position:absolute;
+      width:140px; height:100px;
+      transform-origin:center;
+      background:#fff;
+      border:1px solid #cfcfcf;
+      border-radius:10px;
+      padding:6px;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      font-size:13px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.04);
+    }
+    .cell .title { font-weight:700; text-align:center; }
+    .tokens { display:flex; gap:4px; justify-content:center; align-items:center; flex-wrap:wrap; min-height:22px; }
+    .token { width:20px; height:20px; border-radius:50%; color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; box-shadow:0 1px 0 rgba(0,0,0,0.08) inset;}
+    #players { margin-top:6px; display:flex; gap:12px; flex-wrap:wrap; }
+    .player { border:1px solid #e2e2e2; padding:8px; border-radius:6px; width:320px; background:#fff; }
+    .controls { margin-top:8px; }
+    button{ margin:4px; padding:6px 8px; cursor:pointer; border-radius:6px; border:1px solid #bbb; background:#fff; }
+    button.primary{ background:#2a9d8f; color:#fff; border-color:#23846f; }
+    #log { margin-top:8px; height:260px; overflow:auto; border:1px solid #e4e6eb; padding:8px; background:#fff; }
+    .small { font-size:12px; color:#444; }
+    .goal { font-weight:700; color:#155; }
+  </style>
 </head>
 <body>
 
-<h2>Тачка Невозврата — локальный прототип</h2>
+  <h2>Тачка Невозврата — прототип (с ботом)</h2>
 
-<div>
-  Игроки: <input id="numPlayers" type="number" min="1" max="5" value="2">
-  <button id="startBtn">Старт игры</button>
-</div>
-
-<div id="board" aria-label="Поле"></div>
-
-<div id="players"></div>
-
-<div class="controls">
-  <div id="turnInfo"></div>
-  <div id="moveControls" style="display:none;">
-    <div>Выберите шаг (1–6). Бесплатно 1–2. Стоимость сверх 2: 10k/шаг.</div>
-    <div id="stepButtons"></div>
-    <button id="endTurnBtn">Пропустить ход</button>
+  <div class="topbar">
+    <div>Игроки: <input id="numPlayers" type="number" min="1" max="5" value="2" style="width:56px"></div>
+    <div>Цель (деньги): <input id="goalMoney" type="number" value="5000000" style="width:140px"></div>
+    <button id="startBtn" class="primary">Старт игры</button>
+    <div class="small">Игрок 2 по умолчанию — бот. В начале каждому игроку дается бесплатная машина с дефектом.</div>
   </div>
-  <div id="actionArea" style="display:none;">
-    <div id="cellActionText"></div>
-    <div id="actionButtons"></div>
+
+  <div style="display:flex; align-items:flex-start;">
+    <div id="boardWrap">
+      <div id="board"></div>
+    </div>
+
+    <div style="margin-left:12px; min-width:380px;">
+      <div id="players"></div>
+
+      <div class="controls">
+        <div id="turnInfo" style="margin-top:6px;"></div>
+        <div id="moveControls" style="display:none;margin-top:8px;">
+          <div>Выберите шаг (1–6). 1–2 — бесплатно. Свыше 2 — 10k/шаг.</div>
+          <div id="stepButtons"></div>
+          <button id="endTurnBtn">Пропустить ход</button>
+        </div>
+
+        <div id="actionArea" style="display:none;margin-top:8px;">
+          <div id="cellActionText" class="small" style="margin-bottom:6px"></div>
+          <div id="actionButtons"></div>
+        </div>
+      </div>
+
+      <div id="log"></div>
+    </div>
   </div>
-</div>
 
-<div id="log"></div>
-
-<script>
-/* --- Простая модель игры --- */
-const START_MONEY = 150000;
-const BANK = { money: 10000000 }; // бесконечно большой банк для прототипа
+  <!-- JS будет во второй части. -->
+  <script>
+    /* Вставьте сюда следующую часть — весь игровой JS */
+    const START_MONEY = 150000;
+let FINISH_GOAL = 5000000;
+const PLAYER_COLORS = ['#e63946','#2a9d8f','#f4a261','#0077b6','#6a4c93'];
 
 const boardTemplate = [
-  { id:0, type:'skupka', name:'СКУПКА' },
+  { id:0, type:'start', name:'СТАРТ' },
   { id:1, type:'vedra', name:'ВЁДРА' },
   { id:2, type:'car', name:'БИТЬЕ', carClass:'bitye' },
   { id:3, type:'service', name:'АВТОСЕРВИС' },
-  { id:4, type:'car', name:'ВЁДРА', carClass:'vedra' },
-  { id:5, type:'race', name:'ГОНКА (+1 старт)' , raceBonus:'plus1' },
+  { id:4, type:'car', name:'ВЁДРА CELL', carClass:'vedra' },
+  { id:5, type:'race', name:'ГОНКА (+1 старт)', raceBonus:'plus1' },
   { id:6, type:'car', name:'ПРЕМИУМ', carClass:'premium' },
   { id:7, type:'skupka', name:'СКУПКА' },
   { id:8, type:'car', name:'РЕТРО', carClass:'retro' },
   { id:9, type:'autopodbor', name:'АВТОПОДБОР' },
-  { id:10, type:'race', name:'ГОНКА (переброс)' , raceBonus:'reroll' },
-  { id:11, type:'prokat', name:'ПРОКАТ' }
+  { id:10, type:'race', name:'ГОНКА (переброс)', raceBonus:'reroll' },
+  { id:11, type:'prokat', name:'ПРОКАТ' },
+  { id:12, type:'finish', name:'ФИНИШ' }
 ];
 
 const sampleVehicles = [
-  // structure: id, name, buyPrice, sellPriceAfterRepair, class, repairCost (or function)
-  { id:1, name:'LADA GRANTA', class:'vedra', buy:150000, sell:500000, repair:150000 },
-  { id:2, name:'ZAZ Коробка', class:'bitye', buy:50000, sell:120000, repair:80000 },
-  { id:3, name:'BMW 3', class:'premium', buy:800000, sell:1300000, repair:300000 },
-  { id:4, name:'MERCEDES S', class:'premium', buy:1200000, sell:2000000, repair:600000 },
-  { id:5, name:'GAZ RETRO', class:'retro', buy:2500000, sell:4500000, repair:0, restoration:1000000 },
-  { id:6, name:'VOLGA RETRO', class:'retro', buy:2200000, sell:4000000, repair:0, restoration:900000 }
+  { id:1, name:'LADA GRANTA', class:'vedra', buy:120000, sell:400000, repair:130000 },
+  { id:2, name:'ZAZ TAVRIA', class:'bitye', buy:40000, sell:100000, repair:70000 },
+  { id:3, name:'MOSKVICH', class:'bitye', buy:60000, sell:120000, repair:80000 },
+  { id:4, name:'FORD FOCUS', class:'premium', buy:250000, sell:600000, repair:180000 },
+  { id:5, name:'TOYOTA COROLLA', class:'premium', buy:300000, sell:700000, repair:200000 },
+  { id:6, name:'BMW 3', class:'premium', buy:850000, sell:1400000, repair:350000 },
+  { id:7, name:'MERCEDES C', class:'premium', buy:1100000, sell:1900000, repair:500000 },
+  { id:8, name:'GAZ RETRO', class:'retro', buy:2200000, sell:3800000, restoration:900000 },
+  { id:9, name:'VOLGA RETRO', class:'retro', buy:2500000, sell:4200000, restoration:1000000 },
+  { id:10, name:'OPEL ASTRA', class:'premium', buy:320000, sell:650000, repair:210000 },
+  { id:11, name:'NIVA 4x4', class:'vedra', buy:140000, sell:380000, repair:120000 },
+  { id:12, name:'TRABANT', class:'bitye', buy:50000, sell:110000, repair:60000 },
+  { id:13, name:'AUDI A4', class:'premium', buy:950000, sell:1600000, repair:420000 },
+  { id:14, name:'RETRO LIMO', class:'retro', buy:2800000, sell:4800000, restoration:1200000 }
 ];
 
 const defectDeck = [
-  { id:1, name:'КАПИТАЛЬНЫЙ РЕМОНТ', costMultiplier:1.0 },
-  { id:2, name:'ДВИГУН НА РЕМОНТ', costMultiplier:0.6 },
-  { id:3, name:'КОРОБКА ПЕРЕКЛЮЧЕНИЯ', costMultiplier:0.4 },
-  { id:4, name:'ЭЛЕКТРИКА', costMultiplier:0.2 }
+  { id:1, name:'КАПИТАЛЬНЫЙ РЕМОНТ', multiplier:1.0 },
+  { id:2, name:'ДВИГУН', multiplier:0.7 },
+  { id:3, name:'КОРОБКА', multiplier:0.5 },
+  { id:4, name:'ЭЛЕКТРИКА', multiplier:0.25 },
+  { id:5, name:'КУЗОВ', multiplier:0.4 }
 ];
 
 let players = [];
 let deck = [];
 let defects = [];
-let currentTurn = 0;
 let order = [];
+let curOrderIndex = 0;
 let gameStarted = false;
 
-/* --- UI элементы --- */
 const boardEl = document.getElementById('board');
 const playersEl = document.getElementById('players');
 const logEl = document.getElementById('log');
@@ -103,363 +142,108 @@ const actionButtons = document.getElementById('actionButtons');
 const endTurnBtn = document.getElementById('endTurnBtn');
 
 document.getElementById('startBtn').onclick = startGame;
+    document.getElementById('goalMoney').onchange = ()=>{ FINISH_GOAL = parseInt(document.getElementById('goalMoney').value) || FINISH_GOAL; };
 
-/* --- Инициализация --- */
-function log(msg){
-  const p = document.createElement('div'); p.textContent = msg; logEl.prepend(p);
-}
+function log(msg){ const d = document.createElement('div'); d.textContent = `${new Date().toLocaleTimeString()} — ${msg}`; logEl.prepend(d); }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+function formatMoney(n){ return (n/1000).toFixed(0) + 'k'; }
+function rollDie(){ return Math.floor(Math.random()*6)+1; }
 
 function buildBoard(){
-  boardEl.innerHTML='';
-  for(const c of boardTemplate){
-    const e = document.createElement('div');
-    e.className='cell';
-    e.id='cell-'+c.id;
-    e.innerHTML = `<div class="title">${c.name}</div><div style="font-size:12px;color:#555">#${c.id}</div>`;
-    boardEl.appendChild(e);
+  boardEl.innerHTML = '';
+  const N = boardTemplate.length;
+  const cx = boardEl.clientWidth/2;
+  const cy = boardEl.clientHeight/2;
+  const radius = Math.min(cx,cy) - 90;
+  for(let i=0;i<N;i++){
+    const c = boardTemplate[i];
+    const angle = (i / N) _ Math.PI _ 2 - Math.PI/2;
+    const x = cx + Math.cos(angle) * radius - 70;
+    const y = cy + Math.sin(angle) * radius - 50;
+    const el = document.createElement('div');
+    el.className = 'cell';
+    el.id = 'cell-'+c.id;
+    el.style.left = x+'px';
+    el.style.top = y+'px';
+    el.innerHTML = `<div class="title">${c.name}</div><div class="small">#${c.id} ${c.carClass?('['+c.carClass+']'):''}</div><div class="tokens" id="tokens-${c.id}"></div>`;
+    boardEl.appendChild(el);
   }
 }
-
-function renderPlayers(){
-  playersEl.innerHTML='';
+    function renderPlayers(){
+  playersEl.innerHTML = '';
+  for(const c of boardTemplate){
+    const t = document.getElementById('tokens-'+c.id);
+    if(t) t.innerHTML = '';
+  }
   for(const p of players){
     const div = document.createElement('div');
-    div.className='player';
-    if(players[currentTurn]===p) div.classList.add('highlight');
-    div.id='player-'+p.id;
-    let ownedHtml='';
-    for(const car of p.cars){
-      ownedHtml += `<div class="car">${car.name} (${car.state}) — Пр: ${formatMoney(car.buy)} / Прод: ${formatMoney(car.sell)} / Рем: ${formatMoney(car.repairCost)} ${car.defect?'/ '+car.defect.name:''}</div>`;
-    }
-    div.innerHTML = `<b>${p.name}</b> <div>Деньги: ${formatMoney(p.money)}</div><div>Позиция: ${p.pos}</div><div>Авто:<br>${ownedHtml||'<i>нет</i>'}</div>`;
+    div.className = 'player';
+    div.id = 'player-'+p.id;
+    const carsHtml = p.cars.map(c=>`<div style="margin:4px 0;padding:4px;border-radius:4px;background:#f0f8ff;font-size:12px">${c.name} — ${c.state}${c.defect?(' / '+c.defect.name):''} — Рем: ${formatMoney(c.repairCost||0)}</div>`).join('') || '<i>нет</i>';
+    div.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;background:${p.color};border-radius:50%"></div><b>${p.name}</b> ${p.bot?'<span class="small"> (БОТ)</span>':''}</div>
+      <div>Деньги: <b>${formatMoney(p.money)}</b></div>
+      <div>Позиция: <b>${p.pos}</b> — <span class="small">${boardTemplate[p.pos].name}</span></div>
+      <div>Авто:<br>${carsHtml}</div>`;
     playersEl.appendChild(div);
+    const tokens = document.getElementById('tokens-'+p.pos);
+    if(tokens){
+      const tok = document.createElement('div');
+      tok.className = 'token';
+      tok.style.background = p.color;
+      tok.textContent = (p.id+1);
+      tok.title = p.name + (p.bot? ' (БОТ)':'');
+      tokens.appendChild(tok);
+    }
   }
+  const curPlayer = getCurrentPlayer();
+  if(curPlayer){
+    turnInfo.textContent = `${curPlayer.name} — ход. Деньги: ${formatMoney(curPlayer.money)}. Цель: ${formatMoney(FINISH_GOAL)}.`;
+  } else turnInfo.textContent = '';
 }
 
-function formatMoney(n){ return (n/1000).toFixed(0) + 'k'; }
-
-/* --- Игровая логика --- */
 function startGame(){
-  const n = parseInt(document.getElementById('numPlayers').value) || 2;
+  const num = Math.max(1, Math.min(5, parseInt(document.getElementById('numPlayers').value) || 2));
   players = [];
-  for(let i=0;i<n;i++){
-    players.push({ id:i, name:'Игрок '+(i+1), money:START_MONEY, pos:0, cars:[] });
+  for(let i=0;i<num;i++){
+    players.push({ id:i, name:'Игрок '+(i+1), money:START_MONEY, pos:0, cars:[], color:PLAYER_COLORS[i%PLAYER COLORS.length], bot:false });
   }
-  // колоды
+  if(players[1]){ players[1].name = 'Бот'; players[1].bot = true; }
   deck = sampleVehicles.slice();
   defects = defectDeck.slice();
   shuffle(deck);
   shuffle(defects);
-  // случайный порядок
   order = players.map(p=>p.id);
   shuffle(order);
-  currentTurn = 0;
+  curOrderIndex = 0;
   gameStarted = true;
   buildBoard();
-  log('Игра запущена. Порядок ходов: ' + order.map(i=>'Игрок '+(i+1)).join(', '));
+  // каждому бесплатно выдаём машину (не ретро)
+  for(const p of players){
+    const freeCar = drawFreeCarForPlayer();
+    if(freeCar){ p.cars.push(freeCar); log(`${p.name} бесплатно получил ${freeCar.name}${freeCar.defect?(' (дефект: '+freeCar.defect.name+')'):''}`); }
+  }
   renderPlayers();
-  nextTurn();
+  log('Игра начата. Порядок: ' + order.map(i=>'Игрок '+(i+1)).join(', '));
+  setTimeout(nextTurn, 300);
 }
 
-function nextTurn(){
-  if(!gameStarted) return;
-  // find current player by order
-  const pid = order[currentTurn % order.length];
-  const player = players.find(p=>p.id===pid);
-  log(`Ход ${player.name}`);
-  turnInfo.textContent = `${player.name} — ваш ход. Деньги: ${formatMoney(player.money)}`;
-  renderPlayers();
-  showMoveControls(player);
+function drawFreeCarForPlayer(){
+  let pickIndex = deck.findIndex(d=>d.class !== 'retro');
+  if(pickIndex === -1){
+    deck = sampleVehicles.slice(); shuffle(deck);
+    pickIndex = deck.findIndex(d=>d.class !== 'retro');
+    if(pickIndex === -1) pickIndex = 0;
+  }
+  const car = deck.splice(pickIndex,1)[0];
+  let defect = null;
+  if(car.class !== 'retro'){
+    defect = defects[Math.floor(Math.random()*defects.length)];
+  }
+  const repairCost = car.class==='retro' ? (car.restoration||0) : Math.round((car.repair||0) * (defect?defect.multiplier:1));
+  return { name:car.name, class:car.class, buy:car.buy, sell:car.sell, repairCost, defect:defect, state: car.class==='retro' ? 'need_restoration' : 'broken' };
 }
-
-function showMoveControls(player){
-  moveControls.style.display='block';
-  actionArea.style.display='none';
-  stepButtons.innerHTML='';
-  for(let s=1;s<=6;s++){
-    const btn = document.createElement('button');
-    const cost = Math.max(0, s-2)*10000;
-    btn.textContent = `${s} (стоимость ${formatMoney(cost)})`;
-    btn.onclick = ()=>doMove(player, s, cost);
-    stepButtons.appendChild(btn);
-  }
-  endTurnBtn.onclick = ()=>{ log(`${player.name} пропускает ход`); currentTurn++; nextTurn(); };
-}
-
-function doMove(player, steps, cost){
-  if(player.money < cost){ alert('Нет денег на оплату хода'); return; }
-  player.money -= cost;
-  player.pos = (player.pos + steps) % boardTemplate.length;
-  log(`${player.name} переместился на ${steps} клеток и теперь на ${boardTemplate[player.pos].name}`);
-  moveControls.style.display='none';
-  renderPlayers();
-  handleCell(player, boardTemplate[player.pos]);
-}
-  function handleCell(player, cell){
-  actionArea.style.display='block';
-  actionButtons.innerHTML='';
-  cellActionText.textContent = `Вы на ${cell.name}. Выберите действие:`;
-  // common: игрок может отказаться от действия и только перейти (либо сделать таксовать на сервисе)
-  const skipBtn = document.createElement('button');
-  skipBtn.textContent = 'Не использовать клетку (пропустить действие)';
-  skipBtn.onclick = ()=>{ log(`${player.name} отказался от действия на ${cell.name}`); currentTurn++; nextTurn(); };
-  actionButtons.appendChild(skipBtn);
-
-  if(cell.type === 'skupka'){
-    const sellBtn = document.createElement('button');
-    sellBtn.textContent = 'Продать починённые машины';
-    sellBtn.onclick = ()=>{ sellAtSkupka(player); };
-    actionButtons.appendChild(sellBtn);
-  }
-  if(cell.type === 'vedra'){
-    const drawBtn = document.createElement('button');
-    drawBtn.textContent = 'Вытянуть машину (ВЁДРА)';
-    drawBtn.onclick = ()=>{ drawVedra(player); };
-    actionButtons.appendChild(drawBtn);
-  }
-  if(cell.type === 'car' && cell.carClass === 'retro'){
-    const auctionBtn = document.createElement('button');
-    auctionBtn.textContent = 'Аукцион РЕТРО (авто выставлено)';
-    auctionBtn.onclick = ()=>{ startRetroAuction(player); };
-    actionButtons.appendChild(auctionBtn);
-  }
-  if(cell.type === 'service'){
-    const repairBtn = document.createElement('button');
-    repairBtn.textContent = 'Чинить машину';
-    repairBtn.onclick = ()=>{ openService(player); };
-    actionButtons.appendChild(repairBtn);
-    const taxiBtn = document.createElement('button');
-    taxiBtn.textContent = 'Таксовать (бросить кубик и получить *10k)';
-    taxiBtn.onclick = ()=>{ taxiAction(player); };
-    actionButtons.appendChild(taxiBtn);
-  }
-  if(cell.type === 'autopodbor'){
-    const pickBtn = document.createElement('button');
-    pickBtn.textContent = 'Автоподбор — взять случайную (кроме ретро)';
-    pickBtn.onclick = ()=>{ autopodbor(player); };
-    actionButtons.appendChild(pickBtn);
-  }
-  if(cell.type === 'prokat'){
-    const rentBtn = document.createElement('button');
-    rentBtn.textContent = 'Сдать машину в прокат';
-    rentBtn.onclick = ()=>{ rentCar(player); };
-    actionButtons.appendChild(rentBtn);
-  }
-  if(cell.type === 'race'){
-    const raceBtn = document.createElement('button');
-    raceBtn.textContent = 'Начать гонку';
-    raceBtn.onclick = ()=>{ startRace(player, cell.raceBonus); };
-    actionButtons.appendChild(raceBtn);
-  }
-}
-
-function sellAtSkupka(player){
-  const sellable = player.cars.filter(c=>c.state==='repaired');
-  if(sellable.length===0){ alert('Нет починённых машин для продажи'); return; }
-  let names = sellable.map((c,i)=>`${i+1}. ${c.name} — продажа ${formatMoney(c.sell)}`).join('\n');
-  const choice = prompt(`Выберите номер машины для продажи:\n${names}`);
-  const idx = parseInt(choice)-1;
-  if(isNaN(idx) || !sellable[idx]) return;
-  const car = sellable[idx];
-  player.money += car.sell;
-  player.cars = player.cars.filter(c=>c!==car);
-  log(`${player.name} продал ${car.name} на СКУПКА за ${formatMoney(car.sell)}`);
-  currentTurn++; nextTurn();
-}
-
-function drawVedra(player){
-  if(deck.length===0) deck = sampleVehicles.slice(), shuffle(deck);
-  const car = deck.pop();
-  const defect = (car.class==='retro') ? null : defects[Math.floor(Math.random()*defects.length)];
-  // Player immediately must buy at buy price if wants — but we give option
-  const want = confirm(`${player.name} вытянул ${car.name} (покупка ${formatMoney(car.buy)}). Хотите купить?`);
-  if(want){
-    if(player.money < car.buy){ alert('Нет денег'); currentTurn++; nextTurn(); return; }
-    player.money -= car.buy;
-    const owned = {
-      name: car.name, buy:car.buy, sell:car.sell, class:car.class,
-      repairCost: car.class==='retro' ? (car.restoration||0) : Math.round(car.repair * (defect?defect.costMultiplier:1)),
-      defect: defect?defect:null,
-      state: car.class==='retro' ? 'need_restoration' : 'broken'
-    };
-    player.cars.push(owned);
-    log(`${player.name} купил ${car.name} за ${formatMoney(car.buy)}${defect?(' (дефект: '+defect.name+')'):''}`);
-    if(car.class==='retro'){ log(`Это ретро — его надо восстановить на АВТОСЕРВИСЕ. Реставрация: ${formatMoney(owned.repairCost)}`); }
-  } else {
-    log(`${player.name} отказался от ${car.name}`);
-    // для ретро — выставляем на аукцион автоматически?
-    if(car.class==='retro'){
-      deck.push(car); shuffle(deck);
-      alert('Ретро возвращено в колоду.');
-    } else {
-      deck.push(car); shuffle(deck);
-    }
-  }
-  currentTurn++; nextTurn();
-}
-
-function openService(player){
-  // список сломанных машин
-  const broken = player.cars.filter(c=>c.state==='broken' || c.state==='need_restoration');
-  if(broken.length===0){ alert('Нет машин для ремонта/реставрации'); return; }
-  let list = broken.map((c,i)=>`${i+1}. ${c.name} (${c.state}) — стоимость ремонта ${formatMoney(c.repairCost)}`).join('\n');
-  const ans = prompt(`Выберите машину для ремонта (номер), или отмена:\n${list}`);
-  const idx = parseInt(ans)-1;
-  if(isNaN(idx) || !broken[idx]) return;
-  const car = broken[idx];
-  if(player.money < car.repairCost){ alert('Не хватает денег на ремонт'); return; }
-  const confirmRepair = confirm(`Потратить ${formatMoney(car.repairCost)} на ремонт ${car.name}?`);
-  if(!confirmRepair) return;
-  player.money -= car.repairCost;
-  car.state = 'repaired';
-  log(`${player.name} отремонтировал ${car.name} за ${formatMoney(car.repairCost)}`);
-  currentTurn++; nextTurn();
-}
-
-function taxiAction(player){
-  const roll = rollDie();
-  const gain = roll * 10000;
-  player.money += gain;
-  log(`${player.name} таксовал: бросил ${roll}, получил ${formatMoney(gain)}`);
-  currentTurn++; nextTurn();
-}
-
-function autopodbor(player){
-  // draw non-retro random
-  const pool = sampleVehicles.filter(v=>v.class!=='retro');
-  const car = pool[Math.floor(Math.random()*pool.length)];
-  const want = confirm(`${player.name} получил ${car.name} (покупка ${formatMoney(car.buy)}). Хотите купить?`);
-  if(want){
-    if(player.money < car.buy){ alert('Нет денег'); currentTurn++; nextTurn(); return; }
-    player.money -= car.buy;
-    const defect = defects[Math.floor(Math.random()*defects.length)];
-    player.cars.push({ name:car.name, buy:car.buy, sell:car.sell, class:car.class, repairCost:Math.round(car.repair*defect.costMultiplier), defect:defect, state:'broken' });
-    log(`${player.name} купил на автоподборе ${car.name} за ${formatMoney(car.buy)} (дефект ${defect.name})`);
-  } else {
-    log(`${player.name} отказался от автоподбора`);
-  }
-  currentTurn++; nextTurn();
-}
-
-function rentCar(player){
-  const rentable = player.cars.filter(c=>c.state==='repaired');
-  if(rentable.length===0){ alert('Нет машин для проката'); return; }
-  let list = rentable.map((c,i)=>`${i+1}. ${c.name} — вознаграждение ${formatMoney(Math.round(c.sell*0.1))}`).join('\n');
-  const choice = prompt(`Выберите машину для проката:\n${list}`);
-  const idx = parseInt(choice)-1;
-  if(isNaN(idx) || !rentable[idx]) return;
-  const car = rentable[idx];
-  const reward = Math.round(car.sell*0.1);
-  if(BANK.money < reward) BANK.money = 0;
-  player.money += reward;
-  log(`${player.name} сдал ${car.name} в прокат и получил ${formatMoney(reward)}`);
-  currentTurn++; nextTurn();
-}
-
-function startRetroAuction(initiator){
-  // simple auction: каждый игрок по очереди вводит ставку (или пас). Побеждает максимальная >0.
-  const retro = sampleVehicles.filter(v=>v.class==='retro')[0];
-  if(!retro){ alert('Нет ретро в колоде'); currentTurn++; nextTurn(); return; }
-  log(`${initiator.name} инициировал аукцион ретро: ${retro.name}`);
-  let active = players.map(p=>({id:p.id, name:p.name, active:true, bid:0}));
-  let highest = { playerId:null, amount:0 };
-  let idx = order.indexOf(initiator.id);
-  let roundsWithoutRaise = 0;
-  while(true){
-    const pid = order[idx % order.length];
-    const p = players.find(x=>x.id===pid);
-    const participant = active.find(a=>a.id===pid);
-    if(!participant || !participant.active){ idx++; continue; }
-    const maxCan = p.money;
-    const inp = prompt(`${p.name} — введите ставку выше ${formatMoney(highest.amount)} (макс ${formatMoney(maxCan)}), или оставьте пустым для пас`);
-    if(inp===null){ // cancel entire auction
-      log('Аукцион отменён');
-      break;
-    }
-    const bid = parseInt(inp) || 0;
-    if(bid>highest.amount && bid<=maxCan){
-      highest = { playerId: p.id, amount: bid };
-      participant.bid = bid;
-      roundsWithoutRaise = 0;
-      log(`${p.name} поставил ${formatMoney(bid)}`);
-    } else {
-      // пас
-      participant.active = false;
-      log(`${p.name} пасует`);
-    }
-    // check remaining active
-    const activeLeft = active.filter(a=>a.active);
-    if(activeLeft.length<=1){
-      if(highest.playerId!==null){
-        const winner = players.find(x=>x.id===highest.playerId);
-        winner.money -= highest.amount;
-        winner.cars.push({ name: retro.name, buy: highest.amount, sell: retro.sell, class:'retro', repairCost: retro.restoration||0, state:'need_restoration' });
-        log(`${winner.name} выиграл аукцион и купил ${retro.name} за ${formatMoney(highest.amount)}`);
-      } else {
-        log('Ретро не продано');
-      }
-      break;
-    }
-    idx++;
-    roundsWithoutRaise++;
-    if(roundsWithoutRaise>50) { log('Аукцион завершён по таймауту'); break; }
-  }
-  currentTurn++; nextTurn();
-  }
-
-  
-function startRace(player, bonusType){
-  // выбрать соперника
-  const others = players.filter(p=>p.id!==player.id);
-  if(others.length===0){ alert('Нет соперников'); return; }
-  const names = others.map((o,i)=>`${i+1}. ${o.name} (${formatMoney(o.money)})`).join('\n');
-  const ch = prompt(`Выберите соперника для гонки:\n${names}`);
-  const idx = parseInt(ch)-1;
-  if(isNaN(idx) || !others[idx]) return;
-  const opponent = others[idx];
-  const maxStake = Math.floor(opponent.money*0.5);
-  const stakeInp = prompt(`Введите ставку (не более ${formatMoney(maxStake)}). Игровой банк добавит +100k к банку гонки.`);
-  const stake = parseInt(stakeInp) || 0;
-  if(stake>maxStake){ alert('Слишком большая ставка'); return; }
-  if(player.money < stake){ alert('У вас нет средств на ставку'); return; }
-  if(opponent.money < stake){ alert('Оппонент не может поставить такую сумму'); return; }
-  // оба ставят stake; банк игры добавляет +100k
-  player.money -= stake;
-  opponent.money -= stake;
-  let pot = stake*2 + 100000;
-  log(`${player.name} и ${opponent.name} поставили по ${formatMoney(stake)}. Банк добавил +100k. Пот: ${formatMoney(pot)}`);
-  // броски
-  let pRoll = rollDie();
-  let oRoll = rollDie();
-  if(bonusType==='plus1') pRoll += 1;
-  // simulate opponent may get reroll later? For second race the starter has right to reroll after all — handled below
-  const allowReroll = (bonusType==='reroll');
-  if(allowReroll){
-    // starter (player) has право переброса после того как все бросили
-    const doReroll = confirm(`${player.name}, хотите перебросить кубик (заменит ${pRoll})?`);
-    if(doReroll) {
-      pRoll = rollDie(); log(`${player.name} перебросил и получил ${pRoll}`);
-    }
-  }
-  log(`${player.name} бросил ${pRoll}, ${opponent.name} бросил ${oRoll}`);
-  if(pRoll > oRoll){
-    player.money += pot; log(`${player.name} выиграл гонку и получил ${formatMoney(pot)}`);
-  } else if(oRoll > pRoll){
-    opponent.money += pot; log(`${opponent.name} выиграл гонку и получил ${formatMoney(pot)}`);
-  } else {
-    // ничья — делим
-    const half = Math.floor(pot/2);
-    player.money += half;
-    opponent.money += pot - half;
-    log(`Ничья. Пот поделён`);
-  }
-  currentTurn++; nextTurn();
-}
-
-function rollDie(){ return Math.floor(Math.random()*6)+1; }
-
-</script>
+  </script>
 
 </body>
+
 </html>
