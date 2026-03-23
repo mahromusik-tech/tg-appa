@@ -77,6 +77,138 @@
 
   <!-- JS будет во второй части. -->
   <script>
+    // Вставить в начало <script>
+(function(){
+  'use strict';
+
+  // Добавляем стили для встроенной консоли
+  const css = `
+    #appConsole{ position:fixed; right:12px; bottom:12px; width:360px; height:220px;
+                background:rgba(18,18,18,0.92); color:#e6e6e6; font-family:monospace;
+                font-size:12px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.5);
+                z-index:99999; display:flex; flex-direction:column; overflow:hidden; }
+    #appConsole .head{ padding:6px 8px; background:rgba(255,255,255,0.03); display:flex; gap:6px; align-items:center; }
+    #appConsole .head button{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:#ddd; padding:4px 6px; border-radius:4px; cursor:pointer; }
+    #appConsole .body{ padding:8px; overflow:auto; flex:1; }
+    #appConsole .line{ margin-bottom:6px; white-space:pre-wrap; }
+    #appConsole .err{ color:#ff9b9b }
+    #appConsole .warn{ color:#ffd58a }
+    #appConsole .info{ color:#9bdcff }
+  `;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+  // Создаём контейнер консоли
+  const appConsole = document.createElement('div');
+  appConsole.id = 'appConsole';
+  appConsole.innerHTML = `
+    <div class="head">
+      <strong style="flex:1">App Console</strong>
+      <button id="ac-clear">Clear</button>
+      <button id="ac-toggle">Hide</button>
+    </div>
+    <div class="body" id="ac-body"></div>
+  `;
+  document.body.appendChild(appConsole);
+  const acBody = document.getElementById('ac-body');
+  document.getElementById('ac-clear').onclick = ()=> acBody.innerHTML = '';
+  document.getElementById('ac-toggle').onclick = (e)=>{
+    if(acBody.style.display === 'none'){ acBody.style.display='block'; e.target.textContent='Hide'; }
+    else { acBody.style.display='none'; e.target.textContent='Show'; }
+  };
+
+  function appendLine(text, cls){
+    const d = document.createElement('div');
+    d.className = 'line ' + (cls||'');
+    d.textContent = (new Date()).toLocaleTimeString() + ' — ' + text;
+    acBody.prepend(d);
+  }
+
+  // Сохраняем оригиналы
+  const _log = console.log.bind(console);
+  const _warn = console.warn.bind(console);
+  const _error = console.error.bind(console);
+
+  // Перехват console.*
+  console.log = function(...args){ _log(...args); appendLine(args.map(a=>formatForConsole(a)).join(' '), 'info'); };
+  console.warn = function(...args){ _warn(...args); appendLine(args.map(a=>formatForConsole(a)).join(' '), 'warn'); };
+  console.error = function(...args){ _error(...args); appendLine(args.map(a=>formatForConsole(a)).join(' '), 'err'); };
+
+  function formatForConsole(v){
+    try { if(typeof v === 'object') return JSON.stringify(v); return String(v); } catch(e){ return String(v); }
+  }
+
+  // Глобальный перехват ошибок
+  window.addEventListener('error', function(ev){
+    const msg = `${ev.message} — ${ev.filename}:${ev.lineno}:${ev.colno}\nStack: ${ev.error && ev.error.stack ? ev.error.stack : '—'}`;
+    appendLine(msg, 'err');
+    console.error(ev.error || ev.message);
+  });
+
+  window.addEventListener('unhandledrejection', function(ev){
+    const reason = ev.reason && ev.reason.stack ? ev.reason.stack : JSON.stringify(ev.reason);
+    appendLine('UnhandledRejection: ' + reason, 'err');
+    console.error('UnhandledRejection', ev.reason);
+  });
+
+  // Удобный вывод ошибок из try/catch
+  window.appShowError = function(err){
+    try{
+      const text = err && err.stack ? err.stack : (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      appendLine('ERROR: ' + text, 'err');
+      console.error(err);
+    }catch(e){ _error('appShowError fail', e); }
+  };
+
+  // Инициализация: защищённое выполнение callback после DOMContentLoaded
+  function safeInit(callback){
+    document.addEventListener('DOMContentLoaded', ()=>{
+      try{
+        callback();
+        appendLine('Инициализация завершена', 'info');
+      }catch(e){
+        appShowError(e);
+      }
+    });
+  }
+
+  // Экспортируем safeInit наружу, чтобы подключаемый код использовал его
+  window.appSafeInit = safeInit;
+
+  // Сообщение сразу (на случай, если код добавлен после DOMContentLoaded)
+  appendLine('Встроенная консоль готова. Сообщения и ошибки будут показаны здесь.', 'info');
+
+})(); // конец IIFE
+
+appSafeInit(()=>{
+
+  // Пример "безопасного" назначения кнопки Start (удобно вставить в существующий init)
+  try {
+    const startBtn = document.getElementById('startBtn');
+    if (!startBtn) {
+      console.error('startBtn не найден в DOM — проверьте id кнопки (должен быть <button id="startBtn">Старт</button>)');
+    } else {
+      startBtn.addEventListener('click', ()=> {
+        try {
+          if (typeof startGame !== 'function') {
+            throw new Error('startGame() не определена — проверьте порядок подключения скриптов');
+          }
+          startGame();
+        } catch(err) {
+          appShowError(err);
+        }
+      });
+      console.log('startBtn назначен');
+    }
+
+    // По аналогии привяжите другие элементы (goalMoney, и т.д.) здесь или в вашем основном init.
+    const goalMoneyEl = document.getElementById('goalMoney');
+    if (goalMoneyEl) goalMoneyEl.addEventListener('change', ()=>{ FINISH_GOAL = parseInt(goalMoneyEl.value) || FINISH_GOAL; });
+
+  } catch(e){
+    appShowError(e);
+  }
+
+});
     /* Вставьте сюда следующую часть — весь игровой JS */
     const START_MONEY = 150000;
 let FINISH_GOAL = 5000000;
