@@ -1,3 +1,36 @@
+<script>
+    // 1. Создаем контейнер для логов на экране
+const logContainer = document.createElement('div');
+logContainer.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.9);color:#00ff00;font-family:monospace;font-size:12px;z-index:9999;padding:10px;box-sizing:border-box;pointer-events:none;';
+document.body.appendChild(logContainer);
+
+// 2. Функция для вывода текста на экран
+function screenLog(message, type = 'INFO') {
+    const logLine = document.createElement('div');
+    logLine.innerText = `[${new Date().toLocaleTimeString()}] [${type}] ${message}`;
+    if (type === 'ERROR') logLine.style.color = '#ff3333';
+    logContainer.appendChild(logLine);
+    logContainer.scrollTop = logContainer.scrollHeight; // Автоскролл вниз
+}
+
+// 3. Перехват кликов по ВСЕМ кнопкам в приложении
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (button) {
+        screenLog(`Нажата кнопка: "${button.innerText || button.id || 'Без текста'}"`);
+    }
+});
+
+// 4. Перехват всех необработанных ошибок JS
+window.addEventListener('error', (event) => {
+    screenLog(`${event.message} в ${event.filename}:${event.lineno}`, 'ERROR');
+});
+
+// 5. Перехват ошибок от упавших Promise (например, запросы fetch)
+window.addEventListener('unhandledrejection', (event) => {
+    screenLog(`Ошибка Promise: ${event.reason}`, 'ERROR');
+});
+</script>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
