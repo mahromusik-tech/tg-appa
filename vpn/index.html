@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Store</title>
+    <script src="telegram.org"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0; padding: 20px; text-align: center;
+        }
+        .tariff-card {
+            border: 2px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 12px;
+            padding: 20px; margin-bottom: 15px;
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            cursor: pointer;
+        }
+        .tariff-card:hover { border-color: var(--tg-theme-button-color, #248bcf); }
+        .title { font-size: 20px; font-weight: bold; }
+        .price { font-size: 18px; color: var(--tg-theme-button-color, #248bcf); margin-top: 5px; }
+        h2 { margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+
+    <h2>Выберите тарифный план VPN</h2>
+
+    <div class="tariff-card" onclick="buyTariff('1')">
+        <div class="title">1 Месяц</div>
+        <div class="price">⭐ 100 Stars</div>
+    </div>
+
+    <div class="tariff-card" onclick="buyTariff('3')">
+        <div class="title">3 Месяца</div>
+        <div class="price">⭐ 270 Stars</div>
+    </div>
+
+    <div class="tariff-card" onclick="buyTariff('12')">
+        <div class="title">1 Год</div>
+        <div class="price">⭐ 900 Stars</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // АДРЕС ВАШЕГО БЭКЕНДА НА VPS
+        const BACKEND_URL = "http://31.42.120.232:8000";
+
+        async function buyTariff(tariffId) {
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (!userId) {
+                alert("Ошибка авторизации в Telegram");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/create-invoice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, tariff: tariffId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.invoice_link) {
+                    tg.openInvoice(data.invoice_link, function(status) {
+                        if (status === 'paid') tg.close();
+                    });
+                } else {
+                    alert('Не удалось сформировать счет.');
+                }
+            } catch (error) {
+                alert('Ошибка соединения с сервером VPS: ' + error);
+            }
+        }
+    </script>
+</body>
+</html>
