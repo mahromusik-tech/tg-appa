@@ -86,14 +86,14 @@
 const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
 class Game {
-    constructor() {
+        constructor() {
         this.money = 100000;
         this.rating = 50;
         this.monthIdx = 0;
         this.year = 1;
         this.currentTab = 'stocks';
 
-        // ИИ Компании на рынке (с плавными трендами и историей)
+        // ИИ Компании на рынке (Исправлено: добавлены массивы начальной истории)
         this.companies = [
             { id: 1, name: "Apex Tech Inc.", price: 120, history:, dividend: 4.5, stability: 65, owned: 0, volatility: 0.04, trend: 0.01, isAI: true },
             { id: 2, name: "Nord Crude Oil", price: 340, history:, dividend: 18.0, stability: 75, owned: 0, volatility: 0.03, trend: 0.005, isAI: true },
@@ -111,6 +111,8 @@ class Game {
         this.myCompanies = [];
         this.news = ["Инвестиционные рынки открыты. Рассчитывайте риски взвешенно."];
     }
+
+    
 
     init() {
         this.render();
