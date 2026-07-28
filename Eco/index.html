@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Симулятор Акционера</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #fff; margin: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .card { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .btn { background: #4CAF50; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .btn:hover { background: #45a049; }
+        .btn-next { background: #008CBA; width: 100%; padding: 15px; font-size: 18px; }
+        .btn-next:hover { background: #007B9A; }
+        .company-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3a3a3a; padding: 10px 0; }
+        .news-item { border-left: 4px solid #008CBA; padding-left: 10px; margin-bottom: 10px; color: #ccc; }
+        input[type="number"] { width: 60px; background: #333; color: #fff; border: 1px solid #555; padding: 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Верхняя панель состояния -->
+    <div class="header">
+        <div><strong>Месяц:</strong> <span id="current-month">1</span> (Год <span id="current-year">1</span>)</div>
+        <div><strong>Баланс:</strong> $<span id="player-money">100000</span></div>
+        <div><strong>Рейтинг:</strong> <span id="player-rating">50</span>/100</div>
+    </div>
+
+    <div class="grid">
+        <!-- Левая колонка: Рынок и Свой Бизнес -->
+        <div>
+            <div class="card">
+                <h2>Фондовый рынок</h2>
+                <div id="market-list"></div>
+            </div>
+
+            <div class="card">
+                <h2>Создать свою компанию</h2>
+                <p>Стоимость регистрации: $50,000. Начальный рейтинг увеличит шансы на успех.</p>
+                <button class="btn" onclick="game.createCompany()">Основать "Игрок Инкорпорейтед"</button>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Управление ходом и Лента новостей -->
+        <div>
+            <div class="card">
+                <button class="btn btn-next" onclick="game.nextTurn()">Завершить месяц →</button>
+            </div>
+
+            <div class="card">
+                <h2>Новости и Результаты</h2>
+                <div id="news-feed">
+                    <div class="news-item">Добро пожаловать на биржу! Покупайте акции и зарабатывайте рейтинг.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+class Game {
+    constructor() {
+        this.money = 100000;
+        this.rating = 50;
+        this.month = 1;
+        this.year = 1;
+        
+        // Базовые компании на рынке
+        this.companies = [
+            { id: 1, name: "Global Tech", price: 100, dividend: 2, stability: 40, sharesOwned: 0 },
+            { id: 2, name: "Oil Energy", price: 250, dividend: 8, stability: 60, sharesOwned: 0 },
+            { id: 3, name: "Cyber Pharma", price: 50, dividend: 0, stability: 20, sharesOwned: 0 }
+        ];
+        
+        this.news = [];
+    }
+
+    init() {
+        this.render();
+    }
+
+    render() {
+        // Обновление показателей игрока
+        document.getElementById("player-money").innerText = this.money.toLocaleString();
+        document.getElementById("player-rating").innerText = Math.round(this.rating);
+        document.getElementById("current-month").innerText = this.month;
+        document.getElementById("current-year").innerText = this.year;
+
+        // Рендер таблицы акций
+        const marketList = document.getElementById("market-list");
+        marketList.innerHTML = "";
+        
+        this.companies.forEach(company => {
+            const row = document.createElement("div");
+            row.className = "company-row";
+            row.innerHTML = `
+                <div>
+                    <strong>${company.name}</strong><br>
+                    <small>Цена: $${company.price.toFixed(2)} | Див: $${company.dividend}/акц.</small>
+                </div>
+                <div>У вас: <strong>${company.sharesOwned}</strong></div>
+                <div>
+                    <input type="number" id="amount-${company.id}" value="10" min="1">
+                    <button class="btn" onclick="game.buyStock(${company.id})">Купить</button>
+                    <button class="btn" style="background:#f44336;" onclick="game.takeover(${company.id})">Выкупить (M&A)</button>
+                </div>
+            `;
+            marketList.appendChild(row);
+        });
+
+        // Рендер новостей
+        const newsFeed = document.getElementById("news-feed");
+        newsFeed.innerHTML = this.news.map(n => `<div class="news-item">${n}</div>`).join("");
+    }
+
+    buyStock(id) {
+        const company = this.companies.find(c => c.id === id);
+        const amount = parseInt(document.getElementById(`amount-${id}`).value);
+        const cost = company.price * amount;
+
+        if (this.money >= cost) {
+            this.money -= cost;
+            company.sharesOwned += amount;
+            this.rating = Math.min(100, this.rating + (amount * 0.05)); // Небольшой рост рейтинга от объема сделки
+            this.news.unshift(`Куплено ${amount} акций ${company.name} за $${cost}`);
+            this.render();
+        } else {
+            alert("Недостаточно средств!");
+        }
+    }
+
+    takeover(id) {
+        const company = this.companies.find(c => c.id === id);
+        // Шанс поглощения зависит от рейтинга игрока против стабильности компании
+        const chance = Math.max(5, this.rating - company.stability);
+        const roll = Math.random() * 100;
+
+        if (roll <= chance) {
+            const cost = company.price * 100; // Условная цена полного выкупа
+            if (this.money >= cost) {
+                this.money -= cost;
+                company.sharesOwned += 1000; // Переходит под контроль
+                this.rating = Math.min(100, this.rating + 15);
+                this.news.unshift(`🎉 УСПЕХ! Вы выкупили компанию ${company.name} за $${cost}. Совет директоров одобрил сделку (Шанс: ${Math.round(chance)}%).`);
+            } else {
+                alert(`Совет директоров согласен, но у вас нет $${cost} для полного выкупа.`);
+            }
+        } else {
+            this.rating = Math.max(0, this.rating - 5); // Падение рейтинга при отказе
+            this.news.unshift(`❌ ОТКАЗ! Совет директоров ${company.name} отклонил ваше предложение. Ваш рейтинг слишком мал (Шанс: ${Math.round(chance)}%).`);
+        }
+        this.render();
+    }
+
+    createCompany() {
+        if (this.money >= 50000) {
+            this.money -= 50000;
+            const newId = this.companies.length + 1;
+            this.companies.push({
+                id: newId,
+                name: "Player Inc #" + newId,
+                price: 120,
+                dividend: 5,
+                stability: 10,
+                sharesOwned: 100 // Игрок сразу владеет контрольным пакетом
+            });
+            this.news.unshift(`🚀 Вы открыли собственную компанию "Player Inc #${newId}"!`);
+            this.render();
+        } else {
+            alert("Нужно минимум $50,000 для старта бизнеса.");
+        }
+    }
+
+    nextTurn() {
+        this.news = []; // Очищаем старые новости для нового месяца
+        let totalDividends = 0;
+
+        // Помесячный пересчет
+        this.companies.forEach(company => {
+            // 1. Колебание цен (Рандомный рынок)
+            const changePercent = (Math.random() * 20 - 10) / 100; // от -10% до +10%
+            company.price = Math.max(10, company.price * (1 + changePercent));
+
+            // 2. Выплата дивидендов
+            if (company.sharesOwned > 0) {
+                const divs = company.sharesOwned * company.dividend;
+                totalDividends += divs;
+            }
+        });
+
+        this.money += totalDividends;
+        if (totalDividends > 0) {
+            this.news.push(`💰 Получены дивиденды по акциям: +$${totalDividends.toLocaleString()}`);
+        }
+
+        // Случайное рыночное событие
+        const events = [
+            { text: "Кризис в технологическом секторе! Акции Tech компаний падают.", action: () => this.companies[0].price *= 0.8 },
+            { text: "Бум спроса на энергоносители. Энергетические компании растут.", action: () => this.companies[1].price *= 1.25 },
+            { text: "Новый закон стабилизировал рынок.", action: () => {} }
+        ];
+        const randomEvent = events[Math.floor(Math.random() * events.length)];
+        randomEvent.action();
+        this.news.push(`📰 Событие месяца: ${randomEvent.text}`);
+
+        // Календарь
+        this.month++;
+        if (this.month > 12) {
+            this.month = 1;
+            this.year++;
+            this.news.push(`🎆 Наступил новый ${this.year} финансовый год!`);
+        }
+
+        this.render();
+    }
+}
+
+// Запуск игры
+const game = new Game();
+game.init();
+</script>
+
+</body>
+</html>
